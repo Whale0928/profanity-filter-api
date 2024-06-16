@@ -1,11 +1,5 @@
 server:
-  port: 8080 # to be changed some other port number
-  encoding:
-    charset: UTF-8 # 인코딩 설정
-  version: 0.0.1
-  path:
-    version: /v1
-
+  port: 9999 # to be changed some other port number
 
 # DB properties
 spring:
@@ -41,18 +35,3 @@ spring:
 logging:
   level:
     root: info # error, warn, info, debug, trace (default: info)
-
-# Spring Security
-security:
-  jwt: # dummy-key : 로그인 개발용으로 만든 더미키 입니다. 실제 서비스에서는 키값도 변경해야하며, 노출되지않는 application.yml에 넣어야 합니다.
-    secret-key: 'c2VjdXJlU2VjcmV0S2V5MTIzNDU2Nzg5MGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6QWJDRGVGR2hJSktMTU5PUFFSU1RVVldYWVphYmNkZWZnaGlrSg=='
-
-
-# AWS S3
-amazon:
-  aws:
-    accessKey: ${AMAZON_AWS_ACCESS_KEY}
-    secretKey: ${AMAZON_AWS_SECRET_KEY}
-    region: ${AMAZON_AWS_REGION}
-    bucket: ${AMAZON_AWS_BUCKET}
-    cloudFrontUrl: ${AMAZON_AWS_CLOUDFRONT_URL}
