@@ -1,0 +1,58 @@
+server:
+  port: 8080 # to be changed some other port number
+  encoding:
+    charset: UTF-8 # 인코딩 설정
+  version: 0.0.1
+  path:
+    version: /v1
+
+
+# DB properties
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/db?useSSL=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+    username: db
+    password: db_1234
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: validate # validate, update, create, create-drop
+    properties:
+      hibernate:
+        format_sql: true # SQL 출력 포맷
+        use_sql_comments: true
+        dialect: org.hibernate.dialect.MySQLDialect
+        show_sql: true # 콘솔에 SQL 출력
+    open-in-view: false # JPA 영속성 컨텍스트를 View까지 열어두는 옵션 (default: true) - false로 설정할 것
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+# Logging
+logging:
+  level:
+    root: info # error, warn, info, debug, trace (default: info)
+
+# Spring Security
+security:
+  jwt: # dummy-key : 로그인 개발용으로 만든 더미키 입니다. 실제 서비스에서는 키값도 변경해야하며, 노출되지않는 application.yml에 넣어야 합니다.
+    secret-key: 'c2VjdXJlU2VjcmV0S2V5MTIzNDU2Nzg5MGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6QWJDRGVGR2hJSktMTU5PUFFSU1RVVldYWVphYmNkZWZnaGlrSg=='
+
+
+# AWS S3
+amazon:
+  aws:
+    accessKey: ${AMAZON_AWS_ACCESS_KEY}
+    secretKey: ${AMAZON_AWS_SECRET_KEY}
+    region: ${AMAZON_AWS_REGION}
+    bucket: ${AMAZON_AWS_BUCKET}
+    cloudFrontUrl: ${AMAZON_AWS_CLOUDFRONT_URL}
