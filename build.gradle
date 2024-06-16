@@ -1,0 +1,52 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.1.9'
+    id 'io.spring.dependency-management' version '1.1.4'
+}
+
+group = 'profanity-filter-api'
+version = '0.0.1-SNAPSHOT'
+
+compileJava.options.encoding = 'UTF-8'
+compileTestJava.options.encoding = 'UTF-8'
+
+java {
+    sourceCompatibility = '21'
+    targetCompatibility = '21'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // lombok
+    implementation 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    //database
+    // implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    // implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    // implementation 'com.h2database:h2'
+    // runtimeOnly 'com.mysql:mysql-connector-j'
+}
+
+// =========================== spring boot jar setting ===========================
+
+bootJar {
+    archiveFileName = 'app.jar' // jar 파일명 변경 ( 기본값 : ${project.name}-${project.version}.jar )
+}
+jar {
+    enabled = false // plain jar 파일 생성 안함
+}
+
+// =========================== spring rest docs setting ===========================
+
+test {
+    useJUnitPlatform()
+}
