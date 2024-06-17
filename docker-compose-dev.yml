@@ -1,5 +1,5 @@
 services:
-  dev-bottle-note:
+  profanity-filter-api:
     build:
       context: .
       dockerfile: Dockerfile
