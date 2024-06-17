@@ -32,9 +32,18 @@
 ### 사용 예시
 
 - 요청 경로 :
-    - basic : `https://api.profanity-filter.run/api/v1/filter/basic?word = {{word}}`
-    - advanced : `https://api.profanity-filter.run/api/v1/filter/advanced?word = {{word}}`
+    - basic : `GET https://api.profanity-filter.run/api/v1/filter/basic?word = {{word}}`
+    - advanced : `GET https://api.profanity-filter.run/api/v1/filter/advanced?word = {{word}}`
 
 | 파라미터 | 설명      | 필수 | 타입     |
 |------|---------|----|--------|
 | word | 필터링할 문장 | O  | string |
+
+---
+
+### 주의사항
+
+- 이 서비스는 포트폴리오나 비영리 서비스를 할때 최소한의 금액이라도 절약하기 바라는 마음으로 제작되었습니다.
+- 따라서 영리 목적으로 사용할 경우에는 [KISO 이용자 보호 시스템 API 서비스](https://www.safekiso.com/)를 사용하세요.
+- 이 서비스는 무료로 제공되는 서비스이므로, 제 서버컴퓨터가 불의의 사고 등으로 다운되는 경우가 있을 수 있습니다. 이 점 유의해주세요.
+- API 스펙은 변경될 수 있습니다. 변경 시에는 문서를 통해 공지하겠습니다. 추구하고자 하는 모델은 [KISO 이용자 보호 시스템 API 서비스](https://www.safekiso.com/) 입니다.

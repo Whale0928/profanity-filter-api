@@ -33,6 +33,7 @@ public class DataSourceProfanityFilter {
                 .collect(Collectors.toSet());
 
         trie = Trie.builder()
+                .ignoreOverlaps()
                 .addKeywords(collect)
                 .build();
 
@@ -40,6 +41,10 @@ public class DataSourceProfanityFilter {
         long duration = (endTime - startTime) / 1_000_000;  // convert to milliseconds
 
         log.info("비속어 사전 로딩 완료 {}개 (지연 시간 : {}ms)", collect.size(), duration);
+    }
+
+    public Collection<Emit> containsAllProfanity(String word) {
+        return trie.parseText(word);
     }
 
     public Collection<Emit> containsProfanity(String word) {
