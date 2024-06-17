@@ -11,8 +11,8 @@ compileJava.options.encoding = 'UTF-8'
 compileTestJava.options.encoding = 'UTF-8'
 
 java {
-    sourceCompatibility = '21'
-    targetCompatibility = '21'
+    sourceCompatibility = '17'
+    targetCompatibility = '17'
 }
 
 repositories {
@@ -37,16 +37,12 @@ dependencies {
     implementation 'org.apache.commons:commons-lang3:3.12.0'
 }
 
-// =========================== spring boot jar setting ===========================
-
 bootJar {
     archiveFileName = 'app.jar' // jar 파일명 변경 ( 기본값 : ${project.name}-${project.version}.jar )
 }
 jar {
     enabled = false // plain jar 파일 생성 안함
 }
-
-// =========================== spring rest docs setting ===========================
 
 test {
     useJUnitPlatform()
