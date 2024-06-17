@@ -19,13 +19,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
 
-      ## 원격 환경에 코드 복사
+      ## 원격 환경에 코드 복사ja
       - name: copy project
         uses: burnett01/rsync-deployments@6.0.0
         with:
