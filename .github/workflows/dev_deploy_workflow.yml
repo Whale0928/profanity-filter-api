@@ -59,9 +59,9 @@ jobs:
           script: |
             cd /home/ubuntu/app/profanity-filter-api
             # 기존 실행 중인 컨테이너 중지 및 제거
-            docker stop dev-profanity-filter-api || true
-            docker rm dev-profanity-filter-api || true
+            docker stop profanity-filter-api || true
+            docker rm profanity-filter-api || true
             # Docker Compose를 이용한 컨테이너 빌드 및 실행
-            docker-compose -f docker-compose-dev.yml up -d --no-deps --build dev-profanity-filter-api
+            docker-compose -f docker-compose-dev.yml up -d --no-deps --build profanity-filter-api
             # 사용하지 않는 이미지 정리
             docker image prune -f
