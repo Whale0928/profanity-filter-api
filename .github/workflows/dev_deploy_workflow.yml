@@ -48,7 +48,7 @@ jobs:
             touch  /home/ubuntu/app/profanity-filter-api/module-domai/src/main/resources/application-prod.yml
             echo "${{ secrets.APPLICATION_PROD }}" | base64 --decode > module-api/src/main/resources/application-prod.yml  
             echo "${{ secrets.APPLICATION_PROD }}" | base64 --decode > module-core/src/main/resources/application-prod.yml  
-            echo "${{ secrets.APPLICATION_PROD }}" | base64 --decode > module-domai/src/main/resources/application-prod.yml  
+            echo "${{ secrets.APPLICATION_PROD }}" | base64 --decode > module-domain/src/main/resources/application-prod.yml  
             chmod +x gradlew
             ./gradlew build -x test
 
