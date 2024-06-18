@@ -1,5 +1,7 @@
 <img width="1003" alt="image" src="https://github.com/Whale0928/profanity-filter-api/assets/75371249/924c007c-1b76-4c90-8b8b-ba361171e6f2">
 
+### 개발 진행중인 프로젝트입니다 문의사항은 Issue로 등록하거나 이메일로 문의바랍니다.
+
 # profanity-filter-api
 
 한국어와 영어 비속어를 모두 검증할 수 있는 서비스입니다.
@@ -26,20 +28,32 @@
 
 ### Advanced 모델
 
-- 정규식 , 비속어 데이터베이스 , AI를 이용한 비속어 필터링 모델입니다.
-- AI의 경우 인증되지 않은 사용자의 경우 1일 100회 사용 제한이 있습니다.
+- 구현 예정인 정밀 필터링 모델입니다.
+- 인증되지 않은 사용자의 경우 1일 10회 사용 제한이 있습니다.
 
 ### 사용 예시
 
-- 요청 경로 :
-    - basic : `GET https://api.profanity-filter.run/api/v1/filter/basic?word = {{word}}`
-    - advanced : `GET https://api.profanity-filter.run/api/v1/filter/advanced?word = {{word}}`
+**비속어 검증 요청하기**:
+   - 요청 URL: `POST https://api.profanity-filter.run/api/v1/filter/basic`
+   - 필요 파라미터:
+     - `word`: 검증할 문장 (예: "나쁜말")
+   - 사용 예 (cURL):
+     ```bash
+     curl -X POST "https://api.profanity-filter.run/api/v1/filter/basic" \
+    -H "accept: application/json" \
+    -H "Content-Type: application/json" \
+    -d '{"word": "나쁜말"}'
+     ```
 
-| 파라미터 | 설명      | 필수 | 타입     |
-|------|---------|----|--------|
-| word | 필터링할 문장 | O  | string |
+   - 응답 예:
+     ```json
+     {
+      "status": "OK",
+      "message": "비속어가 존재하지 않습니다.",
+      "isProfane": false
+     }
+     ```
 
----
 
 ### 주의사항
 
@@ -47,3 +61,5 @@
 - 따라서 영리 목적으로 사용할 경우에는 [KISO 이용자 보호 시스템 API 서비스](https://www.safekiso.com/)를 사용하세요.
 - 이 서비스는 무료로 제공되는 서비스이므로, 제 서버컴퓨터가 불의의 사고 등으로 다운되는 경우가 있을 수 있습니다. 이 점 유의해주세요.
 - API 스펙은 변경될 수 있습니다. 변경 시에는 문서를 통해 공지하겠습니다. 추구하고자 하는 모델은 [KISO 이용자 보호 시스템 API 서비스](https://www.safekiso.com/) 입니다.
+
+> 추가적인 문의 사항은 rlagusrl928@gmail.com으로 연락 혹은 issue를 등록해주세요.
