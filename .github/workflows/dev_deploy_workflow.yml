@@ -45,7 +45,7 @@ jobs:
             cd /home/ubuntu/app/profanity-filter-api
             touch  /home/ubuntu/app/profanity-filter-api/module-api/src/main/resources/application-prod.yml
             touch  /home/ubuntu/app/profanity-filter-api/module-core/src/main/resources/application-prod.yml
-            touch  /home/ubuntu/app/profanity-filter-api/module-domai/src/main/resources/application-prod.yml
+            touch  /home/ubuntu/app/profanity-filter-api/module-domain/src/main/resources/application-prod.yml
             echo "${{ secrets.APPLICATION_PROD }}" | base64 --decode > module-api/src/main/resources/application-prod.yml  
             echo "${{ secrets.APPLICATION_PROD }}" | base64 --decode > module-core/src/main/resources/application-prod.yml  
             echo "${{ secrets.APPLICATION_PROD }}" | base64 --decode > module-domain/src/main/resources/application-prod.yml  
