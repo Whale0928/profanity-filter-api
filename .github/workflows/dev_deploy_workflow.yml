@@ -63,5 +63,5 @@ jobs:
             cd /home/ubuntu/app/profanity-filter-api
             docker stop profanity-filter-api || true
             docker rm profanity-filter-api || true
-            docker-compose -f docker-compose-dev.yml up -d --no-deps --build profanity-filter-api
+            docker-compose up -d --no-deps --build profanity-filter-api
             docker image prune -f

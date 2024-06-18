@@ -13,7 +13,6 @@ configurations {
 allprojects {
     version = '0.0.1-SNAPSHOT'
     group = 'app.profanity-filter'
-    sourceCompatibility = '17'
 
     repositories {
         mavenCentral()
