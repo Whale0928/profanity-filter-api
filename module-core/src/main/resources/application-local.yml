@@ -1,0 +1,37 @@
+server:
+  port: 9999 # to be changed some other port number
+
+# DB properties
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/db?useSSL=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+    username: db
+    password: db_1234
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: validate # validate, update, create, create-drop
+    properties:
+      hibernate:
+        format_sql: true # SQL 출력 포맷
+        use_sql_comments: true
+        dialect: org.hibernate.dialect.MySQLDialect
+        show_sql: true # 콘솔에 SQL 출력
+    open-in-view: false # JPA 영속성 컨텍스트를 View까지 열어두는 옵션 (default: true) - false로 설정할 것
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+# Logging
+logging:
+  level:
+    root: info # error, warn, info, debug, trace (default: info)

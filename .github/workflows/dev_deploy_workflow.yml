@@ -25,11 +25,10 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      ## 원격 환경에 코드 복사ja
       - name: copy project
         uses: burnett01/rsync-deployments@6.0.0
         with:
-          switches: -avzr --delete # rsync 명령어 옵션
+          switches: -avzr --delete
           remote_path: /home/ubuntu/app/profanity-filter-api
           remote_host: ${{ secrets.DEV_SERVER_IP }}
           remote_user: ubuntu
@@ -44,8 +43,12 @@ jobs:
           key: ${{ secrets.DEV_SSH_KEY }}
           script: |
             cd /home/ubuntu/app/profanity-filter-api
-            touch  /home/ubuntu/app/profanity-filter-api/src/main/resources/application-prod.yml
-            echo "${{ secrets.APPLICATION_PROD }}" | base64 --decode > src/main/resources/application-prod.yml  
+            touch  /home/ubuntu/app/profanity-filter-api/module-api/src/main/resources/application-prod.yml
+            touch  /home/ubuntu/app/profanity-filter-api/module-core/src/main/resources/application-prod.yml
+            touch  /home/ubuntu/app/profanity-filter-api/module-domai/src/main/resources/application-prod.yml
+            echo "${{ secrets.APPLICATION_PROD }}" | base64 --decode > module-api/src/main/resources/application-prod.yml  
+            echo "${{ secrets.APPLICATION_PROD }}" | base64 --decode > module-core/src/main/resources/application-prod.yml  
+            echo "${{ secrets.APPLICATION_PROD }}" | base64 --decode > module-domai/src/main/resources/application-prod.yml  
             chmod +x gradlew
             ./gradlew build -x test
 
@@ -58,10 +61,7 @@ jobs:
           key: ${{ secrets.DEV_SSH_KEY }}
           script: |
             cd /home/ubuntu/app/profanity-filter-api
-            # 기존 실행 중인 컨테이너 중지 및 제거
             docker stop profanity-filter-api || true
             docker rm profanity-filter-api || true
-            # Docker Compose를 이용한 컨테이너 빌드 및 실행
             docker-compose -f docker-compose-dev.yml up -d --no-deps --build profanity-filter-api
-            # 사용하지 않는 이미지 정리
             docker image prune -f
