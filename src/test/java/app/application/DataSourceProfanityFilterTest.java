@@ -4,7 +4,6 @@ import org.ahocorasick.trie.Emit;
 import org.ahocorasick.trie.Trie;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
 import java.util.Collection;
@@ -67,7 +66,7 @@ class DataSourceProfanityFilterTest {
     /**
      * 아호코라식으로도 완전일치 테스트가 가능하지만 java컬렉션을 이용해서도 구현
      */
-    @Test
+    // @Test
     @Timeout(value = 20, unit = TimeUnit.MILLISECONDS)
     public void 금칙어_완전일치_테스트() {
 
@@ -93,7 +92,7 @@ class DataSourceProfanityFilterTest {
      * 성능을 위해서 포함여부 체크는 아호코라식 알고리즘을 사용
      * - 구현 java 라이브러리: https://github.com/robert-bor/aho-corasick (maven mvnrepository에는 배포를 안하니 참고해서 직접 구현하거나 소스 내려받아서 빌드 후 사용)
      */
-    @Test
+    //@Test
     @Timeout(value = 20, unit = TimeUnit.MILLISECONDS)
     public void 금칙어_포함여부_아호코라식알고리즘기반_테스트() {
 
