@@ -1,1 +1,5 @@
 rootProject.name = 'profanity-filter-api'
+
+include('module-core')
+include('module-domain')
+include('module-api')

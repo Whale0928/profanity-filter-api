@@ -44,5 +44,5 @@ out/
 # Ignore Gradle build output directory
 build
 src/main/generated
-/src/test/resources/application-dev.yml
-/src/test/resources/application-prod.yml
+application-dev.yml
+application-prod.yml

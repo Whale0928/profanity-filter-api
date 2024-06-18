@@ -1,0 +1,10 @@
+services:
+  profanity-filter-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: profanity-filter-api
+    ports:
+      - "9999:9999"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
