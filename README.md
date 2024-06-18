@@ -40,9 +40,9 @@
    - 사용 예 (cURL):
      ```bash
      curl -X POST "https://api.profanity-filter.run/api/v1/filter/basic" \
-    -H "accept: application/json" \
-    -H "Content-Type: application/json" \
-    -d '{"word": "나쁜말"}'
+       -H "accept: application/json" \
+       -H "Content-Type: application/json" \
+       -d '{"word": "나쁜말"}'
      ```
 
    - 응답 예:
