@@ -1,4 +1,4 @@
-package app.core.data.constant;
+package app.core.data.response.constant;
 
 public enum StatusCode {
 
