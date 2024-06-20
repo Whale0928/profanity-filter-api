@@ -4,47 +4,56 @@ plugins {
     id 'io.spring.dependency-management' version '1.1.4'
 }
 
-group = 'profanity-filter-api'
-version = '0.0.1-SNAPSHOT'
-
-compileJava.options.encoding = 'UTF-8'
-compileTestJava.options.encoding = 'UTF-8'
-
-java {
-    sourceCompatibility = '17'
-    targetCompatibility = '17'
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
 }
 
-repositories {
-    mavenCentral()
+allprojects {
+    version = '0.0.1-SNAPSHOT'
+    group = 'app.profanity-filter'
+
+    repositories {
+        mavenCentral()
+    }
+
+    java {
+        sourceCompatibility = '17'
+        targetCompatibility = '17'
+    }
 }
 
-dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
-    implementation 'org.springframework.boot:spring-boot-starter-validation'
+subprojects {
+    apply plugin: 'java-library'
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'io.spring.dependency-management'
 
-    // lombok
-    implementation 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok'
+    dependencies {
+        implementation 'org.apache.commons:commons-lang3:3.12.0'
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+    }
 
-    //database
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    runtimeOnly 'com.mysql:mysql-connector-j'
+    bootJar.enabled = false
+    jar.enabled = true
 
-    implementation 'org.ahocorasick:ahocorasick:0.6.3'
-
-    implementation 'org.apache.commons:commons-lang3:3.12.0'
+    tasks.named('test') { // 테스트할 때 junit5로 하겠다는 의미
+        useJUnitPlatform()
+    }
 }
 
 bootJar {
-    archiveFileName = 'app.jar' // jar 파일명 변경 ( 기본값 : ${project.name}-${project.version}.jar )
+    enabled = false
 }
 jar {
-    enabled = false // plain jar 파일 생성 안함
+    enabled = true
 }
 
-test {
-    useJUnitPlatform()
+springBoot {
+    mainClass = 'app.ProfanityFilterApplication'
+}
+
+tasks.named("bootRun") {
+    mainClass = 'app.ProfanityFilterApplication'
 }

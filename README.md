@@ -34,26 +34,26 @@
 ### 사용 예시
 
 **비속어 검증 요청하기**:
-   - 요청 URL: `POST https://api.profanity-filter.run/api/v1/filter/basic`
-   - 필요 파라미터:
-     - `word`: 검증할 문장 (예: "나쁜말")
-   - 사용 예 (cURL):
-     ```bash
-     curl -X POST "https://api.profanity-filter.run/api/v1/filter/basic" \
-       -H "accept: application/json" \
-       -H "Content-Type: application/json" \
-       -d '{"word": "나쁜말"}'
-     ```
 
-   - 응답 예:
-     ```json
-     {
-      "status": "OK",
-      "message": "비속어가 존재하지 않습니다.",
-      "isProfane": false
-     }
-     ```
+- 요청 URL: `POST https://api.profanity-filter.run/api/v1/filter/basic`
+- 필요 파라미터:
+    - `word`: 검증할 문장 (예: "나쁜말")
+- 사용 예 (cURL):
+  ```bash
+  curl -X POST "https://api.profanity-filter.run/api/v1/filter/basic" \
+    -H "accept: application/json" \
+    -H "Content-Type: application/json" \
+    -d '{"word": "나쁜말"}'
+  ```
 
+- 응답 예:
+  ```json
+  {
+   "status": "OK",
+   "message": "비속어가 존재하지 않습니다.",
+   "isProfane": false
+  }
+  ```
 
 ### 주의사항
 
