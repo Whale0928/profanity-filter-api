@@ -1,11 +1,15 @@
 package app.core.data.response;
 
+import app.core.data.elapsed.Elapsed;
 import lombok.Builder;
 
+import java.util.List;
+import java.util.UUID;
+
 public record ApiResponse(
-        String trackingId,
+        UUID trackingId,
         Status status,
-        Detected[] detected,
+        List<Detected> detected,
         String filtered,
         Elapsed elapsed
 ) {

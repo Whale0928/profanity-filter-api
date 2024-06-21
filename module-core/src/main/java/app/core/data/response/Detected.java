@@ -5,6 +5,9 @@ package app.core.data.response;
  */
 public record Detected(
         int length,
-        String word
+        String filteredWord
 ) {
+    public static Detected of(int length, String filteredWord) {
+        return new Detected(length, filteredWord);
+    }
 }
