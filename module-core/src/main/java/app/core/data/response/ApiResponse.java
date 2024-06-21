@@ -11,9 +11,10 @@ public record ApiResponse(
         Status status,
         List<Detected> detected,
         String filtered,
-        Elapsed elapsed
+        Long elapsed
 ) {
     @Builder
-    public ApiResponse {
+    public ApiResponse(UUID trackingId, Status status, List<Detected> detected, String filtered, Elapsed elapsed) {
+        this(trackingId, status, detected, filtered, elapsed.getMilliseconds());
     }
 }

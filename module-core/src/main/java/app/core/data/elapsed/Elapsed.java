@@ -1,10 +1,12 @@
 package app.core.data.elapsed;
 
+import lombok.Getter;
 import org.springframework.lang.NonNull;
 
 /**
  * 처리 시간을 나타내는 값 입니다.
  */
+@Getter
 public class Elapsed {
     private final Long milliseconds;
 

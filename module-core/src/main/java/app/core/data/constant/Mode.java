@@ -11,8 +11,9 @@ public enum Mode {
 
     @JsonCreator
     public static Mode fromString(String value) {
-        return Arrays.stream(Mode.values()).findFirst()
+        return Arrays.stream(Mode.values())
                 .filter(mode -> mode.name().equalsIgnoreCase(value))
+                .findFirst()
                 .orElse(null);
     }
 }
