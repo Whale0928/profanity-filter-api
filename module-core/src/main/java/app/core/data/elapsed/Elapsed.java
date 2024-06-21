@@ -8,26 +8,30 @@ import org.springframework.lang.NonNull;
  */
 @Getter
 public class Elapsed {
-    private final Long milliseconds;
+    private final Double milliseconds;
+    private final Double microseconds;
+    private final Double seconds;
 
-    public Elapsed(long milliseconds) {
+    protected Elapsed(double milliseconds, double microseconds, double seconds) {
         this.milliseconds = milliseconds;
+        this.microseconds = microseconds;
+        this.seconds = seconds;
     }
 
     public static Elapsed end(@NonNull ElapsedStartAt startAt) {
         Long start = startAt.getStartAt();
         Long end = System.nanoTime();
 
-        long totalMilliseconds = (end - start) / 1_000_000; // 나노초에서 밀리초로 변환
-        return new Elapsed(totalMilliseconds);
-    }
+        long totalNanoseconds = end - start;
+        double totalMilliseconds = totalNanoseconds / 1_000_000.0; // 나노초 => 밀리초
+        double totalMicroseconds = totalNanoseconds / 1_000.0; // 나노초 => 마이크로초
+        double totalSeconds = totalNanoseconds / 1_000_000_000.0; // 나노초 => 초
 
-    public Long milliseconds() {
-        return milliseconds;
+        return new Elapsed(totalMilliseconds, totalMicroseconds, totalSeconds);
     }
 
     @Override
     public String toString() {
-        return milliseconds + " ms";
+        return String.format("%.8f s / %.5f ms / %.3f µs", seconds, milliseconds, microseconds);
     }
 }
