@@ -1,45 +1,39 @@
 package app.application;
 
-import app.core.data.response.ProfanityResponse;
+import app.core.data.constant.Mode;
+import app.core.data.response.ApiResponse;
+import app.request.ApiRequest;
+import jakarta.validation.constraints.NotNull;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
-
-import java.util.Collection;
 
 @Service
 public class ProfanityService {
 
-    private final DataSourceProfanityFilter dataSourceProfanityFilter;
-    private final RegexProfanityFilter regexProfanityFilter;
+    private static final Logger log = LogManager.getLogger(ProfanityService.class);
+    private final ProfanityFilterService filterService;
 
-    public ProfanityService(
-            DataSourceProfanityFilter dataSourceProfanityFilter,
-            RegexProfanityFilter regexProfanityFilter
+
+    public ProfanityService(ProfanityFilterService profanityFilterService) {
+        this.filterService = profanityFilterService;
+    }
+
+    public ApiResponse basicFilter(
+            @NotNull(message = "검사할 대상은 필수입니다.") String text,
+            @NotNull(message = "검사 방식은 필수입니다.") Mode mode
     ) {
-        this.dataSourceProfanityFilter = dataSourceProfanityFilter;
-        this.regexProfanityFilter = regexProfanityFilter;
+        log.info("[API] : request basicFilter: text={}, mode={}", text, mode);
+        return filterService.requestFacadeFilter(text, mode);
     }
 
-    public ProfanityResponse basicFilter(String word) {
-        // 정규 표현식 필터 결과
-        boolean regexResult = regexProfanityFilter.containsProfanity(word);
-        // 데이터 소스 필터 결과
-        Collection<?> emits = dataSourceProfanityFilter.containsProfanity(word);
-
-        // regexResult가 true이거나 emits가 비어있지 않은 경우 true 반환
-        boolean result = regexResult || !emits.isEmpty();
-
-        return ProfanityResponse.success(result);
+    public ApiResponse advancedFilter(String word) {
+        return null;
     }
 
-    public ProfanityResponse advancedFilter(String word) {
-        // 정규 표현식 필터 결과
-        boolean regexResult = regexProfanityFilter.containsProfanity(word);
-        // 데이터 소스 필터 결과
-        Collection<?> emits = dataSourceProfanityFilter.containsProfanity(word);
-
-        // regexResult가 true이거나 emits가 비어있지 않은 경우 true 반환
-        boolean result = regexResult || !emits.isEmpty();
-
-        return ProfanityResponse.success(result);
+    public Object healthCheck(ApiRequest request) {
+        log.debug("[API] : request healthCheck: request={}", request);
+        log.debug("async: {}", request.isAsync());
+        return request;
     }
 }

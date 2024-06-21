@@ -1,6 +1,8 @@
 package app.ui;
 
 import app.application.ProfanityService;
+import app.request.ApiRequest;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,23 +25,23 @@ public class ProfanityController {
         this.profanityService = profanityService;
     }
 
-    @PostMapping("/basic")
-    public ResponseEntity<?> basicProfanity(
-            @RequestBody String word
-    ) {
-        Objects.requireNonNull(word, "단어는 필수 입니다.");
+    @PostMapping
+    public ResponseEntity<?> basicProfanity(@RequestBody @Valid ApiRequest request) {
         return ResponseEntity.ok(
-                profanityService.basicFilter(word)
+                profanityService.basicFilter(request.text(), request.mode())
         );
     }
 
     @GetMapping("/advanced")
-    public ResponseEntity<?> advancedProfanity(
-            @RequestParam("word") String word
-    ) {
+    public ResponseEntity<?> advancedProfanity(@RequestParam("word") String word) {
         Objects.requireNonNull(word, "단어는 필수 입니다.");
         return ResponseEntity.ok(
                 profanityService.advancedFilter(word)
         );
+    }
+
+    @PostMapping("/health")
+    public ResponseEntity<?> healthCheck(@RequestBody @Valid ApiRequest request) {
+        return ResponseEntity.ok(profanityService.healthCheck(request));
     }
 }
