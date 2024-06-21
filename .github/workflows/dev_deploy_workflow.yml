@@ -1,17 +1,12 @@
 name: deploy workflow
 
 on:
-  pull_request:
-    types: [ closed ]
-    branches:
-      - main
   push:
     branches:
       - main
 
 jobs:
   build-and-push:
-    # if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
