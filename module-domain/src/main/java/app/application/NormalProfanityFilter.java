@@ -44,7 +44,7 @@ public class NormalProfanityFilter {
                 .collect(Collectors.toSet());
 
         trie = Trie.builder()
-                .ignoreOverlaps()
+                //.ignoreOverlaps()
                 .addKeywords(collect)
                 .build();
 

@@ -11,7 +11,9 @@ import app.dto.response.FilterWord;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static app.core.data.response.constant.StatusCode.OK;
 
@@ -43,26 +45,36 @@ public class ProfanityFilterExecutor implements ProfanityFilterService {
 
     @Override
     public ApiResponse quickFilter(String word) {
-        ElapsedStartAt start = ElapsedStartAt.now();
         Boolean profanity = quickProfanityFilter.containsProfanity(word);
-        Elapsed end = Elapsed.end(start);
 
         if (profanity) {
+            ElapsedStartAt start = ElapsedStartAt.now();
+            FilterWord filterWord = normalProfanityFilter.firstMatched(word);
+            Elapsed elapsed = Elapsed.end(start);
+
+            Set<Detected> detected = Set.of(Detected.of(filterWord.length(), filterWord.word()));
+
             return ApiResponse.builder()
                     .trackingId(UUID.randomUUID())
                     .status(Status.of(OK))
-                    .detected(List.of(Detected.of(word.length(), word)))
+                    .detected(detected)
                     .filtered("")
-                    .elapsed(end)
+                    .elapsed(elapsed)
                     .build();
         }
-        return normalFilter(word);
+        return ApiResponse.builder()
+                .trackingId(UUID.randomUUID())
+                .status(Status.of(OK))
+                .detected(null)
+                .filtered("")
+                .elapsed(null)
+                .build();
     }
 
     @Override
     public ApiResponse normalFilter(String word) {
         final FilterResponse filterResponse = normalProfanityFilter.allMatched(word);
-        final List<Detected> detects = detects(filterResponse.filterWords());
+        final Set<Detected> detects = detects(filterResponse.filterWords());
 
         return ApiResponse.builder()
                 .trackingId(UUID.randomUUID())
@@ -76,7 +88,7 @@ public class ProfanityFilterExecutor implements ProfanityFilterService {
     @Override
     public ApiResponse sanitizeProfanity(String word) {
         final FilterResponse filterResponse = normalProfanityFilter.allMatched(word);
-        final List<Detected> detects = detects(filterResponse.filterWords());
+        final Set<Detected> detects = detects(filterResponse.filterWords());
         final String masked = masked(word, filterResponse.filterWords());
 
         return ApiResponse.builder()
@@ -93,10 +105,10 @@ public class ProfanityFilterExecutor implements ProfanityFilterService {
         advancedProfanityFilter.call();
     }
 
-    private List<Detected> detects(List<FilterWord> filterWords) {
+    private Set<Detected> detects(List<FilterWord> filterWords) {
         return filterWords.stream()
                 .map(w -> Detected.of(w.length(), w.word()))
-                .toList();
+                .collect(Collectors.toSet());
     }
 
     private String masked(String word, List<FilterWord> filterWords) {
