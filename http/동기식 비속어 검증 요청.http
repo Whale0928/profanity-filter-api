@@ -1,4 +1,4 @@
-### 노말 모델 비속어를 검증할 수 있다.
+### 퀵 모델 비속어를 검증할 수 있다.
 POST {{host}}/api/v1/filter
 Content-Type: application/json
 
