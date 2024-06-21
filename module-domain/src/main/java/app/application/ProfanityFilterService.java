@@ -42,4 +42,6 @@ public interface ProfanityFilterService {
      * @return the api response
      */
     ApiResponse sanitizeProfanity(String text);
+
+    void advancedFilter(String text);
 }
