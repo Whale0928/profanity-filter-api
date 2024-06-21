@@ -1,7 +1,0 @@
-### 비속어를 검증할 수 있다.
-POST http://localhost:9999/api/v1/filter/basic
-Content-Type: application/json
-
-{
-  "word": "hello"
-}

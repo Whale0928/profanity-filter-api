@@ -63,3 +63,34 @@
 - API 스펙은 변경될 수 있습니다. 변경 시에는 문서를 통해 공지하겠습니다. 추구하고자 하는 모델은 [KISO 이용자 보호 시스템 API 서비스](https://www.safekiso.com/) 입니다.
 
 > 추가적인 문의 사항은 rlagusrl928@gmail.com으로 연락 혹은 issue를 등록해주세요.
+
+
+
+```mermaid
+classDiagram
+    class ProfanityService {
+        - ProfanityFilterService filterService
+        + ProfanityService(ProfanityFilterService profanityFilterService)
+        + ApiResponse basicFilter(String text, Mode mode)
+        + ApiResponse advancedFilter(String word)
+    }
+
+    class ProfanityFilterService {
+        <<interface>>
+        + ApiResponse requestFacadeFilter(String text, Mode mode)
+        + ApiResponse quickFilter(String text)
+        + ApiResponse normalFilter(String text)
+        + ApiResponse sanitizeProfanity(String text)
+    }
+
+    class ProfanityFilterExecutor {
+        + ApiResponse requestFacadeFilter(String text, Mode mode)
+        + ApiResponse quickFilter(String text)
+        + ApiResponse normalFilter(String text)
+        + ApiResponse sanitizeProfanity(String text)
+    }
+
+    ProfanityService --> ProfanityFilterService: depends on
+    ProfanityFilterService <|-- ProfanityFilterExecutor: implements
+
+```
