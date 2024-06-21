@@ -39,4 +39,9 @@ public class ProfanityController {
                 profanityService.advancedFilter(word)
         );
     }
+
+    @PostMapping("/health")
+    public ResponseEntity<?> healthCheck(@RequestBody @Valid ApiRequest request) {
+        return ResponseEntity.ok(profanityService.healthCheck(request));
+    }
 }

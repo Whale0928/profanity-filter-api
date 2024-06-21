@@ -2,6 +2,7 @@ package app.application;
 
 import app.core.data.constant.Mode;
 import app.core.data.response.ApiResponse;
+import app.request.ApiRequest;
 import jakarta.validation.constraints.NotNull;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -28,5 +29,11 @@ public class ProfanityService {
 
     public ApiResponse advancedFilter(String word) {
         return null;
+    }
+
+    public Object healthCheck(ApiRequest request) {
+        log.debug("[API] : request healthCheck: request={}", request);
+        log.debug("async: {}", request.isAsync());
+        return request;
     }
 }
