@@ -16,6 +16,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static app.core.data.response.constant.StatusCode.OK;
+import static java.util.Collections.emptySet;
 
 @Service
 public class ProfanityFilterExecutor implements ProfanityFilterService {
@@ -45,7 +46,9 @@ public class ProfanityFilterExecutor implements ProfanityFilterService {
 
     @Override
     public ApiResponse quickFilter(String word) {
+        ElapsedStartAt outBoundStart = ElapsedStartAt.now();
         Boolean profanity = quickProfanityFilter.containsProfanity(word);
+        Elapsed outBoundlapsed = Elapsed.end(outBoundStart);
 
         if (profanity) {
             ElapsedStartAt start = ElapsedStartAt.now();
@@ -62,12 +65,13 @@ public class ProfanityFilterExecutor implements ProfanityFilterService {
                     .elapsed(elapsed)
                     .build();
         }
+
         return ApiResponse.builder()
                 .trackingId(UUID.randomUUID())
                 .status(Status.of(OK))
-                .detected(null)
+                .detected(emptySet())
                 .filtered("")
-                .elapsed(null)
+                .elapsed(outBoundlapsed)
                 .build();
     }
 

@@ -3,9 +3,11 @@ package app.ui;
 import app.application.ProfanityService;
 import app.request.ApiRequest;
 import jakarta.validation.Valid;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,8 +27,15 @@ public class ProfanityController {
         this.profanityService = profanityService;
     }
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> basicProfanity(@RequestBody @Valid ApiRequest request) {
+        return ResponseEntity.ok(
+                profanityService.basicFilter(request.text(), request.mode())
+        );
+    }
+
+    @PostMapping(consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+    public ResponseEntity<?> basicProfanityByUrlencodedValue(@ModelAttribute @Valid ApiRequest request) {
         return ResponseEntity.ok(
                 profanityService.basicFilter(request.text(), request.mode())
         );
