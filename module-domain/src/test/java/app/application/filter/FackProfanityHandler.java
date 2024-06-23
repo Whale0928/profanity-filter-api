@@ -1,11 +1,11 @@
 package app.application.filter;
 
-import app.core.data.constant.Mode;
 import app.core.data.response.ApiResponse;
+import app.dto.request.FilterRequest;
 
 public class FackProfanityHandler implements ProfanityHandler {
     @Override
-    public ApiResponse requestFacadeFilter(String text, Mode mode) {
+    public ApiResponse requestFacadeFilter(FilterRequest filterRequest) {
         return null;
     }
 

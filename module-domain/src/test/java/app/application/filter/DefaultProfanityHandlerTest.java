@@ -1,5 +1,6 @@
 package app.application.filter;
 
+import app.application.event.FakeApplicationEventPublisher;
 import app.core.data.response.ApiResponse;
 import app.core.data.response.Detected;
 import app.domain.InmemoryProfanityRepository;
@@ -26,13 +27,14 @@ class DefaultProfanityHandlerTest {
         QuickProfanityFilter quickProfanityFilter = new QuickProfanityFilter();
         NormalProfanityFilter normalProfanityFilter = new NormalProfanityFilter(repository);
         AdvancedProfanityFilter advancedProfanityFilter = new AdvancedProfanityFilter();
+        FakeApplicationEventPublisher eventPublisher = new FakeApplicationEventPublisher();
 
         repository.save(ProfanityWord.create("욕설"));
         repository.save(ProfanityWord.create("나쁜놈"));
         repository.save(ProfanityWord.create("비속어"));
         normalProfanityFilter.synchronizeProfanityTrie();
 
-        ProfanityHandler = new DefaultProfanityHandler(quickProfanityFilter, normalProfanityFilter, advancedProfanityFilter);
+        ProfanityHandler = new DefaultProfanityHandler(quickProfanityFilter, normalProfanityFilter, advancedProfanityFilter, eventPublisher);
     }
 
 

@@ -1,18 +1,17 @@
 package app.application.filter;
 
-import app.core.data.constant.Mode;
 import app.core.data.response.ApiResponse;
+import app.dto.request.FilterRequest;
 
 public interface ProfanityHandler {
 
     /**
      * 모드에 따라 적절한 필터링을 수행합니다.
      *
-     * @param text the text
-     * @param mode the mode
+     * @param request 요청 객체
      * @return the api response
      */
-    ApiResponse requestFacadeFilter(String text, Mode mode);
+    ApiResponse requestFacadeFilter(FilterRequest request);
 
     /**
      * 빠른 필터링을 수행합니다.
