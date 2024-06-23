@@ -30,10 +30,10 @@
 
 ## API Guide
 
-- 요청 URL: `POST https://api.profanity-filter.run/api/v1/filter/basic`
+- 요청 URL: `POST https://api.profanity-filter.run/api/v1/filter/`
 - headers
+    - `Content-Type: application/json` or `application/x-www-form-urlencoded`
     - `accept: application/json`
-    - `Content-Type: application/json`
     - `x-api-key: {API_KEY}`
         - API_KEY는 제공되는 API_KEY를 사용해주세요. (현재는 무료로 제공중입니다.)
 - parameters:
@@ -87,7 +87,7 @@ import java.util.Collections;
 
 public class ProfanityFilterClient {
 
-    private static final String API_URL = "https://api.profanity-filter.run/api/v1/filter/basic";
+    private static final String API_URL = "https://api.profanity-filter.run/api/v1/filter/";
     private static final String API_KEY = "YOUR_API_KEY";
 
     public String filterProfanity(String text, String mode, String callbackUrl) {
