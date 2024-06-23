@@ -103,7 +103,10 @@ public class Records {
         return updatedAt;
     }
 
-    // Builder class
+    /**
+     * The type Builder.
+     */
+// Builder class
     public static class Builder {
         private UUID trackingId;
         private String apiKey;
