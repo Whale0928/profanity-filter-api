@@ -1,4 +1,4 @@
-package app.application;
+package app.application.filter;
 
 import org.springframework.stereotype.Service;
 
@@ -7,6 +7,6 @@ public class AdvancedProfanityFilter {
 
     public void call() {
         //TODO: Implement this method
-        System.out.println("AdvancedProfanityFilter called");
+        System.out.println("[domain] AdvancedProfanityFilter called");
     }
 }

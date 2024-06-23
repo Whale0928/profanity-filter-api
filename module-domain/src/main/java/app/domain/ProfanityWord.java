@@ -1,6 +1,6 @@
 package app.domain;
 
-import app.domain.constant.isUsed;
+import app.domain.constant.isUsedType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -22,15 +22,19 @@ public class ProfanityWord {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private isUsed isUsed;
+    private isUsedType isUsed;
 
     protected ProfanityWord() {
     }
 
-    public ProfanityWord(Long id, String word, app.domain.constant.isUsed isUsed) {
+    public ProfanityWord(Long id, String word, isUsedType isUsed) {
         this.id = id;
         this.word = word;
         this.isUsed = isUsed;
+    }
+
+    public static ProfanityWord create(String word) {
+        return new ProfanityWord(null, word, isUsedType.Y);
     }
 
     public Long getId() {
@@ -41,7 +45,7 @@ public class ProfanityWord {
         return word;
     }
 
-    public app.domain.constant.isUsed getIsUsed() {
+    public isUsedType getIsUsed() {
         return isUsed;
     }
 }

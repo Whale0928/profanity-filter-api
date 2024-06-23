@@ -8,6 +8,9 @@ dependencies {
 
     // ahocorasick
     implementation 'org.ahocorasick:ahocorasick:0.6.3'
+
+    //UUID v7
+    implementation 'com.github.f4b6a3:uuid-creator:5.3.3'
 }
 
 tasks.register("prepareKotlinBuildScriptModel") {}

@@ -1,3 +1,4 @@
+version: '3.8'
 services:
   profanity-filter-api:
     build:
@@ -8,3 +9,4 @@ services:
       - "9999:9999"
     environment:
       - SPRING_PROFILES_ACTIVE=prod
+    command: [ "java", "-Djava.net.preferIPv4Stack=true", "-Djava.net.preferIPv4Addresses=true", "-jar", "/app.jar" ]

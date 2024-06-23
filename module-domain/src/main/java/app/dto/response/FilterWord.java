@@ -13,4 +13,8 @@ public record FilterWord(
     ) {
         return new FilterWord(word, word.length(), start, end);
     }
+
+    public static FilterWord empty() {
+        return new FilterWord("", 0, 0, 0);
+    }
 }

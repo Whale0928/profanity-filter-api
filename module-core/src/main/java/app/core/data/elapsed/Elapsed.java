@@ -30,6 +30,10 @@ public class Elapsed {
         return new Elapsed(totalMilliseconds, totalMicroseconds, totalSeconds);
     }
 
+    public static Elapsed zero() {
+        return new Elapsed(0, 0, 0);
+    }
+
     @Override
     public String toString() {
         return String.format("%.8f s / %.5f ms / %.3f µs", seconds, milliseconds, microseconds);
