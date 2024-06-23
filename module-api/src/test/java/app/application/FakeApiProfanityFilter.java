@@ -1,8 +1,8 @@
 package app.application;
 
 import app.application.filter.ProfanityHandler;
-import app.core.data.constant.Mode;
 import app.core.data.response.ApiResponse;
+import app.dto.request.FilterRequest;
 import app.request.ApiRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,9 +16,9 @@ public class FakeApiProfanityFilter implements ProfanityFilterService {
     }
 
     @Override
-    public ApiResponse basicFilter(String text, Mode mode) {
+    public ApiResponse basicFilter(FilterRequest filterRequest) {
         log.info("[API] fake call : basicFilter");
-        return filterService.requestFacadeFilter(text, mode);
+        return filterService.requestFacadeFilter(filterRequest);
     }
 
     @Override

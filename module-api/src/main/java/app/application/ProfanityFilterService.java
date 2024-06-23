@@ -1,11 +1,11 @@
 package app.application;
 
-import app.core.data.constant.Mode;
 import app.core.data.response.ApiResponse;
+import app.dto.request.FilterRequest;
 import app.request.ApiRequest;
 
 public interface ProfanityFilterService {
-    ApiResponse basicFilter(String text, Mode mode);
+    ApiResponse basicFilter(FilterRequest filterRequest);
 
     ApiResponse advancedFilter(String word);
 

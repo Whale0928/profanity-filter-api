@@ -8,6 +8,7 @@ import app.core.data.response.ApiResponse;
 import app.core.data.response.Detected;
 import app.core.data.response.Status;
 import app.core.data.response.constant.StatusCode;
+import app.dto.request.FilterRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -23,7 +24,10 @@ public class FakeProfanityHandler implements ProfanityHandler {
     private static final Logger log = LogManager.getLogger(FakeProfanityHandler.class);
 
     @Override
-    public ApiResponse requestFacadeFilter(String text, Mode mode) {
+    public ApiResponse requestFacadeFilter(FilterRequest filterRequest) {
+        Mode mode = filterRequest.mode();
+        String text = filterRequest.text();
+
         return switch (mode) {
             case QUICK -> quickFilter(text);
             case NORMAL -> normalFilter(text);
