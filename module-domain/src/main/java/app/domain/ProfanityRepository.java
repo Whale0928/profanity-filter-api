@@ -10,4 +10,6 @@ public interface ProfanityRepository {
     ProfanityWord save(ProfanityWord profanityWord);
 
     List<ProfanityWord> findAll();
+
+    void deleteAll();
 }

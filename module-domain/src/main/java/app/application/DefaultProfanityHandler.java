@@ -10,7 +10,6 @@ import app.dto.response.FilterResponse;
 import app.dto.response.FilterWord;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -19,13 +18,13 @@ import static app.core.data.response.constant.StatusCode.OK;
 import static java.util.Collections.emptySet;
 
 @Service
-public class ProfanityFilterExecutor implements ProfanityFilterService {
+public class DefaultProfanityHandler implements ProfanityHandler {
 
     private final QuickProfanityFilter quickProfanityFilter;
     private final NormalProfanityFilter normalProfanityFilter;
     private final AdvancedProfanityFilter advancedProfanityFilter;
 
-    public ProfanityFilterExecutor(
+    public DefaultProfanityHandler(
             QuickProfanityFilter quickProfanityFilter,
             NormalProfanityFilter normalProfanityFilter,
             AdvancedProfanityFilter advancedProfanityFilter
@@ -105,17 +104,18 @@ public class ProfanityFilterExecutor implements ProfanityFilterService {
     }
 
     @Override
-    public void advancedFilter(String text) {
+    public ApiResponse advancedFilter(String text) {
         advancedProfanityFilter.call();
+        return sanitizeProfanity(text);
     }
 
-    private Set<Detected> detects(List<FilterWord> filterWords) {
+    private Set<Detected> detects(Set<FilterWord> filterWords) {
         return filterWords.stream()
                 .map(w -> Detected.of(w.length(), w.word()))
                 .collect(Collectors.toSet());
     }
 
-    private String masked(String word, List<FilterWord> filterWords) {
+    private String masked(String word, Set<FilterWord> filterWords) {
         return filterWords.stream()
                 .reduce(word, (w, f) -> w.replace(f.word(), "*".repeat(f.length())), String::concat);
     }

@@ -3,7 +3,7 @@ package app.application;
 import app.core.data.constant.Mode;
 import app.core.data.response.ApiResponse;
 
-public interface ProfanityFilterService {
+public interface ProfanityHandler {
 
     /**
      * 모드에 따라 적절한 필터링을 수행합니다.
@@ -43,5 +43,10 @@ public interface ProfanityFilterService {
      */
     ApiResponse sanitizeProfanity(String text);
 
-    void advancedFilter(String text);
+    /**
+     *
+     *
+     * @param text the text
+     */
+    ApiResponse advancedFilter(String text);
 }
