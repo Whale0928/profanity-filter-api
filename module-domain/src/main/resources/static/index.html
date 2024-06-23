@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>필터링 요청 페이지</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #e8f5e9;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            display: flex;
+            gap: 20px;
+        }
+
+        .box {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            height: fit-content;
+        }
+
+        h1 {
+            color: #388e3c;
+            text-align: center;
+        }
+
+        input[type="text"], select {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            background-color: #388e3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #2e7d32;
+        }
+
+        .response-box {
+            background-color: #f0f4c3;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 500px;
+            max-height: 700px;
+            overflow-y: auto;
+        }
+
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="box">
+        <h1>필터링 요청</h1>
+        <form id="filterForm">
+            <label for="url">요청 URL:</label>
+            <input id="url" name="url" required type="text" value="http://localhost:9999/api/v1/filter">
+
+            <label for="text">필터링할 단어:</label>
+            <input id="text" name="text" required type="text">
+
+            <label for="mode">모드 선택:</label>
+            <select id="mode" name="mode">
+                <option value="quick">빠른 모드</option>
+                <option value="normal">일반 모드</option>
+                <option value="filter">필터 모드</option>
+            </select>
+
+            <label for="apiKey">API Key:</label>
+            <input id="apiKey" name="apiKey" required type="text" value="dsadqjenwqjnd">
+
+            <label for="referrer">Referer:</label>
+            <input id="referrer" name="referrer" required type="text" value="https://google.com">
+
+            <button onclick="sendJsonRequest()" type="button">JSON 요청 전송</button>
+            <button onclick="sendFormRequest()" type="button">폼 요청 전송</button>
+        </form>
+    </div>
+    <div class="response-box">
+        <h1>응답</h1>
+        <pre id="responseJson">여기에 응답이 표시됩니다...</pre>
+    </div>
+</div>
+
+<script>
+    function sendJsonRequest() {
+        const text = document.getElementById('text').value;
+        const mode = document.getElementById('mode').value;
+        const apiKey = document.getElementById('apiKey').value;
+        const referrer = document.getElementById('referrer').value;
+        const url = document.getElementById('url').value;
+
+        const jsonData = JSON.stringify({mode: mode, text: text});
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': apiKey,
+                'Referer': referrer
+            },
+            body: jsonData
+        })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('responseJson').textContent = JSON.stringify(data, null, 2);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('responseJson').textContent = 'Error: ' + error;
+            });
+    }
+
+    function sendFormRequest() {
+        const text = document.getElementById('text').value;
+        const mode = document.getElementById('mode').value;
+        const apiKey = document.getElementById('apiKey').value;
+        const referrer = document.getElementById('referrer').value;
+        const url = document.getElementById('url').value;
+
+        const formData = new URLSearchParams();
+        formData.append('mode', mode);
+        formData.append('text', text);
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'x-api-key': apiKey,
+                'Referer': referrer
+            },
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('responseJson').textContent = JSON.stringify(data, null, 2);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('responseJson').textContent = 'Error: ' + error;
+            });
+    }
+</script>
+</body>
+</html>

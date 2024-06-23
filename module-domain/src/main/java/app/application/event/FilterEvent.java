@@ -6,11 +6,13 @@ import app.dto.request.FilterRequest;
 
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public record FilterEvent(
         UUID trackingId,
         String apiKey,
-        Set<Detected> words,
+        String requestText,
+        Set<String> words,
         String referrer,
         String ip
 ) {
@@ -21,7 +23,8 @@ public record FilterEvent(
         return new FilterEvent(
                 apiResponse.trackingId(),
                 filterRequest.apiKey(),
-                apiResponse.detected(),
+                filterRequest.text(),
+                apiResponse.detected().stream().map(Detected::filteredWord).collect(Collectors.toSet()),
                 filterRequest.referrer(),
                 filterRequest.clientIp()
         );
