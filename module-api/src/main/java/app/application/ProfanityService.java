@@ -9,16 +9,16 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
 @Service
-public class ProfanityService {
+public class ProfanityService implements ProfanityFilter {
 
     private static final Logger log = LogManager.getLogger(ProfanityService.class);
-    private final ProfanityFilterService filterService;
+    private final ProfanityHandler filterService;
 
-
-    public ProfanityService(ProfanityFilterService profanityFilterService) {
-        this.filterService = profanityFilterService;
+    public ProfanityService(ProfanityHandler profanityHandler) {
+        this.filterService = profanityHandler;
     }
 
+    @Override
     public ApiResponse basicFilter(
             @NotNull(message = "검사할 대상은 필수입니다.") String text,
             @NotNull(message = "검사 방식은 필수입니다.") Mode mode
@@ -27,10 +27,13 @@ public class ProfanityService {
         return filterService.requestFacadeFilter(text, mode);
     }
 
-    public ApiResponse advancedFilter(String word) {
-        return null;
+    @Override
+    public ApiResponse advancedFilter(String text) {
+        log.info("[API] : request advancedFilter: text={}", text);
+        return filterService.advancedFilter(text);
     }
 
+    @Override
     public Object healthCheck(ApiRequest request) {
         log.debug("[API] : request healthCheck: request={}", request);
         log.debug("async: {}", request.isAsync());

@@ -1,6 +1,6 @@
 package app.ui;
 
-import app.application.ProfanityService;
+import app.application.ProfanityFilter;
 import app.request.ApiRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
@@ -21,12 +21,18 @@ import java.util.Objects;
 @RestController
 public class ProfanityController {
 
-    private final ProfanityService profanityService;
+    private final ProfanityFilter profanityService;
 
-    public ProfanityController(ProfanityService profanityService) {
+    public ProfanityController(ProfanityFilter profanityService) {
         this.profanityService = profanityService;
     }
 
+    /**
+     * APPLICATION_JSON_VALUE 미디어 타입으로 요청을 받는다.
+     *
+     * @param request the request
+     * @return the response entity
+     */
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> basicProfanity(@RequestBody @Valid ApiRequest request) {
         return ResponseEntity.ok(
@@ -34,6 +40,12 @@ public class ProfanityController {
         );
     }
 
+    /**
+     * APPLICATION_FORM_URLENCODED_VALUE 미디어 타입으로 요청을 받는다.
+     *
+     * @param request the request
+     * @return the response entity
+     */
     @PostMapping(consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public ResponseEntity<?> basicProfanityByUrlencodedValue(@ModelAttribute @Valid ApiRequest request) {
         return ResponseEntity.ok(
