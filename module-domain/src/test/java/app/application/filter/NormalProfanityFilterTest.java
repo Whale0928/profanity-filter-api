@@ -1,6 +1,6 @@
-package app.application;
+package app.application.filter;
 
-import app.domain.FakeProfanityRepository;
+import app.domain.InmemoryProfanityRepository;
 import app.domain.ProfanityWord;
 import app.dto.response.FilterResponse;
 import app.dto.response.FilterWord;
@@ -22,11 +22,11 @@ class NormalProfanityFilterTest {
 
     private static final Logger log = LogManager.getLogger(NormalProfanityFilterTest.class);
     private NormalProfanityFilter normalProfanityFilter;
-    private FakeProfanityRepository repository;
+    private InmemoryProfanityRepository repository;
 
     @BeforeEach
     void setUp() {
-        repository = new FakeProfanityRepository();
+        repository = new InmemoryProfanityRepository();
         normalProfanityFilter = new NormalProfanityFilter(repository);
 
         repository.save(ProfanityWord.create("욕설"));

@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public class FakeProfanityRepository implements ProfanityRepository {
+public class InmemoryProfanityRepository implements ProfanityRepository {
 
     private final Map<Long, ProfanityWord> repository = new HashMap<>();
 

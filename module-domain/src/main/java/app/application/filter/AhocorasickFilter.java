@@ -1,4 +1,4 @@
-package app.application;
+package app.application.filter;
 
 import java.util.List;
 

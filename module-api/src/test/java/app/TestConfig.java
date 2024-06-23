@@ -2,8 +2,8 @@ package app;
 
 import app.application.FakeApiProfanityFilter;
 import app.application.FakeProfanityHandler;
-import app.application.ProfanityFilter;
-import app.application.ProfanityHandler;
+import app.application.ProfanityFilterService;
+import app.application.filter.ProfanityHandler;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Primary;
 public class TestConfig {
     @Bean
     @Primary
-    public ProfanityFilter fakeProfanityFilter() {
+    public ProfanityFilterService fakeProfanityFilter() {
         return new FakeApiProfanityFilter(fakeProfanityFilterService());
     }
 

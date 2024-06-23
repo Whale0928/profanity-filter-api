@@ -1,5 +1,6 @@
 package app.application;
 
+import app.application.filter.ProfanityHandler;
 import app.core.data.constant.Mode;
 import app.core.data.elapsed.Elapsed;
 import app.core.data.elapsed.ElapsedStartAt;
@@ -20,8 +21,6 @@ public class FakeProfanityHandler implements ProfanityHandler {
 
     private static final List<String> profaityWordList = List.of("비속어", "욕설");
     private static final Logger log = LogManager.getLogger(FakeProfanityHandler.class);
-    //fd757a88-b8cf-4e9e-be7f-6087612e5b97
-    UUID trackingId = UUID.fromString("fd757a88-b8cf-4e9e-be7f-6087612e5b97");
 
     @Override
     public ApiResponse requestFacadeFilter(String text, Mode mode) {

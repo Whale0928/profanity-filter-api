@@ -1,4 +1,4 @@
-package app.application;
+package app.application.filter;
 
 import app.core.data.constant.Mode;
 import app.core.data.response.ApiResponse;

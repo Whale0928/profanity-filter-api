@@ -1,6 +1,6 @@
 package app.ui;
 
-import app.application.ProfanityFilter;
+import app.application.ProfanityFilterService;
 import app.request.ApiRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
@@ -21,9 +21,9 @@ import java.util.Objects;
 @RestController
 public class ProfanityController {
 
-    private final ProfanityFilter profanityService;
+    private final ProfanityFilterService profanityService;
 
-    public ProfanityController(ProfanityFilter profanityService) {
+    public ProfanityController(ProfanityFilterService profanityService) {
         this.profanityService = profanityService;
     }
 

@@ -1,5 +1,6 @@
 package app.application;
 
+import app.application.filter.ProfanityHandler;
 import app.core.data.constant.Mode;
 import app.core.data.response.ApiResponse;
 import app.request.ApiRequest;
@@ -9,7 +10,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
 @Service
-public class ProfanityService implements ProfanityFilter {
+public class ProfanityService implements ProfanityFilterService {
 
     private static final Logger log = LogManager.getLogger(ProfanityService.class);
     private final ProfanityHandler filterService;

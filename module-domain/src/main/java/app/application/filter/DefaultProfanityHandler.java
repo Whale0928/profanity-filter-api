@@ -1,4 +1,4 @@
-package app.application;
+package app.application.filter;
 
 import app.core.data.constant.Mode;
 import app.core.data.elapsed.Elapsed;
@@ -51,7 +51,7 @@ public class DefaultProfanityHandler implements ProfanityHandler {
 
         if (profanity) {
             ElapsedStartAt start = ElapsedStartAt.now();
-            FilterWord filterWord = normalProfanityFilter.firstMatched(word);
+            FilterWord filterWord = quickProfanityFilter.firstMatched(word);
             Elapsed elapsed = Elapsed.end(start);
 
             Set<Detected> detected = Set.of(Detected.of(filterWord.length(), filterWord.word()));

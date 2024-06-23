@@ -1,12 +1,13 @@
 package app.application;
 
+import app.application.filter.ProfanityHandler;
 import app.core.data.constant.Mode;
 import app.core.data.response.ApiResponse;
 import app.request.ApiRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class FakeApiProfanityFilter implements ProfanityFilter {
+public class FakeApiProfanityFilter implements ProfanityFilterService {
     private static final Logger log = LogManager.getLogger(ProfanityService.class);
     private final ProfanityHandler filterService;
 

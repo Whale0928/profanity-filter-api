@@ -1,4 +1,4 @@
-package app.application;
+package app.application.filter;
 
 import org.springframework.stereotype.Service;
 

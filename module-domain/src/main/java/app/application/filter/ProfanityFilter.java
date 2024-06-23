@@ -1,4 +1,4 @@
-package app.application;
+package app.application.filter;
 
 import app.dto.response.FilterResponse;
 import app.dto.response.FilterWord;
