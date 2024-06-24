@@ -9,4 +9,5 @@ services:
       - "9999:9999"
     environment:
       - SPRING_PROFILES_ACTIVE=prod
-    command: [ "java", "-Djava.net.preferIPv4Stack=true", "-Djava.net.preferIPv4Addresses=true", "-jar", "/app.jar" ]
+      - TZ=Asia/Seoul
+    command: [ "java", "-jar", "/app.jar" ]
