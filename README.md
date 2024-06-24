@@ -1,6 +1,8 @@
 <img width="1003" alt="image" src="https://github.com/Whale0928/profanity-filter-api/assets/75371249/924c007c-1b76-4c90-8b8b-ba361171e6f2">
 
-### 개발 진행중인 프로젝트입니다 문의사항은 Issue로 등록하거나 이메일로 문의바랍니다.
+#### 개발 진행중인 프로젝트입니다 문의사항은 Issue로 등록하거나 이메일로 문의바랍니다.
+
+[ Post. 비속어 검증 API 서비스 만들기 ](https://deadwhale.me/posts/profanity-filter-api/)
 
 ## History
 
