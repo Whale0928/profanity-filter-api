@@ -1,12 +1,48 @@
 version: '3.8'
 services:
-  profanity-filter-api:
+  profanity-filter-api-blue-1:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: profanity-filter-api
+    container_name: profanity-filter-api-blue-1
     ports:
       - "9999:9999"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - TZ=Asia/Seoul
+    command: [ "java", "-jar", "/app.jar" ]
+
+  profanity-filter-api-blue-2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: profanity-filter-api-blue-2
+    ports:
+      - "9998:9999"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - TZ=Asia/Seoul
+    command: [ "java", "-jar", "/app.jar" ]
+
+  profanity-filter-api-green-1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: profanity-filter-api-green-1
+    ports:
+      - "9997:9999"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - TZ=Asia/Seoul
+    command: [ "java", "-jar", "/app.jar" ]
+
+  profanity-filter-api-green-2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: profanity-filter-api-green-2
+    ports:
+      - "9996:9999"
     environment:
       - SPRING_PROFILES_ACTIVE=prod
       - TZ=Asia/Seoul

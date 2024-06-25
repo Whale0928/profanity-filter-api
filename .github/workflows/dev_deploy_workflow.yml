@@ -45,16 +45,14 @@ jobs:
             chmod +x gradlew
             ./gradlew build -x test
 
-      ## 개발 도커 실행
-      - name: docker compose up
+        ## deploy script
+      - name: Run deploy script
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.DEV_SERVER_IP }}
           username: ubuntu
           key: ${{ secrets.DEV_SSH_KEY }}
           script: |
-            cd /home/ubuntu/app/profanity-filter-api
-            docker stop profanity-filter-api || true
-            docker rm profanity-filter-api || true
-            docker-compose up -d --no-deps --build profanity-filter-api
-            docker image prune -f
+            cd /home/ubuntu/app/profanity-filter-api/script
+            chmod +x deploy.sh
+            ./deploy.sh

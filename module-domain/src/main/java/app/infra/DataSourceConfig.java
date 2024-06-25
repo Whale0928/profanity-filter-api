@@ -20,11 +20,11 @@ public class DataSourceConfig {
                 .build();
     }
 
-    @Bean(name = "secondDataSource")
-    @ConfigurationProperties("second.datasource.hikari")
-    public DataSource secondDataSource() {
-        return DataSourceBuilder.create()
-                .type(HikariDataSource.class)
-                .build();
-    }
+    // @Bean(name = "secondDataSource")
+    // @ConfigurationProperties("second.datasource.hikari")
+    // public DataSource secondDataSource() {
+    //     return DataSourceBuilder.create()
+    //             .type(HikariDataSource.class)
+    //             .build();
+    // }
 }
