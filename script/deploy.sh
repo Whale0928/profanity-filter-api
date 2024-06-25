@@ -6,6 +6,9 @@ DEPLOY_PATH="/home/ubuntu/app/$PROJECT_NAME"
 NGINX_CONFIG_PATH="/etc/nginx/sites-enabled/api.profanity-filter.run"
 LOG_DIR="/home/ubuntu/deploy-logs/$PROJECT_NAME"
 
+# 실행 권한 부여
+chmod +x ./check_environment.sh
+
 # 로그 디렉토리 생성 (없으면 생성)
 mkdir -p $LOG_DIR
 
