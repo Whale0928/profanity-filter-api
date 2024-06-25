@@ -24,9 +24,6 @@ echo "배포 스크립트 시작: $(date +"%Y-%m-%d %H:%M:%S")"
 # 현재 활성화된 환경 확인
 source ./check_environment.sh
 
-echo "현재 활성화된 환경: $ACTIVE_ENV"
-echo "비활성화된 환경: $INACTIVE_ENV"
-
 # 비활성화된 환경에 배포
 cd $DEPLOY_PATH
 if [ "$INACTIVE_ENV" = "green" ]; then
@@ -39,33 +36,19 @@ fi
 
 # 새 인스턴스가 준비될 때까지 대기
 echo "새 인스턴스가 준비될 때까지 대기 중..."
-
-max_retries=10
-retry_count=0
-success=false
-
-while [ $retry_count -lt $max_retries ]; do
-    if [ "$INACTIVE_ENV" = "green" ]; then
-        curl -f http://localhost:9997/system/actuator/health && curl -f http://localhost:9996/system/actuator/health
-    else
-        curl -f http://localhost:9999/system/actuator/health && curl -f http://localhost:9998/system/actuator/health
-    fi
-
-    if [ $? -eq 0 ]; then
-        success=true
-        break
-    fi
-
-    retry_count=$((retry_count + 1))
-    echo "건강 체크 시도 중... ($retry_count/$max_retries)"
-    sleep 5
-done
-
-if [ "$success" = false ]; then
-    echo "모든 건강 체크 시도가 실패했습니다. 다음 단계로 진행합니다."
+if [ "$INACTIVE_ENV" = "green" ]; then
+    until curl -f http://localhost:9997/system/actuator/health && curl -f http://localhost:9996/system/actuator/health; do
+        printf '.'
+        sleep 5
+    done
 else
-    echo "새 인스턴스가 정상적으로 실행 중입니다. Nginx 설정을 업데이트합니다."
+    until curl -f http://localhost:9999/system/actuator/health && curl -f http://localhost:9998/system/actuator/health; do
+        printf '.'
+        sleep 5
+    done
 fi
+
+echo "새 인스턴스가 정상적으로 실행 중입니다. Nginx 설정을 업데이트합니다."
 
 # 도커 이미지 정리
 docker image prune -f
