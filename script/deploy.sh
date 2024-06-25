@@ -19,16 +19,10 @@ exec > >(tee -a $LOG_FILE) 2>&1
 echo "배포 스크립트 시작: $(date +"%Y-%m-%d %H:%M:%S")"
 
 # 현재 활성화된 환경 확인
-if grep -q "server 127.0.0.1:9999;" $NGINX_CONFIG_PATH; then
-    ACTIVE_ENV="blue"
-    INACTIVE_ENV="green"
-else
-    ACTIVE_ENV="green"
-    INACTIVE_ENV="blue"
-fi
+source ./check_environment.sh
 
 echo "현재 활성화된 환경: $ACTIVE_ENV"
-echo "$INACTIVE_ENV 환경에 배포를 시작합니다"
+echo "비활성화된 환경: $INACTIVE_ENV"
 
 # 비활성화된 환경에 배포
 cd $DEPLOY_PATH
@@ -43,14 +37,12 @@ fi
 # 새 인스턴스가 준비될 때까지 대기
 echo "새 인스턴스가 준비될 때까지 대기 중..."
 if [ "$INACTIVE_ENV" = "green" ]; then
-    until [ "$(docker inspect --format='{{json .State.Health.Status}}' profanity-filter-api-green-1)" == "\"healthy\"" ] &&
-          [ "$(docker inspect --format='{{json .State.Health.Status}}' profanity-filter-api-green-2)" == "\"healthy\"" ]; do
+    until curl -f http://localhost:9997/system/actuator/health && curl -f http://localhost:9996/system/actuator/health; do
         printf '.'
         sleep 5
     done
 else
-    until [ "$(docker inspect --format='{{json .State.Health.Status}}' profanity-filter-api-blue-1)" == "\"healthy\"" ] &&
-          [ "$(docker inspect --format='{{json .State.Health.Status}}' profanity-filter-api-blue-2)" == "\"healthy\"" ]; do
+    until curl -f http://localhost:9999/system/actuator/health && curl -f http://localhost:9998/system/actuator/health; do
         printf '.'
         sleep 5
     done
@@ -63,15 +55,15 @@ docker image prune -f
 
 # Nginx 설정을 새로운 환경으로 전환
 if [ "$INACTIVE_ENV" = "green" ]; then
-    sed -i 's/server 127.0.0.1:9999;/# server 127.0.0.1:9999;/' $NGINX_CONFIG_PATH
-    sed -i 's/server 127.0.0.1:9998;/# server 127.0.0.1:9998;/' $NGINX_CONFIG_PATH
-    sed -i 's/# server 127.0.0.1:9997;/server 127.0.0.1:9997;/' $NGINX_CONFIG_PATH
-    sed -i 's/# server 127.0.0.1:9996;/server 127.0.0.1:9996;/' $NGINX_CONFIG_PATH
+    sudo sed -i 's/# server 127.0.0.1:9997;/server 127.0.0.1:9997;/' $NGINX_CONFIG_PATH
+    sudo sed -i 's/# server 127.0.0.1:9996;/server 127.0.0.1:9996;/' $NGINX_CONFIG_PATH
+    sudo sed -i 's/server 127.0.0.1:9999;/# server 127.0.0.1:9999;/' $NGINX_CONFIG_PATH
+    sudo sed -i 's/server 127.0.0.1:9998;/# server 127.0.0.1:9998;/' $NGINX_CONFIG_PATH
 else
-    sed -i 's/# server 127.0.0.1:9999;/server 127.0.0.1:9999;/' $NGINX_CONFIG_PATH
-    sed -i 's/# server 127.0.0.1:9998;/server 127.0.0.1:9998;/' $NGINX_CONFIG_PATH
-    sed -i 's/server 127.0.0.1:9997;/# server 127.0.0.1:9997;/' $NGINX_CONFIG_PATH
-    sed -i 's/server 127.0.0.1:9996;/# server 127.0.0.1:9996;/' $NGINX_CONFIG_PATH
+    sudo sed -i 's/server 127.0.0.1:9997;/# server 127.0.0.1:9997;/' $NGINX_CONFIG_PATH
+    sudo sed -i 's/server 127.0.0.1:9996;/# server 127.0.0.1:9996;/' $NGINX_CONFIG_PATH
+    sudo sed -i 's/# server 127.0.0.1:9999;/server 127.0.0.1:9999;/' $NGINX_CONFIG_PATH
+    sudo sed -i 's/# server 127.0.0.1:9998;/server 127.0.0.1:9998;/' $NGINX_CONFIG_PATH
 fi
 
 # Nginx 재시작
