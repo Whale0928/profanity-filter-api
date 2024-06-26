@@ -46,6 +46,6 @@ build
 src/main/generated
 application-dev.yml
 application-prod.yml
-/logs/error/20240627_profanity-filter.log
-/logs/info/20240627_profanity-filter.log
-/logs/warn/20240627_profanity-filter.log
+/logs/error/**
+/logs/info/**
+/logs/warn/**

@@ -27,11 +27,11 @@ source ./check_environment.sh
 # 비활성화된 환경에 배포
 cd $DEPLOY_PATH
 if [ "$INACTIVE_ENV" = "green" ]; then
-    docker-compose up -d --no-deps --build profanity-filter-api-green-1
-    docker-compose up -d --no-deps --build profanity-filter-api-green-2
+    docker-compose up -d --no-deps --build --remove-orphans profanity-filter-api-green-1
+    docker-compose up -d --no-deps --build --remove-orphans profanity-filter-api-green-2
 else
-    docker-compose up -d --no-deps --build profanity-filter-api-blue-1
-    docker-compose up -d --no-deps --build profanity-filter-api-blue-2
+    docker-compose up -d --no-deps --build --remove-orphans profanity-filter-api-blue-1
+    docker-compose up -d --no-deps --build --remove-orphans profanity-filter-api-blue-2
 fi
 
 # 새 인스턴스가 준비될 때까지 대기
@@ -79,5 +79,8 @@ else
     docker stop profanity-filter-api-green-1 profanity-filter-api-green-2
     docker rm profanity-filter-api-green-1 profanity-filter-api-green-2
 fi
+
+# 사용하지 않는 모든 도커 이미지, 컨테이너, 네트워크, 볼륨 제거
+docker system prune -a -f
 
 echo "$INACTIVE_ENV 환경으로 배포가 완료되었습니다: $(date +"%Y-%m-%d %H:%M:%S")"
