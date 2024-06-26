@@ -26,15 +26,15 @@ public class Records {
     private UUID trackingId;
 
     @Comment("API Key")
-    @Column(nullable = false)
+    @Column
     private String apiKey;
 
     @Comment("요청된 텍스트")
     @Column(nullable = false)
     private String requestText;
 
-    @Comment("필터링된 욕설들")
-    @Column(nullable = false)
+    @Comment("필터링 된 욕설들")
+    @Column
     private String words;
 
     @Comment("요청 referrer")
