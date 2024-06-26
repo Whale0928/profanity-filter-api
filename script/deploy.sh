@@ -85,6 +85,8 @@ else
 fi
 
 # 사용하지 않는 모든 도커 이미지, 컨테이너, 네트워크, 볼륨 제거
+# docker container prune -f
+# docker image prune -a -f
 docker system prune -a -f
 
 echo "$INACTIVE_ENV 환경으로 배포가 완료되었습니다: $(date +"%Y-%m-%d %H:%M:%S")"
