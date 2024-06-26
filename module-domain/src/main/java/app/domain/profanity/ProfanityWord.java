@@ -1,6 +1,6 @@
-package app.domain;
+package app.domain.profanity;
 
-import app.domain.constant.isUsedType;
+import app.domain.profanity.constant.isUsedType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

@@ -1,4 +1,4 @@
-package app.domain;
+package app.domain.profanity;
 
 import java.util.List;
 import java.util.Optional;

@@ -6,6 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -49,6 +50,12 @@ public class GlobalExceptionHandler {
         log.warn("예외 발생 : ", ex);
         String errorMessage = String.format("파라미터 '%s' 유형이어야 합니다. '%s'", ex.getName(), ex.getRequiredType().getSimpleName());
         return ApiResponse.error(UUID.randomUUID(), Status.of(BAD_REQUEST, errorMessage));
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ApiResponse> handleMissingServletRequestParameterException(MissingServletRequestParameterException ex) {
+        log.warn("예외 발생 : ", ex);
+        return ApiResponse.error(UUID.randomUUID(), Status.of(BAD_REQUEST, ex.getMessage()));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

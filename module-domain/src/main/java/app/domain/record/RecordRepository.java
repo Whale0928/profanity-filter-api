@@ -1,4 +1,4 @@
-package app.domain;
+package app.domain.record;
 
 import java.util.Optional;
 

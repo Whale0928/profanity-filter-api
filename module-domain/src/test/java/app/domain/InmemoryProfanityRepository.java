@@ -1,6 +1,8 @@
 package app.domain;
 
-import app.domain.constant.isUsedType;
+import app.domain.profanity.ProfanityRepository;
+import app.domain.profanity.ProfanityWord;
+import app.domain.profanity.constant.isUsedType;
 
 import java.util.HashMap;
 import java.util.List;

@@ -1,8 +1,8 @@
 package app.application.tracking;
 
 import app.application.event.FilterEvent;
-import app.domain.RecordRepository;
-import app.domain.Records;
+import app.domain.record.RecordRepository;
+import app.domain.record.Records;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;

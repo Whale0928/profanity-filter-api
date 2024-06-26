@@ -1,4 +1,4 @@
-package app.domain;
+package app.domain.record;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

@@ -2,8 +2,8 @@ package app.application.filter;
 
 import app.core.data.elapsed.Elapsed;
 import app.core.data.elapsed.ElapsedStartAt;
-import app.domain.ProfanityRepository;
-import app.domain.ProfanityWord;
+import app.domain.profanity.ProfanityRepository;
+import app.domain.profanity.ProfanityWord;
 import app.dto.response.FilterResponse;
 import app.dto.response.FilterWord;
 import jakarta.annotation.PostConstruct;

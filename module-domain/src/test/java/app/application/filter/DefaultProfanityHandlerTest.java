@@ -4,7 +4,7 @@ import app.application.event.FakeApplicationEventPublisher;
 import app.core.data.response.ApiResponse;
 import app.core.data.response.Detected;
 import app.domain.InmemoryProfanityRepository;
-import app.domain.ProfanityWord;
+import app.domain.profanity.ProfanityWord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.BeforeEach;

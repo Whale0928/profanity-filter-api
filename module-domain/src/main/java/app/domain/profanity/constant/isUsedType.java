@@ -1,4 +1,4 @@
-package app.domain.constant;
+package app.domain.profanity.constant;
 
 public enum isUsedType {
     Y("used"),

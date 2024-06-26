@@ -1,7 +1,7 @@
 package app.application.filter;
 
 import app.domain.InmemoryProfanityRepository;
-import app.domain.ProfanityWord;
+import app.domain.profanity.ProfanityWord;
 import app.dto.response.FilterResponse;
 import app.dto.response.FilterWord;
 import org.apache.logging.log4j.LogManager;
