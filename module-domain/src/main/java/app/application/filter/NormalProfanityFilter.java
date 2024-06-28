@@ -49,7 +49,8 @@ public class NormalProfanityFilter implements ProfanityFilter, AhocorasickFilter
                 .collect(Collectors.toSet());
 
         trie = Trie.builder()
-                //.ignoreOverlaps()
+                .ignoreOverlaps()
+                .ignoreCase()
                 .addKeywords(collect)
                 .build();
 
