@@ -1,7 +1,10 @@
 package app.domain.record;
 
+import app.core.data.constant.Mode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -24,6 +27,10 @@ public class Records {
     @Comment("요청 트래킹 ID")
     @Column(nullable = false, updatable = false, unique = true)
     private UUID trackingId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false,name = "mode")
+    private Mode mode;
 
     @Comment("API Key")
     @Column
@@ -110,6 +117,7 @@ public class Records {
     public static class Builder {
         private UUID trackingId;
         private String apiKey;
+        private Mode mode;
         private String requestText;
         private String words;
         private String referrer;
@@ -122,6 +130,11 @@ public class Records {
 
         public Builder apiKey(String apiKey) {
             this.apiKey = apiKey;
+            return this;
+        }
+
+        public Builder mode(Mode mode) {
+            this.mode = mode;
             return this;
         }
 
@@ -139,6 +152,7 @@ public class Records {
             this.referrer = referrer;
             return this;
         }
+
 
         public Builder ip(String ip) {
             this.ip = ip;

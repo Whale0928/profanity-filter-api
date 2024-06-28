@@ -1,5 +1,6 @@
 package app.application.event;
 
+import app.core.data.constant.Mode;
 import app.core.data.response.ApiResponse;
 import app.core.data.response.Detected;
 import app.dto.request.FilterRequest;
@@ -10,6 +11,7 @@ import java.util.stream.Collectors;
 
 public record FilterEvent(
         UUID trackingId,
+        Mode mode,
         String apiKey,
         String requestText,
         Set<String> words,
@@ -22,6 +24,7 @@ public record FilterEvent(
     ) {
         return new FilterEvent(
                 apiResponse.trackingId(),
+                filterRequest.mode(),
                 filterRequest.apiKey(),
                 filterRequest.text(),
                 apiResponse.detected().stream().map(Detected::filteredWord).collect(Collectors.toSet()),

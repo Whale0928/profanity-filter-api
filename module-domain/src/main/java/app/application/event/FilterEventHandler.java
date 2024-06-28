@@ -22,6 +22,7 @@ public class FilterEventHandler {
     @Transactional(propagation = REQUIRES_NEW)
     @TransactionalEventListener
     public void handle(FilterEvent event) {
+
         trackingRecorder.recordTracking(event);
         log.info("[DOMAIN] 이벤트 발행 성공 : event={}", event);
     }
