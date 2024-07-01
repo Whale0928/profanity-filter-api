@@ -30,9 +30,8 @@ public class DefaultTrackingRecorder implements TrackingRecorder {
     public void recordTracking(FilterEvent event) {
         log.info("[DOMAIN] record tracking : {}", event);
         String ip = event.ip();
-        // 로컬 호스트 IP와 매칭되는지 확인
-        boolean isLocalHost = localHostPatterns.stream().anyMatch(pattern -> matcher.match(pattern, ip));
 
+        boolean isLocalHost = localHostPatterns.stream().anyMatch(pattern -> matcher.match(pattern, ip));
         if (isLocalHost) {
             log.info("[DOMAIN] 로컬 호스트 IP로 인해 레코드 저장을 건너뜁니다 : {}", ip);
             return;
