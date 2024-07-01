@@ -29,7 +29,7 @@ public class Records {
     private UUID trackingId;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false,name = "mode")
+    @Column(nullable = false, name = "mode")
     private Mode mode;
 
     @Comment("API Key")
@@ -66,6 +66,7 @@ public class Records {
     // Private constructor for Builder
     private Records(Builder builder) {
         this.trackingId = builder.trackingId;
+        this.mode = builder.mode;
         this.apiKey = builder.apiKey;
         this.requestText = builder.requestText;
         this.words = builder.words;
@@ -113,7 +114,6 @@ public class Records {
     /**
      * The type Builder.
      */
-// Builder class
     public static class Builder {
         private UUID trackingId;
         private String apiKey;
@@ -167,6 +167,7 @@ public class Records {
         public String toString() {
             return "Builder{" +
                     "trackingId=" + trackingId +
+                    "mode=" + mode +
                     ", apiKey='" + apiKey + '\'' +
                     ", requestText='" + requestText + '\'' +
                     ", words='" + words + '\'' +
