@@ -22,7 +22,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static app.core.data.response.constant.StatusCode.OK;
-import static java.util.Collections.emptySet;
 
 @Service
 public class DefaultProfanityHandler implements ProfanityHandler {
@@ -67,32 +66,18 @@ public class DefaultProfanityHandler implements ProfanityHandler {
 
     @Override
     public ApiResponse quickFilter(String word) {
-        ElapsedStartAt outBoundStart = ElapsedStartAt.now();
-        Boolean profanity = quickProfanityFilter.containsProfanity(word);
-        Elapsed outBoundlapsed = Elapsed.end(outBoundStart);
+        ElapsedStartAt start = ElapsedStartAt.now();
+        FilterWord filterWord = quickProfanityFilter.firstMatched(word);
+        Elapsed elapsed = Elapsed.end(start);
 
-        if (profanity) {
-            ElapsedStartAt start = ElapsedStartAt.now();
-            FilterWord filterWord = quickProfanityFilter.firstMatched(word);
-            Elapsed elapsed = Elapsed.end(start);
-
-            Set<Detected> detected = Set.of(Detected.of(filterWord.length(), filterWord.word()));
-
-            return ApiResponse.builder()
-                    .trackingId(generateTrackingId())
-                    .status(Status.of(OK))
-                    .detected(detected)
-                    .filtered("")
-                    .elapsed(elapsed)
-                    .build();
-        }
+        Set<Detected> detected = Set.of(Detected.of(filterWord.length(), filterWord.word()));
 
         return ApiResponse.builder()
                 .trackingId(generateTrackingId())
                 .status(Status.of(OK))
-                .detected(emptySet())
+                .detected(detected)
                 .filtered("")
-                .elapsed(outBoundlapsed)
+                .elapsed(elapsed)
                 .build();
     }
 
