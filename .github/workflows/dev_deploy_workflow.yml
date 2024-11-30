@@ -3,7 +3,16 @@ name: deploy workflow
 on:
   push:
     branches:
-      - main
+      - develop
+  pull_request:
+    branches:
+      - deploy
+    types:
+      - closed
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build-and-push:
@@ -24,7 +33,7 @@ jobs:
           switches: -avzr --delete
           remote_path: /home/ubuntu/app/profanity-filter-api
           remote_host: ${{ secrets.DEV_SERVER_IP }}
-          remote_port:  ${{ secrets.DEV_SERVER_PORT }}
+          remote_port: ${{ secrets.DEV_SERVER_PORT }}
           remote_user: ubuntu
           remote_key: ${{ secrets.DEV_SSH_KEY }}
 
