@@ -3,7 +3,7 @@ name: deploy workflow
 on:
   push:
     branches:
-      - develop
+      - deploy
   pull_request:
     branches:
       - deploy
