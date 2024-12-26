@@ -1,4 +1,4 @@
-package app.ui;
+package app.presentation;
 
 import app.TestConfig;
 import app.core.data.response.ApiResponse;

@@ -1,4 +1,4 @@
-package app.ui;
+package app.presentation;
 
 import app.application.ProfanityFilterService;
 import app.dto.request.FilterRequest;
