@@ -1,6 +1,7 @@
 rootProject.name = 'profanity-filter-api'
 
-include('module-core')
-include('module-domain')
-include('module-api')
-include('module-batch')
+include('profanity-api')
+include('profanity-core')
+include('profanity-domain')
+include('profanity-storage:rdb')
+include('profanity-storage:redis')

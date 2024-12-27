@@ -8,7 +8,9 @@
 
 ## History
 
-- `11/30` 이사로 인한 서버 검증 및 재배포
+- `1/3` API Key 기반의 인증 방식 개발
+- `12/27` 순수한 아키텍처 개선을 목적으로 코드 리팩토링 진행
+- `11/30` 서버 컴퓨터 물리적 이동으로 인한 서버 검증 및 재배포
 - `7/6` 120+a 가량의 비속어 데이터베이스 추가
 - `7/1` 500+a 가량의 비속어 데이터베이스 추가
 - `2024.06` ~ 현재 서비스 운영 시작
@@ -71,87 +73,6 @@
 
 ### Usage Guide
 
-#### bash
-
-```bash
-    curl -X POST "https://api.profanity-filter.run/api/v1/filter" \
-    -H "accept: application/json" \
-    -H "Content-Type: application/json" \
-    -d '{"text": "나쁜말", "mode": "filter"}'
-```
-
-#### Java
-
-```java
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.http.MediaType;
-
-import java.util.Collections;
-
-public class ProfanityFilterClient {
-
-    private static final String API_URL = "https://api.profanity-filter.run/api/v1/filter/";
-    private static final String API_KEY = "YOUR_API_KEY";
-
-    public String filterProfanity(String text, String mode, String callbackUrl) {
-        RestTemplate restTemplate = new RestTemplate();
-
-        // Set the headers
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-        headers.set("x-api-key", API_KEY);
-
-        // Set the request body
-        String jsonInputString = String.format("{ \"text\": \"%s\", \"mode\": \"%s\", \"callbackUrl\": \"%s\" }", text, mode, callbackUrl);
-
-        // Create the request entity
-        HttpEntity<String> requestEntity = new HttpEntity<>(jsonInputString, headers);
-
-        // Make the request
-        ResponseEntity<String> response = restTemplate.exchange(API_URL, HttpMethod.POST, requestEntity, String.class);
-
-        // Check the response
-        if (response.getStatusCode().is2xxSuccessful()) {
-            return "Request was successful. Response body: " + response.getBody();
-        } else {
-            return "Request failed. Response code: " + response.getStatusCode();
-        }
-    }
-}
-```
-
-#### JavaScript
-
-```JavaScript
-const fetch = require('node-fetch');
-
-const url = 'https://api.profanity-filter.run/api/v1/filter/basic';
-const apiKey = 'YOUR_API_KEY';
-const data = {
-    text: '나쁜말',
-    mode: 'FILTER',
-    callbackUrl: 'http://example.com/callback'
-};
-
-fetch(url, {
-    method: 'POST',
-    headers: {
-        'accept': 'application/json',
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey
-    },
-    body: JSON.stringify(data)
-})
-    .then(response => response.json())
-    .then(data => console.log('Request was successful:', data))
-    .catch(error => console.error('Request failed:', error));
-```
-
 #### **응답 예**
 
 ```json
@@ -185,6 +106,12 @@ fetch(url, {
   "elapsed": "0.00007676 s / 0.07676 ms / 76.758 µs"
 }
 ```
+
+## Examples
+
+- [cURL Guide](examples/curl.md)
+- [Java Guide](examples/java.md)
+- [JavaScript Guide](examples/javascript.md)
 
 ---
 

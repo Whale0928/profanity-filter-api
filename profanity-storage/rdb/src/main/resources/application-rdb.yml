@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    driver-class-name: ${DB_DRIVER:org.h2.Driver}
+    url: ${DB_URL:jdbc:mysql://localhost:3306}
+    username: ${DB_USERNAME:local}
+    password: ${DB_PASSWORD:local}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate

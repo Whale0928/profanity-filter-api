@@ -1,0 +1,5 @@
+dependencies {
+    implementation project(':profanity-core')
+}
+
+tasks.register("prepareKotlinBuildScriptModel") {}
