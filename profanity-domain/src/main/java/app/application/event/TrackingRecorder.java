@@ -1,6 +1,5 @@
-package app.application.tracking;
+package app.application.event;
 
-import app.application.event.FilterEvent;
 import app.domain.record.RecordRepository;
 import app.domain.record.Records;
 import org.apache.logging.log4j.LogManager;
@@ -14,18 +13,17 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-public class DefaultTrackingRecorder implements TrackingRecorder {
+public class TrackingRecorder {
 
-    private static final Logger log = LogManager.getLogger(DefaultTrackingRecorder.class);
+    private static final Logger log = LogManager.getLogger(TrackingRecorder.class);
     private final RecordRepository recordRepository;
     private final List<String> localHostPatterns = Arrays.asList("127.0.0.1", "::1", "localhost", "localhost:9999");
     private final AntPathMatcher matcher = new AntPathMatcher();
 
-    public DefaultTrackingRecorder(RecordRepository recordRepository) {
+    public TrackingRecorder(RecordRepository recordRepository) {
         this.recordRepository = recordRepository;
     }
 
-    @Override
     @Transactional
     public void recordTracking(FilterEvent event) {
         log.info("[DOMAIN] record tracking : {}", event);
