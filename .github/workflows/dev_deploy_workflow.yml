@@ -37,7 +37,6 @@ jobs:
           remote_user: ${{ secrets.DEV_SERVER_USERNAME }}
           remote_key: ${{ secrets.DEV_SSH_KEY }}
 
-      ## deploy setup
       - name: 프로젝트 환경 변수 설정 및 빌드
         uses: appleboy/ssh-action@master
         with:
@@ -52,7 +51,6 @@ jobs:
             chmod +x gradlew
             ./gradlew clean build -x test
 
-        ## deploy script
       - name: 배포 스크립트 실행
         uses: appleboy/ssh-action@master
         with:
