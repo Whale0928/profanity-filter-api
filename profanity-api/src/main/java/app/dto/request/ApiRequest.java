@@ -1,4 +1,4 @@
-package app.request;
+package app.dto.request;
 
 import app.core.data.constant.Mode;
 import jakarta.validation.constraints.NotBlank;

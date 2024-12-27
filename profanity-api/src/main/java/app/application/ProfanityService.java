@@ -2,8 +2,8 @@ package app.application;
 
 import app.application.filter.ProfanityHandler;
 import app.core.data.response.ApiResponse;
+import app.dto.request.ApiRequest;
 import app.dto.request.FilterRequest;
-import app.request.ApiRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;

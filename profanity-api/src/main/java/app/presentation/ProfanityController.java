@@ -1,8 +1,8 @@
 package app.presentation;
 
 import app.application.ProfanityFilterService;
+import app.dto.request.ApiRequest;
 import app.dto.request.FilterRequest;
-import app.request.ApiRequest;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.apache.logging.log4j.LogManager;

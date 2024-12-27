@@ -1,7 +1,7 @@
 package app.fixture;
 
 import app.core.data.constant.Mode;
-import app.request.ApiRequest;
+import app.dto.request.ApiRequest;
 
 public class ApiTestFixture {
 

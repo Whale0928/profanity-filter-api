@@ -2,8 +2,8 @@ package app.presentation;
 
 import app.TestConfig;
 import app.core.data.response.ApiResponse;
+import app.dto.request.ApiRequest;
 import app.fixture.ApiTestFixture;
-import app.request.ApiRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
