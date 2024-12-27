@@ -12,5 +12,5 @@ else
     INACTIVE_ENV="green"
 fi
 
-echo "현재 활성화된 환경: $ACTIVE_ENV"
-echo "비활성화된 환경: $INACTIVE_ENV"
+echo "현재 활성화 된 환경: $ACTIVE_ENV"
+echo "비 활성화 된 환경: $INACTIVE_ENV"
