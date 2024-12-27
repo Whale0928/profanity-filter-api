@@ -23,6 +23,7 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=prod
       - TZ=Asia/Seoul
+    env_file: .env
     command: [ "java", "-jar", "/app.jar" ]
 
   profanity-filter-api-green-1:
@@ -35,6 +36,7 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=prod
       - TZ=Asia/Seoul
+    env_file: .env
     command: [ "java", "-jar", "/app.jar" ]
 
   profanity-filter-api-green-2:
@@ -47,4 +49,5 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=prod
       - TZ=Asia/Seoul
+    env_file: .env
     command: [ "java", "-jar", "/app.jar" ]

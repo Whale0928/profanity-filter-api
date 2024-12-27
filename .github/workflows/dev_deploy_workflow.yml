@@ -3,10 +3,10 @@ name: deploy workflow
 on:
   push:
     branches:
-      - deploy
+      - release
   pull_request:
     branches:
-      - deploy
+      - release
     types:
       - closed
 
