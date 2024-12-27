@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 /**
  * 원색적인 욕설 필터링을 위한 정규 표현식 필터
  */
-@Deprecated
+//@Deprecated
 @Service
 public class QuickProfanityFilter implements ProfanityFilter {
     private static final String BASIC_PROFANITY = "[시씨슈쓔쉬쉽쒸쓉]([0-9]*|[0-9]+ *)[바발벌빠빡빨뻘파팔펄]|지랄|니[애에]미|새 *[키퀴]";
