@@ -24,15 +24,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
-@WebMvcTest(ProfanityController.class)
 @Import(TestConfig.class)
+@WebMvcTest(ProfanityController.class)
 class ProfanityControllerTest {
     private static final String REQUEST_URL = "/api/v1/filter";
-    @Autowired
-    protected ObjectMapper mapper;
-    @Autowired
-    protected MockMvc mockMvc;
     private ApiTestFixture fixture;
+    @Autowired
+    private ObjectMapper mapper;
+    @Autowired
+    private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {

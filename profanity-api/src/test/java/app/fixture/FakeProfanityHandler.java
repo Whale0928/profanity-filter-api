@@ -1,4 +1,4 @@
-package app.application;
+package app.fixture;
 
 import app.application.filter.ProfanityHandler;
 import app.core.data.constant.Mode;
@@ -19,7 +19,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class FakeProfanityHandler implements ProfanityHandler {
-
     private static final List<String> profaityWordList = List.of("비속어", "욕설");
     private static final Logger log = LogManager.getLogger(FakeProfanityHandler.class);
 

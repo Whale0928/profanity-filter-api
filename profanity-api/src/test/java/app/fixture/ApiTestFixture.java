@@ -16,6 +16,4 @@ public class ApiTestFixture {
     public ApiRequest createSanitizeRequest(String text) {
         return new ApiRequest(text, Mode.FILTER, null);
     }
-
-
 }
