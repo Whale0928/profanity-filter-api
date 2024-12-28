@@ -1,7 +1,7 @@
 package app.presentation;
 
 import app.TestConfig;
-import app.core.data.response.ApiResponse;
+import app.core.data.response.FilterApiResponse;
 import app.dto.request.ApiRequest;
 import app.fixture.ApiTestFixture;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -57,7 +57,7 @@ class ProfanityControllerTest {
                     .andReturn()
                     .getResponse();
 
-            var responseEntity = mapper.readValue(response.getContentAsString(), ApiResponse.class);
+            var responseEntity = mapper.readValue(response.getContentAsString(), FilterApiResponse.class);
 
             assertNotNull(responseEntity.trackingId());
             assertTrue(responseEntity.detected().stream().anyMatch(d -> quickRequest.text().contains(d.filteredWord())));
@@ -79,7 +79,7 @@ class ProfanityControllerTest {
                     .andReturn()
                     .getResponse();
 
-            var responseEntity = mapper.readValue(response.getContentAsString(), ApiResponse.class);
+            var responseEntity = mapper.readValue(response.getContentAsString(), FilterApiResponse.class);
 
             assertNotNull(responseEntity.trackingId());
             assertTrue(responseEntity.detected().stream().anyMatch(d -> quickRequest.text().contains(d.filteredWord())));
@@ -101,7 +101,7 @@ class ProfanityControllerTest {
                     .andReturn()
                     .getResponse();
 
-            var responseEntity = mapper.readValue(response.getContentAsString(), ApiResponse.class);
+            var responseEntity = mapper.readValue(response.getContentAsString(), FilterApiResponse.class);
 
             assertNotNull(responseEntity.trackingId());
             assertTrue(responseEntity.detected().isEmpty());
@@ -119,11 +119,8 @@ class ProfanityControllerTest {
                             .param("mode", ""))
                     .andDo(print())
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.trackingId").isNotEmpty())
                     .andExpect(jsonPath("$.status.code").value(4000))
-                    .andExpect(jsonPath("$.status.message").value("Bad_request"))
-                    .andExpect(jsonPath("$.detected").isEmpty())
-                    .andExpect(jsonPath("$.filtered").isEmpty());
+                    .andExpect(jsonPath("$.status.message").value("Bad_request"));
         }
     }
 
@@ -145,7 +142,7 @@ class ProfanityControllerTest {
                     .andReturn()
                     .getResponse();
 
-            var responseEntity = mapper.readValue(response.getContentAsString(), ApiResponse.class);
+            var responseEntity = mapper.readValue(response.getContentAsString(), FilterApiResponse.class);
 
             assertNotNull(responseEntity.trackingId());
             assertTrue(responseEntity.detected().stream().anyMatch(d -> normalRequest.text().contains(d.filteredWord())));
@@ -167,7 +164,7 @@ class ProfanityControllerTest {
                     .andReturn()
                     .getResponse();
 
-            var responseEntity = mapper.readValue(response.getContentAsString(), ApiResponse.class);
+            var responseEntity = mapper.readValue(response.getContentAsString(), FilterApiResponse.class);
 
             assertNotNull(responseEntity.trackingId());
             assertTrue(responseEntity.detected().stream().anyMatch(d -> normalRequest.text().contains(d.filteredWord())));
@@ -195,7 +192,7 @@ class ProfanityControllerTest {
                     .andReturn()
                     .getResponse();
 
-            var responseEntity = mapper.readValue(response.getContentAsString(), ApiResponse.class);
+            var responseEntity = mapper.readValue(response.getContentAsString(), FilterApiResponse.class);
 
             assertNotNull(responseEntity.trackingId());
             assertTrue(responseEntity.detected().stream().anyMatch(d -> sanitizeRequest.text().contains(d.filteredWord())));
@@ -219,7 +216,7 @@ class ProfanityControllerTest {
                     .andReturn()
                     .getResponse();
 
-            var responseEntity = mapper.readValue(response.getContentAsString(), ApiResponse.class);
+            var responseEntity = mapper.readValue(response.getContentAsString(), FilterApiResponse.class);
 
             assertNotNull(responseEntity.trackingId());
             assertTrue(responseEntity.detected().stream().anyMatch(d -> sanitizeRequest.text().contains(d.filteredWord())));

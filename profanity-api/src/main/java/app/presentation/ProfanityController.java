@@ -1,7 +1,7 @@
 package app.presentation;
 
 import app.application.filter.ProfanityHandler;
-import app.core.data.response.ApiResponse;
+import app.core.data.response.FilterApiResponse;
 import app.dto.request.ApiRequest;
 import app.dto.request.FilterRequest;
 import jakarta.servlet.http.HttpServletRequest;
@@ -51,7 +51,7 @@ public class ProfanityController {
 
         log.info("[API-JSON] Client IP : {} / Referer : {} / Request : {}", clientIp, referrer, request);
         final FilterRequest filterRequest = FilterRequest.create(request.text(), request.mode(), apiKey, clientIp, referrer);
-        ApiResponse response = profanityHandler.requestFacadeFilter(filterRequest);
+        FilterApiResponse response = profanityHandler.requestFacadeFilter(filterRequest);
         return ResponseEntity.ok(response);
     }
 
@@ -73,7 +73,7 @@ public class ProfanityController {
         log.info("[API-URLENCODED]  Client IP : {} / Referer : {} / Request : {}", clientIp, referrer, request);
 
         final FilterRequest filterRequest = FilterRequest.create(request.text(), request.mode(), apiKey, clientIp, referrer);
-        ApiResponse response = profanityHandler.requestFacadeFilter(filterRequest);
+        FilterApiResponse response = profanityHandler.requestFacadeFilter(filterRequest);
         return ResponseEntity.ok(response
         );
     }

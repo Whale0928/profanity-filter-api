@@ -4,8 +4,8 @@ import app.application.filter.ProfanityHandler;
 import app.core.data.constant.Mode;
 import app.core.data.elapsed.Elapsed;
 import app.core.data.elapsed.ElapsedStartAt;
-import app.core.data.response.ApiResponse;
 import app.core.data.response.Detected;
+import app.core.data.response.FilterApiResponse;
 import app.core.data.response.Status;
 import app.core.data.response.constant.StatusCode;
 import app.dto.request.FilterRequest;
@@ -23,7 +23,7 @@ public class FakeProfanityHandler implements ProfanityHandler {
     private static final Logger log = LogManager.getLogger(FakeProfanityHandler.class);
 
     @Override
-    public ApiResponse requestFacadeFilter(FilterRequest filterRequest) {
+    public FilterApiResponse requestFacadeFilter(FilterRequest filterRequest) {
         Mode mode = filterRequest.mode();
         String text = filterRequest.text();
 
@@ -35,7 +35,7 @@ public class FakeProfanityHandler implements ProfanityHandler {
     }
 
     @Override
-    public ApiResponse quickFilter(String text) {
+    public FilterApiResponse quickFilter(String text) {
         log.info("[domain] fake call : quickFilter");
 
         ElapsedStartAt startAt = ElapsedStartAt.now();
@@ -48,7 +48,7 @@ public class FakeProfanityHandler implements ProfanityHandler {
 
         Elapsed ended = Elapsed.end(startAt);
 
-        return ApiResponse.builder()
+        return FilterApiResponse.builder()
                 .trackingId(UUID.randomUUID())
                 .status(Status.of(StatusCode.OK))
                 .detected(detectedSet)
@@ -58,7 +58,7 @@ public class FakeProfanityHandler implements ProfanityHandler {
     }
 
     @Override
-    public ApiResponse normalFilter(String text) {
+    public FilterApiResponse normalFilter(String text) {
         log.info("[domain] fake call : normalFilter");
         ElapsedStartAt startAt = ElapsedStartAt.now();
         Set<Detected> collect = profaityWordList.stream()
@@ -67,7 +67,7 @@ public class FakeProfanityHandler implements ProfanityHandler {
                 .collect(Collectors.toSet());
         Elapsed ended = Elapsed.end(startAt);
 
-        return ApiResponse.builder()
+        return FilterApiResponse.builder()
                 .trackingId(UUID.randomUUID())
                 .status(Status.of(StatusCode.OK))
                 .detected(collect)
@@ -77,7 +77,7 @@ public class FakeProfanityHandler implements ProfanityHandler {
     }
 
     @Override
-    public ApiResponse sanitizeProfanity(String text) {
+    public FilterApiResponse sanitizeProfanity(String text) {
 
         log.info("[domain] fake call : sanitizeProfanity");
 
@@ -92,7 +92,7 @@ public class FakeProfanityHandler implements ProfanityHandler {
             text = text.replaceAll(profaityWord, "*".repeat(profaityWord.length()));
         }
 
-        return ApiResponse.builder()
+        return FilterApiResponse.builder()
                 .trackingId(UUID.randomUUID())
                 .status(Status.of(StatusCode.OK))
                 .detected(collect)
@@ -102,7 +102,7 @@ public class FakeProfanityHandler implements ProfanityHandler {
     }
 
     @Override
-    public ApiResponse advancedFilter(String text) {
+    public FilterApiResponse advancedFilter(String text) {
         log.info("[domain]  fake call : advancedFilter");
         return sanitizeProfanity(text);
     }

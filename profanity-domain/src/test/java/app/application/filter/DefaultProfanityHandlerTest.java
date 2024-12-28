@@ -1,8 +1,8 @@
 package app.application.filter;
 
 import app.application.event.FakeApplicationEventPublisher;
-import app.core.data.response.ApiResponse;
 import app.core.data.response.Detected;
+import app.core.data.response.FilterApiResponse;
 import app.domain.InmemoryProfanityRepository;
 import app.domain.profanity.ProfanityWord;
 import org.apache.logging.log4j.LogManager;
@@ -45,7 +45,7 @@ class DefaultProfanityHandlerTest {
         String word = "'씨뻘'욕설이 들어간 문장입니다.";
 
         // when
-        ApiResponse response = ProfanityHandler.quickFilter(word);
+        FilterApiResponse response = ProfanityHandler.quickFilter(word);
 
         // then
         Set<Detected> detected = response.detected();
@@ -60,7 +60,7 @@ class DefaultProfanityHandlerTest {
         String word = "욕설이 들어간 문장입니다.";
 
         // when
-        ApiResponse response = ProfanityHandler.normalFilter(word);
+        FilterApiResponse response = ProfanityHandler.normalFilter(word);
 
         // then
         log.info("응답 : {}", response);
@@ -76,7 +76,7 @@ class DefaultProfanityHandlerTest {
         String word = "욕설이 들어간 문장입니다.";
 
         // when
-        ApiResponse response = ProfanityHandler.sanitizeProfanity(word);
+        FilterApiResponse response = ProfanityHandler.sanitizeProfanity(word);
 
         // then
         log.info("응답 : {}", response);

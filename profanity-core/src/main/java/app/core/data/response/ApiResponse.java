@@ -1,33 +1,29 @@
 package app.core.data.response;
 
-import app.core.data.elapsed.Elapsed;
+import app.core.data.response.constant.StatusCode;
 import lombok.Builder;
 import org.springframework.http.ResponseEntity;
 
-import java.util.Collections;
-import java.util.Set;
-import java.util.UUID;
-
-public record ApiResponse(
-        UUID trackingId,
+public record ApiResponse<T>(
         Status status,
-        Set<Detected> detected,
-        String filtered,
-        String elapsed
+        T data
 ) {
     @Builder
-    public ApiResponse(UUID trackingId, Status status, Set<Detected> detected, String filtered, Elapsed elapsed) {
-        this(trackingId, status, detected, filtered, elapsed.toString());
+    private static <T> ApiResponse<T> of(Status status, T data) {
+        return new ApiResponse<>(status, data);
     }
 
-    public static ResponseEntity<ApiResponse> error(UUID trackingId, Status status) {
-        return ResponseEntity.ok(ApiResponse.builder()
-                .trackingId(trackingId)
-                .status(status)
-                .detected(Collections.emptySet())
-                .filtered("")
-                .elapsed(Elapsed.zero())
-                .build());
+    public static <T> ResponseEntity<ApiResponse<T>> ok(T data) {
+        return ResponseEntity.ok(ApiResponse.of(
+                Status.of(StatusCode.OK),
+                data
+        ));
+    }
 
+    public static <T> ResponseEntity<ApiResponse<T>> error(Status status) {
+        return ResponseEntity.ok(ApiResponse.<T>of(
+                status,
+                null
+        ));
     }
 }

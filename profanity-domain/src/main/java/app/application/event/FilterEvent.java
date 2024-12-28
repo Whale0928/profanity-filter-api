@@ -1,8 +1,8 @@
 package app.application.event;
 
 import app.core.data.constant.Mode;
-import app.core.data.response.ApiResponse;
 import app.core.data.response.Detected;
+import app.core.data.response.FilterApiResponse;
 import app.dto.request.FilterRequest;
 
 import java.util.Set;
@@ -20,14 +20,14 @@ public record FilterEvent(
 ) {
     public static FilterEvent create(
             FilterRequest filterRequest,
-            ApiResponse apiResponse
+            FilterApiResponse filterApiResponse
     ) {
         return new FilterEvent(
-                apiResponse.trackingId(),
+                filterApiResponse.trackingId(),
                 filterRequest.mode(),
                 filterRequest.apiKey(),
                 filterRequest.text(),
-                apiResponse.detected().stream().map(Detected::filteredWord).collect(Collectors.toSet()),
+                filterApiResponse.detected().stream().map(Detected::filteredWord).collect(Collectors.toSet()),
                 filterRequest.referrer(),
                 filterRequest.clientIp()
         );
