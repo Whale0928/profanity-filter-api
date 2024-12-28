@@ -1,12 +1,13 @@
 package app.presentation;
 
-import app.application.ProfanityFilterService;
+import app.application.filter.ProfanityHandler;
+import app.core.data.response.ApiResponse;
 import app.dto.request.ApiRequest;
 import app.dto.request.FilterRequest;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -27,14 +28,11 @@ import static app.application.HttpClient.getReferrer;
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequestMapping("/api/v1/filter")
 @RestController
+@Slf4j
+@RequiredArgsConstructor
 public class ProfanityController {
 
-    private static final Logger log = LogManager.getLogger(ProfanityController.class);
-    private final ProfanityFilterService profanityService;
-
-    public ProfanityController(ProfanityFilterService profanityService) {
-        this.profanityService = profanityService;
-    }
+    private final ProfanityHandler profanityHandler;
 
     /**
      * APPLICATION_JSON_VALUE 미디어 타입으로 요청을 받는다.
@@ -48,16 +46,13 @@ public class ProfanityController {
             @RequestHeader(value = "x-api-key", required = false) String apiKey,
             @RequestBody @Valid ApiRequest request
     ) {
-        String clientIp = getClientIP(httpRequest);
-        String referrer = getReferrer(httpRequest);
+        final String clientIp = getClientIP(httpRequest);
+        final String referrer = getReferrer(httpRequest);
 
         log.info("[API-JSON] Client IP : {} / Referer : {} / Request : {}", clientIp, referrer, request);
-
-        FilterRequest filterRequest = FilterRequest.create(request.text(), request.mode(), apiKey, clientIp, referrer);
-
-        return ResponseEntity.ok(
-                profanityService.basicFilter(filterRequest)
-        );
+        final FilterRequest filterRequest = FilterRequest.create(request.text(), request.mode(), apiKey, clientIp, referrer);
+        ApiResponse response = profanityHandler.requestFacadeFilter(filterRequest);
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -77,23 +72,21 @@ public class ProfanityController {
 
         log.info("[API-URLENCODED]  Client IP : {} / Referer : {} / Request : {}", clientIp, referrer, request);
 
-        FilterRequest filterRequest = FilterRequest.create(request.text(), request.mode(), apiKey, clientIp, referrer);
-
-        return ResponseEntity.ok(
-                profanityService.basicFilter(filterRequest)
+        final FilterRequest filterRequest = FilterRequest.create(request.text(), request.mode(), apiKey, clientIp, referrer);
+        ApiResponse response = profanityHandler.requestFacadeFilter(filterRequest);
+        return ResponseEntity.ok(response
         );
     }
 
     @GetMapping("/advanced")
     public ResponseEntity<?> advancedProfanity(@RequestParam("word") String word) {
         Objects.requireNonNull(word, "단어는 필수 입니다.");
-        return ResponseEntity.ok(
-                profanityService.advancedFilter(word)
+        return ResponseEntity.ok(profanityHandler.advancedFilter(word)
         );
     }
 
     @PostMapping("/health")
-    public ResponseEntity<?> healthCheck(@RequestBody @Valid ApiRequest request) {
+    public ResponseEntity<?> healthCheck() {
         return ResponseEntity.ok("OK");
     }
 }
