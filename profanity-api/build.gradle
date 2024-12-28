@@ -2,7 +2,9 @@ bootJar.enabled = true
 jar.enabled = false
 
 dependencies {
-    runtimeOnly runtimeOnly(project(':profanity-storage:rdb'))
+    runtimeOnly(project(':profanity-storage:redis'))
+    runtimeOnly(project(':profanity-storage:rdb'))
+
     implementation project(':profanity-core')
     implementation project(':profanity-domain')
 

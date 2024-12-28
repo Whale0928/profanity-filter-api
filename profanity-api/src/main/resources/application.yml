@@ -6,6 +6,7 @@ spring:
   profiles:
     include:
       - rdb
+      - redis
       - domain
       - core
 

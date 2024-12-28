@@ -1,0 +1,37 @@
+version: '3.7'
+services:
+  redis-master:
+    image: redis:7.0
+    container_name: redis-master
+    ports:
+      - "16379:6379"
+    command: >
+      redis-server 
+      --port 6379 
+      --requirepass demo-mutil-redis-cluster
+      --masterauth demo-mutil-redis-cluster
+      --cluster-enabled yes 
+      --cluster-config-file nodes.conf 
+      --cluster-node-timeout 5000
+    networks:
+      - redis-net
+
+  redis-replica:
+    image: redis:7.0
+    container_name: redis-replica
+    ports:
+      - "16380:6379"
+    command: >
+      redis-server 
+      --port 6379 
+      --requirepass demo-mutil-redis-cluster
+      --masterauth demo-mutil-redis-cluster
+      --cluster-enabled yes 
+      --cluster-config-file nodes.conf 
+      --cluster-node-timeout 5000
+    networks:
+      - redis-net
+
+networks:
+  redis-net:
+    driver: bridge
