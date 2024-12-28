@@ -12,14 +12,15 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class ClientsRegistrationService {
+public class ClientsCommandService {
     private final ClientsRepository clientRepository;
-    private final APIKeyGenerator apiKeyGenerator;
+    private final KeyGenerator apiKeyGenerator;
 
     @Transactional
     public ClientsRegistResponse registerNewClient(ClientRegistRequest request) {
         validateEmail(request.email());
-        String apiKey = generateUniqueApiKey();
+        String apiKey = generateApiKey();
+        validateApiKey(apiKey);
 
         Clients client = Clients.builder()
                 .name(request.name())
@@ -45,13 +46,15 @@ public class ClientsRegistrationService {
         }
     }
 
-    private String generateUniqueApiKey() {
+    private void validateApiKey(String apiKey) {
+        if (clientRepository.existsByApiKey(apiKey)) {
+            throw new BusinessException(StatusCode.INTERNAL_SERVER_ERROR, "API 키 생성 중 중복이 발생했습니다.");
+        }
+    }
+
+    private String generateApiKey() {
         try {
-            String apiKey = apiKeyGenerator.generateApiKey();
-            if (clientRepository.existsByApiKey(apiKey)) {
-                throw new BusinessException(StatusCode.INTERNAL_SERVER_ERROR, "API 키 생성 중 중복이 발생했습니다.");
-            }
-            return apiKey;
+            return apiKeyGenerator.generateApiKey();
         } catch (Exception e) {
             throw new BusinessException(StatusCode.INTERNAL_SERVER_ERROR, "API 키 생성 중 오류가 발생했습니다.");
         }
