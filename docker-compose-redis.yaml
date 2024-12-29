@@ -8,11 +8,13 @@ services:
     command: >
       redis-server 
       --port 6379 
-      --requirepass demo-mutil-redis-cluster
-      --masterauth demo-mutil-redis-cluster
+      --requirepass ${REDIS_PASSWORD}
+      --masterauth ${REDIS_PASSWORD}
       --cluster-enabled yes 
       --cluster-config-file nodes.conf 
       --cluster-node-timeout 5000
+    env_file:
+      - .env.redis
     networks:
       - redis-net
 
@@ -24,11 +26,13 @@ services:
     command: >
       redis-server 
       --port 6379 
-      --requirepass demo-mutil-redis-cluster
-      --masterauth demo-mutil-redis-cluster
+      --requirepass ${REDIS_PASSWORD}
+      --masterauth ${REDIS_PASSWORD}
       --cluster-enabled yes 
       --cluster-config-file nodes.conf 
       --cluster-node-timeout 5000
+    env_file:
+      - .env.redis
     networks:
       - redis-net
 

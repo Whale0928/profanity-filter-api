@@ -49,3 +49,4 @@ application-prod.yml
 /logs/error/**
 /logs/info/**
 /logs/warn/**
+/.env.redis

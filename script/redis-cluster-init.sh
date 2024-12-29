@@ -3,6 +3,11 @@
 # 기본값으로 실행 => ./script/redis-cluster-init.sh
 # 환경변수 설정하여 실행 => REDIS_MASTER_HOST=192.168.1.10 REDIS_MASTER_PORT=16379 ./script/redis-cluster-init.sh
 
+# .env.redis 파일이 존재하면 로드
+if [ -f .env.redis ]; then
+   source .env.redis
+fi
+
 # 환경 변수 기본값 설정
 REDIS_MASTER_HOST=${REDIS_MASTER_HOST:-"localhost"}
 REDIS_MASTER_PORT=${REDIS_MASTER_PORT:-16379}
