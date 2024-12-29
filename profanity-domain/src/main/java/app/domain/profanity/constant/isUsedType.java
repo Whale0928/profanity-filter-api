@@ -1,5 +1,8 @@
 package app.domain.profanity.constant;
 
+import lombok.Getter;
+
+@Getter
 public enum isUsedType {
     Y("used"),
     N("not used");
@@ -10,7 +13,4 @@ public enum isUsedType {
         this.description = description;
     }
 
-    public String getDescription() {
-        return description;
-    }
 }

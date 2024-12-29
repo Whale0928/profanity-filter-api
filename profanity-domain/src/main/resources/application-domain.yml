@@ -1,2 +1,3 @@
-domain:
-  value: domain-value
+api-key:
+  keycode: ${server.keycode:keycode-default}
+  algorithm: ${server.keycode.algorithm:SHA-256}

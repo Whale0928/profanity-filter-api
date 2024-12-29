@@ -1,10 +1,12 @@
 server:
   port: ${SERVER_PORT:8080}
+  forward-headers-strategy: native
 
 spring:
   profiles:
     include:
       - rdb
+      - redis
       - domain
       - core
 

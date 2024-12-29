@@ -2,17 +2,6 @@
 POST {{host}}/api/v1/filter/health
 Content-Type: application/json
 
-{
-  "text": "{{text}}",
-  "mode": "QUICK"
-}
-
 ### (비동기 요청) API 상태를 확인할 수 있다.
 POST {{host}}/api/v1/filter/health
 Content-Type: application/json
-
-{
-  "text": "{{text}}",
-  "mode": "QUICK",
-  "callbackUrl": "http://localhost:9999/api/v1/filter/health"
-}

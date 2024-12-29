@@ -1,6 +1,6 @@
 package app.application.filter;
 
-import app.core.data.response.ApiResponse;
+import app.core.data.response.FilterApiResponse;
 import app.dto.request.FilterRequest;
 
 public interface ProfanityHandler {
@@ -11,7 +11,7 @@ public interface ProfanityHandler {
      * @param request 요청 객체
      * @return the api response
      */
-    ApiResponse requestFacadeFilter(FilterRequest request);
+    FilterApiResponse requestFacadeFilter(FilterRequest request);
 
     /**
      * 빠른 필터링을 수행합니다.
@@ -20,7 +20,7 @@ public interface ProfanityHandler {
      * @param text 검사 할 단어
      * @return the api response
      */
-    ApiResponse quickFilter(String text);
+    FilterApiResponse quickFilter(String text);
 
     /**
      * 일반적인 필터링을 수행합니다.
@@ -30,7 +30,7 @@ public interface ProfanityHandler {
      *
      * @return the api response
      */
-    ApiResponse normalFilter(String text);
+    FilterApiResponse normalFilter(String text);
 
     /**
      * 일반적인 필터링을 수행합니다.
@@ -40,10 +40,10 @@ public interface ProfanityHandler {
      * @param text the text
      * @return the api response
      */
-    ApiResponse sanitizeProfanity(String text);
+    FilterApiResponse sanitizeProfanity(String text);
 
     /**
      * @param text the text
      */
-    ApiResponse advancedFilter(String text);
+    FilterApiResponse advancedFilter(String text);
 }

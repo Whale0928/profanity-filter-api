@@ -4,8 +4,8 @@ import app.application.event.FilterEvent;
 import app.core.data.constant.Mode;
 import app.core.data.elapsed.Elapsed;
 import app.core.data.elapsed.ElapsedStartAt;
-import app.core.data.response.ApiResponse;
 import app.core.data.response.Detected;
+import app.core.data.response.FilterApiResponse;
 import app.core.data.response.Status;
 import app.dto.request.FilterRequest;
 import app.dto.response.FilterResponse;
@@ -25,6 +25,7 @@ import static app.core.data.response.constant.StatusCode.OK;
 @Slf4j
 @Service
 public class DefaultProfanityHandler implements ProfanityHandler {
+
     private final NormalProfanityFilter normalProfanityFilter;
     private final ApplicationEventPublisher publisher;
 
@@ -38,13 +39,13 @@ public class DefaultProfanityHandler implements ProfanityHandler {
 
     @Override
     @Transactional(readOnly = true)
-    public ApiResponse requestFacadeFilter(FilterRequest request) {
+    public FilterApiResponse requestFacadeFilter(FilterRequest request) {
         Mode mode = request.mode();
         String text = request.text();
 
         log.info("[DOMAIN] requestFacadeFilter : request={}", request);
 
-        ApiResponse response = switch (mode) {
+        FilterApiResponse response = switch (mode) {
             case QUICK -> quickFilter(text);
             case NORMAL -> normalFilter(text);
             case FILTER -> sanitizeProfanity(text);
@@ -56,12 +57,13 @@ public class DefaultProfanityHandler implements ProfanityHandler {
     }
 
     @Override
-    public ApiResponse quickFilter(String word) {
+    public FilterApiResponse quickFilter(String word) {
         ElapsedStartAt start = ElapsedStartAt.now();
         FilterWord filterWord = normalProfanityFilter.firstMatched(word);
         Elapsed elapsed = Elapsed.end(start);
         Set<Detected> detected = Set.of(Detected.of(filterWord.length(), filterWord.word()));
-        return ApiResponse.builder()
+
+        return FilterApiResponse.builder()
                 .trackingId(generateTrackingId())
                 .status(Status.of(OK))
                 .detected(detected)
@@ -71,11 +73,11 @@ public class DefaultProfanityHandler implements ProfanityHandler {
     }
 
     @Override
-    public ApiResponse normalFilter(String word) {
+    public FilterApiResponse normalFilter(String word) {
         final FilterResponse filterResponse = normalProfanityFilter.allMatched(word);
         final Set<Detected> detects = detects(filterResponse.filterWords());
 
-        return ApiResponse.builder()
+        return FilterApiResponse.builder()
                 .trackingId(generateTrackingId())
                 .status(Status.of(OK))
                 .detected(detects)
@@ -85,12 +87,12 @@ public class DefaultProfanityHandler implements ProfanityHandler {
     }
 
     @Override
-    public ApiResponse sanitizeProfanity(String word) {
+    public FilterApiResponse sanitizeProfanity(String word) {
         final FilterResponse filterResponse = normalProfanityFilter.allMatched(word);
         final Set<Detected> detects = detects(filterResponse.filterWords());
         final String masked = masked(word, filterResponse.filterWords());
 
-        return ApiResponse.builder()
+        return FilterApiResponse.builder()
                 .trackingId(generateTrackingId())
                 .status(Status.of(OK))
                 .detected(detects)
@@ -100,7 +102,7 @@ public class DefaultProfanityHandler implements ProfanityHandler {
     }
 
     @Override
-    public ApiResponse advancedFilter(String text) {
+    public FilterApiResponse advancedFilter(String text) {
         return sanitizeProfanity(text);
     }
 
