@@ -26,8 +26,6 @@ import static app.core.data.response.constant.StatusCode.OK;
 @Service
 public class DefaultProfanityHandler implements ProfanityHandler {
 
-    private static final Logger log = LogManager.getLogger(DefaultProfanityHandler.class);
-    private final QuickProfanityFilter quickProfanityFilter;
     private final NormalProfanityFilter normalProfanityFilter;
     private final ApplicationEventPublisher publisher;
 
