@@ -6,8 +6,10 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.Getter;
 import org.hibernate.annotations.Comment;
 
+@Getter
 @Table(name = "manage_account")
 @Entity(name = "manage_account")
 public class ManageAccount {
@@ -36,15 +38,4 @@ public class ManageAccount {
         return new ManageAccount(null, username, password);
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
 }

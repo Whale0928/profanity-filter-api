@@ -45,11 +45,26 @@ subprojects {
         annotationProcessor 'org.projectlombok:lombok'
     }
 
-
     bootJar.enabled = false
     jar.enabled = true
     tasks.named('test') { useJUnitPlatform() }
+
+    test {
+        outputs.upToDateWhen { false }  // 항상 테스트 실행
+        useJUnitPlatform()
+        testLogging {
+            events "passed", "skipped", "failed"
+            showStandardStreams = true
+            exceptionFormat = 'full'
+            showExceptions = true
+            showCauses = true
+            showStackTraces = true
+        }
+    }
 }
+
+// Root 프로젝트의 test task를 수정
+test.dependsOn subprojects.test
 
 bootJar.enabled = false
 jar.enabled = true

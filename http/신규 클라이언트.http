@@ -1,0 +1,54 @@
+### (성공 케이스) 유효한 클라이언트 등록 요청
+POST {{host}}/api/v1/clients/register
+Content-Type: application/json
+
+{
+  "name": "ABC Corporation",
+  "email": "contact@abccorp.com",
+  "issuerInfo": "발급자 정보",
+  "note": "메모 내용"
+}
+
+### (실패 케이스) 이름이 비어있는 경우
+POST {{host}}/api/v1/clients/register
+Content-Type: application/json
+
+{
+  "name": "",
+  "email": "contact@abccorp.com",
+  "issuerInfo": "발급자 정보",
+  "note": "메모 내용"
+}
+
+### (실패 케이스) 이메일 형식이 잘못된 경우
+POST {{host}}/api/v1/clients/register
+Content-Type: application/json
+
+{
+  "name": "ABC Corporation",
+  "email": "contactabccorp.com",
+  "issuerInfo": "발급자 정보",
+  "note": "메모 내용"
+}
+
+### (실패 케이스) 발급자 정보가 비어있는 경우
+POST {{host}}/api/v1/clients/register
+Content-Type: application/json
+
+{
+  "name": "ABC Corporation",
+  "email": "contact@abccorp.com",
+  "issuerInfo": "",
+  "note": "메모 내용"
+}
+
+### (실패 케이스) 이름이 2자 미만인 경우
+POST {{host}}/api/v1/clients/register
+Content-Type: application/json
+
+{
+  "name": "A",
+  "email": "contact@abccorp.com",
+  "issuerInfo": "발급자 정보",
+  "note": "메모 내용"
+}

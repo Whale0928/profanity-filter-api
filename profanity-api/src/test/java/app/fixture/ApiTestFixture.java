@@ -1,7 +1,7 @@
 package app.fixture;
 
 import app.core.data.constant.Mode;
-import app.request.ApiRequest;
+import app.dto.request.ApiRequest;
 
 public class ApiTestFixture {
 
@@ -16,6 +16,4 @@ public class ApiTestFixture {
     public ApiRequest createSanitizeRequest(String text) {
         return new ApiRequest(text, Mode.FILTER, null);
     }
-
-
 }

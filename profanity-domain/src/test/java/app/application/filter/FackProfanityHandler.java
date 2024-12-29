@@ -1,31 +1,31 @@
 package app.application.filter;
 
-import app.core.data.response.ApiResponse;
+import app.core.data.response.FilterApiResponse;
 import app.dto.request.FilterRequest;
 
 public class FackProfanityHandler implements ProfanityHandler {
     @Override
-    public ApiResponse requestFacadeFilter(FilterRequest filterRequest) {
+    public FilterApiResponse requestFacadeFilter(FilterRequest filterRequest) {
         return null;
     }
 
     @Override
-    public ApiResponse quickFilter(String text) {
+    public FilterApiResponse quickFilter(String text) {
         return null;
     }
 
     @Override
-    public ApiResponse normalFilter(String text) {
+    public FilterApiResponse normalFilter(String text) {
         return null;
     }
 
     @Override
-    public ApiResponse sanitizeProfanity(String text) {
+    public FilterApiResponse sanitizeProfanity(String text) {
         return null;
     }
 
     @Override
-    public ApiResponse advancedFilter(String text) {
+    public FilterApiResponse advancedFilter(String text) {
         return null;
     }
 }
