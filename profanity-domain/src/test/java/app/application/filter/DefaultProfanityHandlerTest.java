@@ -26,7 +26,6 @@ class DefaultProfanityHandlerTest {
         InmemoryProfanityRepository repository = new InmemoryProfanityRepository();
         QuickProfanityFilter quickProfanityFilter = new QuickProfanityFilter();
         NormalProfanityFilter normalProfanityFilter = new NormalProfanityFilter(repository);
-        AdvancedProfanityFilter advancedProfanityFilter = new AdvancedProfanityFilter();
         FakeApplicationEventPublisher eventPublisher = new FakeApplicationEventPublisher();
 
         repository.save(ProfanityWord.create("욕설"));
@@ -34,7 +33,7 @@ class DefaultProfanityHandlerTest {
         repository.save(ProfanityWord.create("비속어"));
         normalProfanityFilter.synchronizeProfanityTrie();
 
-        ProfanityHandler = new DefaultProfanityHandler(quickProfanityFilter, normalProfanityFilter, advancedProfanityFilter, eventPublisher);
+        ProfanityHandler = new DefaultProfanityHandler(quickProfanityFilter, normalProfanityFilter, eventPublisher);
     }
 
 
