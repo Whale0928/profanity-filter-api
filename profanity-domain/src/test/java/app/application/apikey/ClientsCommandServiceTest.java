@@ -2,7 +2,7 @@ package app.application.apikey;
 
 import app.core.exception.BusinessException;
 import app.domain.InmemoryClientsRepository;
-import app.dto.request.ClientRegistRequest;
+import app.dto.request.ClientRegistCommand;
 import app.dto.response.ClientsRegistResponse;
 import app.fixture.ClientTestFixture;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,7 +36,7 @@ class ClientsCommandServiceTest {
         @DisplayName("유효한 요청이면 성공한다")
         void validRequest() {
             // given
-            ClientRegistRequest request = ClientTestFixture.createRequest("테스트 클라이언트", "test@example.com");
+            ClientRegistCommand request = ClientTestFixture.createRequest("테스트 클라이언트", "test@example.com");
 
             // when
             ClientsRegistResponse response = clientsCommandService.registerNewClient(request);
@@ -60,7 +60,7 @@ class ClientsCommandServiceTest {
                     "existing-key"
             ));
 
-            ClientRegistRequest request = ClientTestFixture.createRequest("신규 클라이언트", duplicateEmail);
+            ClientRegistCommand request = ClientTestFixture.createRequest("신규 클라이언트", duplicateEmail);
 
             // when & then
             BusinessException exception = assertThrows(BusinessException.class,
@@ -84,7 +84,7 @@ class ClientsCommandServiceTest {
                     ClientTestFixture.createKeyGenerator(duplicateApiKey)
             );
 
-            ClientRegistRequest request = ClientTestFixture.createRequest(
+            ClientRegistCommand request = ClientTestFixture.createRequest(
                     "신규 클라이언트",
                     "new@example.com"
             );

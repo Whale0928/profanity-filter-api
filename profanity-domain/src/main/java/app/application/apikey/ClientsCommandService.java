@@ -4,7 +4,7 @@ import app.core.data.response.constant.StatusCode;
 import app.core.exception.BusinessException;
 import app.domain.client.Clients;
 import app.domain.client.ClientsRepository;
-import app.dto.request.ClientRegistRequest;
+import app.dto.request.ClientRegistCommand;
 import app.dto.response.ClientsRegistResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +17,7 @@ public class ClientsCommandService {
     private final KeyGenerator apiKeyGenerator;
 
     @Transactional
-    public ClientsRegistResponse registerNewClient(ClientRegistRequest request) {
+    public ClientsRegistResponse registerNewClient(ClientRegistCommand request) {
         validateEmail(request.email());
         String apiKey = generateApiKey();
         validateApiKey(apiKey);

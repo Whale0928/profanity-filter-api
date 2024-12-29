@@ -2,12 +2,12 @@ package app.fixture;
 
 import app.application.apikey.KeyGenerator;
 import app.domain.client.Clients;
-import app.dto.request.ClientRegistRequest;
+import app.dto.request.ClientRegistCommand;
 
 public class ClientTestFixture {
 
-    public static ClientRegistRequest createRequest(String name, String email) {
-        return new ClientRegistRequest(
+    public static ClientRegistCommand createRequest(String name, String email) {
+        return new ClientRegistCommand(
                 name,
                 email,
                 "테스트 발급자",
