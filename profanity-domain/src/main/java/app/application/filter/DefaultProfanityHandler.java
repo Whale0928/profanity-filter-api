@@ -11,8 +11,7 @@ import app.dto.request.FilterRequest;
 import app.dto.response.FilterResponse;
 import app.dto.response.FilterWord;
 import com.github.f4b6a3.uuid.UuidCreator;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,24 +22,20 @@ import java.util.stream.Collectors;
 
 import static app.core.data.response.constant.StatusCode.OK;
 
+@Slf4j
 @Service
 public class DefaultProfanityHandler implements ProfanityHandler {
 
     private static final Logger log = LogManager.getLogger(DefaultProfanityHandler.class);
     private final QuickProfanityFilter quickProfanityFilter;
     private final NormalProfanityFilter normalProfanityFilter;
-    private final AdvancedProfanityFilter advancedProfanityFilter;
     private final ApplicationEventPublisher publisher;
 
     public DefaultProfanityHandler(
-            QuickProfanityFilter quickProfanityFilter,
             NormalProfanityFilter normalProfanityFilter,
-            AdvancedProfanityFilter advancedProfanityFilter,
             ApplicationEventPublisher publisher
     ) {
-        this.quickProfanityFilter = quickProfanityFilter;
         this.normalProfanityFilter = normalProfanityFilter;
-        this.advancedProfanityFilter = advancedProfanityFilter;
         this.publisher = publisher;
     }
 
@@ -66,9 +61,8 @@ public class DefaultProfanityHandler implements ProfanityHandler {
     @Override
     public FilterApiResponse quickFilter(String word) {
         ElapsedStartAt start = ElapsedStartAt.now();
-        FilterWord filterWord = quickProfanityFilter.firstMatched(word);
+        FilterWord filterWord = normalProfanityFilter.firstMatched(word);
         Elapsed elapsed = Elapsed.end(start);
-
         Set<Detected> detected = Set.of(Detected.of(filterWord.length(), filterWord.word()));
 
         return FilterApiResponse.builder()
@@ -111,7 +105,6 @@ public class DefaultProfanityHandler implements ProfanityHandler {
 
     @Override
     public FilterApiResponse advancedFilter(String text) {
-        advancedProfanityFilter.call();
         return sanitizeProfanity(text);
     }
 
@@ -122,8 +115,13 @@ public class DefaultProfanityHandler implements ProfanityHandler {
     }
 
     private String masked(String word, Set<FilterWord> filterWords) {
-        return filterWords.stream()
-                .reduce(word, (w, f) -> w.replace(f.word(), "*".repeat(f.length())), String::concat);
+        StringBuilder result = new StringBuilder(word);
+        filterWords.forEach(f -> {
+            int start = f.startIndex();
+            int end = f.endIndex();
+            result.replace(start, end, "*".repeat(end - start));
+        });
+        return result.toString();
     }
 
     private UUID generateTrackingId() {

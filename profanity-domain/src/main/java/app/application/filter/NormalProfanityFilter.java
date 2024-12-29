@@ -7,6 +7,7 @@ import app.domain.profanity.ProfanityWord;
 import app.dto.response.FilterResponse;
 import app.dto.response.FilterWord;
 import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import org.ahocorasick.trie.Emit;
 import org.ahocorasick.trie.Trie;
 import org.slf4j.Logger;
@@ -20,17 +21,13 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class NormalProfanityFilter implements ProfanityFilter, AhocorasickFilter {
 
     private static final Logger log = LoggerFactory.getLogger(NormalProfanityFilter.class);
-    private final ProfanityRepository profanityRepository;
     private static Trie trie;
+    private final ProfanityRepository profanityRepository;
     private Set<String> collect = new HashSet<>();
-
-    public NormalProfanityFilter(ProfanityRepository profanityRepository) {
-        this.profanityRepository = profanityRepository;
-        trie = Trie.builder().build();
-    }
 
     @PostConstruct
     public void postConstruct() {
@@ -72,13 +69,30 @@ public class NormalProfanityFilter implements ProfanityFilter, AhocorasickFilter
     @Override
     public FilterResponse allMatched(String text) {
         log.info("[NormalProfanityFilter] 전체 비속어 필터링 시작 : {}", LocalDateTime.now());
+        
+        if (text == null || text.isBlank())
+            return FilterResponse.create(text, new HashSet<>(), Elapsed.end(ElapsedStartAt.now()));
+
         ElapsedStartAt start = ElapsedStartAt.now();
 
-        Set<FilterWord> filterWords = trie.parseText(text)
-                .stream()
-                .map(emit -> FilterWord.create(emit.getKeyword(), emit.getStart(), emit.getEnd()))
-                .collect(Collectors.toSet());
+        String cleanedText = text.replaceAll("[^가-힣a-zA-Z\\s]", "");
+        int currentPos = 0;
+        Set<FilterWord> filterWords = new HashSet<>();
 
+        for (Emit emit : trie.parseText(cleanedText)) {
+            int startPos = text.indexOf(emit.getKeyword().charAt(0), currentPos);
+            if (startPos == -1) continue;
+            int endPos = startPos;
+            for (char c : emit.getKeyword().toCharArray()) {
+                endPos = text.indexOf(c, endPos) + 1;
+            }
+            filterWords.add(FilterWord.create(
+                    text.substring(startPos, endPos),
+                    startPos,
+                    endPos
+            ));
+            currentPos = endPos;
+        }
         Elapsed elapsed = Elapsed.end(start);
         log.info("전체 비속어 필터링 : {} (지연 시간 : {}ms)", text, elapsed);
         return FilterResponse.create(text, filterWords, elapsed);
@@ -87,17 +101,27 @@ public class NormalProfanityFilter implements ProfanityFilter, AhocorasickFilter
     @Override
     public FilterWord firstMatched(String text) {
         log.info("[NormalProfanityFilter] 단일 비속어 필터링 시작 : {}", LocalDateTime.now());
+        if (text == null || text.isBlank()) {
+            return FilterWord.empty();
+        }
+
         ElapsedStartAt start = ElapsedStartAt.now();
-        Emit emit = trie.firstMatch(text);
+
+        String cleanedText = text.replaceAll("[^가-힣a-zA-Z\\s]", "");
+        Emit emit = trie.firstMatch(cleanedText);
+
+        if (emit == null) {
+            return FilterWord.empty();
+        }
+
+        int startPos = text.indexOf(emit.getKeyword().charAt(0));
+        int endPos = startPos;
+        for (char c : emit.getKeyword().toCharArray()) {
+            endPos = text.indexOf(c, endPos) + 1;
+        }
+
         Elapsed elapsed = Elapsed.end(start);
-
-        String keyword = emit.getKeyword();
-        int wordStart = emit.getStart();
-        int wordEnd = emit.getEnd();
-
         log.info("단일 비속어 필터링 : {} (지연 시간 : {}ms)", text, elapsed);
-        return FilterWord.create(keyword, wordStart, wordEnd);
+        return FilterWord.create(text.substring(startPos, endPos), startPos, endPos);
     }
-
-
 }
