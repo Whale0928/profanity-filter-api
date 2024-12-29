@@ -9,6 +9,8 @@ import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.List;
 
@@ -118,4 +120,36 @@ class NormalProfanityFilterTest {
         assertTrue(text.contains(filterWord.word()));
     }
 
+    @Test
+    @DisplayName("null 또는 빈 문자열 입력시 빈 응답을 반환한다")
+    void handleEmptyInput() {
+        assertEquals(FilterWord.empty(), normalProfanityFilter.firstMatched(null));
+        assertEquals(FilterWord.empty(), normalProfanityFilter.firstMatched("   "));
+
+        FilterResponse nullResponse = normalProfanityFilter.allMatched(null);
+        FilterResponse emptyResponse = normalProfanityFilter.allMatched("  ");
+
+        assertTrue(nullResponse.filterWords().isEmpty());
+        assertTrue(emptyResponse.filterWords().isEmpty());
+    }
+
+    @ParameterizedTest
+    @DisplayName("특수문자가 포함된 비속어를 필터링할 수 있다")
+    @ValueSource(strings = {
+            "아 진짜 욕!@#설 하고싶네",
+            "이런 나쁜!@#놈을 봤나",
+            "진짜 빡치네 욕&*&설...",
+            "이 비$@속!!어를 어떻게 참냐",
+            "욕@#$%설하면서 화를 풀어",
+            "나쁜^^^놈 같으니라고",
+            "정말 비*&^속!@#어다",
+            "이런 욕12#설이란게 말이죠",
+            "비!!속##어가 나올 뻔",
+            "참 나쁜~~~놈 같구나"
+    })
+    void handleSpecialCharacters(String text) {
+        FilterResponse response = normalProfanityFilter.allMatched(text);
+        assertFalse(response.filterWords().isEmpty());
+        log.info("Found words: {}", response.filterWords());
+    }
 }

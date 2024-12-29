@@ -19,21 +19,21 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class DefaultProfanityHandlerTest {
 
     private static final Logger log = LogManager.getLogger(DefaultProfanityHandlerTest.class);
-    private ProfanityHandler ProfanityHandler;
+    private ProfanityHandler profanityHandler;
 
     @BeforeEach
     void setUp() {
         InmemoryProfanityRepository repository = new InmemoryProfanityRepository();
-        QuickProfanityFilter quickProfanityFilter = new QuickProfanityFilter();
         NormalProfanityFilter normalProfanityFilter = new NormalProfanityFilter(repository);
         FakeApplicationEventPublisher eventPublisher = new FakeApplicationEventPublisher();
 
         repository.save(ProfanityWord.create("욕설"));
         repository.save(ProfanityWord.create("나쁜놈"));
         repository.save(ProfanityWord.create("비속어"));
+        repository.save(ProfanityWord.create("씨뻘"));
         normalProfanityFilter.synchronizeProfanityTrie();
 
-        ProfanityHandler = new DefaultProfanityHandler(quickProfanityFilter, normalProfanityFilter, eventPublisher);
+        profanityHandler = new DefaultProfanityHandler(normalProfanityFilter, eventPublisher);
     }
 
 
@@ -44,7 +44,7 @@ class DefaultProfanityHandlerTest {
         String word = "'씨뻘'욕설이 들어간 문장입니다.";
 
         // when
-        ApiResponse response = ProfanityHandler.quickFilter(word);
+        ApiResponse response = profanityHandler.quickFilter(word);
 
         // then
         Set<Detected> detected = response.detected();
@@ -59,7 +59,7 @@ class DefaultProfanityHandlerTest {
         String word = "욕설이 들어간 문장입니다.";
 
         // when
-        ApiResponse response = ProfanityHandler.normalFilter(word);
+        ApiResponse response = profanityHandler.normalFilter(word);
 
         // then
         log.info("응답 : {}", response);
@@ -75,7 +75,7 @@ class DefaultProfanityHandlerTest {
         String word = "욕설이 들어간 문장입니다.";
 
         // when
-        ApiResponse response = ProfanityHandler.sanitizeProfanity(word);
+        ApiResponse response = profanityHandler.sanitizeProfanity(word);
 
         // then
         log.info("응답 : {}", response);
