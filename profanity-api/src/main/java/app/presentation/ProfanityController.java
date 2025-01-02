@@ -49,6 +49,7 @@ public class ProfanityController {
         final String clientIp = getClientIP(httpRequest);
         final String referrer = getReferrer(httpRequest);
 
+        log.info("api key : {}", apiKey);
         log.info("[API-JSON] Client IP : {} / Referer : {} / Request : {}", clientIp, referrer, request);
         final FilterRequest filterRequest = FilterRequest.create(request.text(), request.mode(), apiKey, clientIp, referrer);
         FilterApiResponse response = profanityHandler.requestFacadeFilter(filterRequest);
