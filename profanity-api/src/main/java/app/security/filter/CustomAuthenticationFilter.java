@@ -32,7 +32,6 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
         try {
             Authentication authentication = authenticationService.getAuthentication(request);
             SecurityContextHolder.getContext().setAuthentication(authentication);
-
         } catch (Exception exp) {
             log.error("Authentication failed: {}", exp.getMessage());
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -41,24 +40,30 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
                 writer.print(exp.getMessage());
                 writer.flush();
             }
-            // 예외 발생시 필터 체인을 계속 진행하지 않음
+            return; // 여기서 체인 중단
         }
-
-
         filterChain.doFilter(request, response);
     }
 
     @Override
     protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
         String path = request.getRequestURI();
+        String method = request.getMethod();
         log.info("Request URI: {}", path);
 
         // 정적 리소스 체크
         if (PathRequest.toStaticResources().atCommonLocations().matches(request)) {
             return true;
         }
+
+        //루트 경로 체크 ( /index.html )
+        if (path.equals("/") || path.equals("/index.html")) {
+            return true;
+        }
+
         // 제외 경로 정확한 체크
-        return ExcludePath.getPaths().stream()
-                .anyMatch(excludePath -> path.startsWith("/" + excludePath));
+        return ExcludePath.getPaths()
+                .stream()
+                .anyMatch(excludePath -> excludePath.isMatch(path, method));
     }
 }

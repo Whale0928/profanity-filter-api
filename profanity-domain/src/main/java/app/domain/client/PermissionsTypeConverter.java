@@ -22,6 +22,9 @@ public class PermissionsTypeConverter
 
     @Override
     public List<PermissionsType> convertToEntityAttribute(String dataset) {
+        if (dataset == null || dataset.isEmpty()) {
+            return List.of();
+        }
         return Arrays.stream(dataset.split(SPLIT_CHAR)).map(PermissionsType::valueOf).toList();
     }
 

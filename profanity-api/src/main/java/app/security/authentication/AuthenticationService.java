@@ -30,6 +30,8 @@ public class AuthenticationService {
         ClientMetadata metadata = clientMetadataReader.read(apiKey);
 
         CustomPrincipal principal = CustomPrincipal.builder()
+                .apiKey(apiKey)
+                .id(metadata.id())
                 .email(metadata.email())
                 .issuerInfo(metadata.issuerInfo())
                 .permissions(metadata.permissions())

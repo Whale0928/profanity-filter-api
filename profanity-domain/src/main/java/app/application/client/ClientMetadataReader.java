@@ -23,6 +23,7 @@ public class ClientMetadataReader {
         final List<String> permissions = clients.getPermissions().stream().map(PermissionsType::getValue).toList();
 
         return ClientMetadata.builder()
+                .id(clients.getId())
                 .email(clients.getEmail())
                 .issuerInfo(clients.getIssuerInfo())
                 .note(clients.getNote())
