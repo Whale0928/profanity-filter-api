@@ -10,5 +10,4 @@ spring:
       - domain
       - core
 
-
 # 실행 환경에 따른 로그 레벨 설정
