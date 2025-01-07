@@ -15,9 +15,10 @@ import java.util.NoSuchElementException;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ClientMetadataReader {
+public class ClientMetadataReader implements MetadataReader {
     private final ClientsRepository clientsRepository;
 
+    @Override
     public ClientMetadata read(String apiKey) {
 
         Clients clients = clientsRepository.findByApiKey(apiKey)

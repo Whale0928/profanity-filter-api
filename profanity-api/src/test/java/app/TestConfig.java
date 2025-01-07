@@ -1,6 +1,8 @@
 package app;
 
+import app.application.client.MetadataReader;
 import app.application.filter.ProfanityHandler;
+import app.fixture.FakeClientMetadataReader;
 import app.fixture.FakeProfanityHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -15,6 +17,12 @@ public class TestConfig {
     @Primary
     public ProfanityHandler fakeProfanityFilterService() {
         return new FakeProfanityHandler();
+    }
+
+    @Bean
+    @Primary
+    public MetadataReader fakeMetadataReader() {
+        return new FakeClientMetadataReader();
     }
 
     @Bean

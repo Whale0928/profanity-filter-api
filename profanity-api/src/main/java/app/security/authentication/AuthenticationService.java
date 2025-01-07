@@ -1,6 +1,6 @@
 package app.security.authentication;
 
-import app.application.client.ClientMetadataReader;
+import app.application.client.MetadataReader;
 import app.core.data.response.constant.StatusCode;
 import app.domain.client.ClientMetadata;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,7 +12,6 @@ import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.Objects;
 
 @Slf4j
 @Component
@@ -20,12 +19,12 @@ import java.util.Objects;
 public class AuthenticationService {
     private static final String AUTH_TOKEN_HEADER_NAME = "X-API-KEY";
     private static final String ROLE_PREFIX = "ROLE_";
-    private final ClientMetadataReader clientMetadataReader;
+    private final MetadataReader clientMetadataReader;
 
     public Authentication getAuthentication(HttpServletRequest request) {
         String apiKey = request.getHeader(AUTH_TOKEN_HEADER_NAME);
 
-        if (Objects.isNull(apiKey)) {
+        if (apiKey == null || apiKey.isEmpty()) {
             StatusCode unauthorized = StatusCode.UNAUTHORIZED;
             throw new BadCredentialsException(String.valueOf(unauthorized.code()));
         }
