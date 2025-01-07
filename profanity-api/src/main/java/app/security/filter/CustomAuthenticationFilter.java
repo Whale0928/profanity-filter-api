@@ -2,47 +2,41 @@ package app.security.filter;
 
 import app.security.authentication.AuthenticationService;
 import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
-import org.springframework.http.MediaType;
 import org.springframework.lang.NonNull;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
-
-import java.io.IOException;
-import java.io.PrintWriter;
 
 @Slf4j
 @RequiredArgsConstructor
 public class CustomAuthenticationFilter extends OncePerRequestFilter {
 
     private final AuthenticationService authenticationService;
+    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
     @Override
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
-            @NonNull FilterChain filterChain
-    ) throws ServletException, IOException {
+            @NonNull FilterChain filterChain) {
         try {
             Authentication authentication = authenticationService.getAuthentication(request);
             SecurityContextHolder.getContext().setAuthentication(authentication);
+            filterChain.doFilter(request, response);
+
         } catch (Exception exp) {
-            log.error("Authentication failed: {}", exp.getMessage());
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-            try (PrintWriter writer = response.getWriter()) {
-                writer.print(exp.getMessage());
-                writer.flush();
-            }
-            return; // 여기서 체인 중단
+            request.setAttribute("exception", exp);
+            customAuthenticationEntryPoint
+                    .commence(request, response, new AuthenticationException(exp.getMessage()) {
+                            }
+                    );
         }
-        filterChain.doFilter(request, response);
     }
 
     @Override
@@ -56,7 +50,6 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
             return true;
         }
 
-        //루트 경로 체크 ( /index.html )
         if (path.equals("/") || path.equals("/index.html")) {
             return true;
         }

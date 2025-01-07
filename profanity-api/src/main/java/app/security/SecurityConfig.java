@@ -52,7 +52,7 @@ public class SecurityConfig {
                                 .requestMatchers("/api/v1/auth/**").permitAll()
                                 .anyRequest().authenticated()
                 )
-                .addFilterBefore(new CustomAuthenticationFilter(authenticationService), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new CustomAuthenticationFilter(authenticationService, customAuthenticationEntryPoint), UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(exceptionHandling -> exceptionHandling.authenticationEntryPoint(customAuthenticationEntryPoint))
                 .build();
     }

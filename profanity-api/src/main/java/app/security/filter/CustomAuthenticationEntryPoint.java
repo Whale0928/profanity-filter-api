@@ -32,9 +32,7 @@ public class CustomAuthenticationEntryPoint implements org.springframework.secur
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType(APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
-
         Exception exception = (Exception) request.getAttribute("exception");
-
         if (Objects.isNull(exception)) exception = authException;
         resolver.resolveException(request, response, null, exception);
     }

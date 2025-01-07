@@ -1,6 +1,7 @@
 package app.security.authentication;
 
 import app.application.client.ClientMetadataReader;
+import app.core.data.response.constant.StatusCode;
 import app.domain.client.ClientMetadata;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -24,8 +25,10 @@ public class AuthenticationService {
     public Authentication getAuthentication(HttpServletRequest request) {
         String apiKey = request.getHeader(AUTH_TOKEN_HEADER_NAME);
 
-        if (Objects.isNull(apiKey))
-            throw new BadCredentialsException("api key required");
+        if (Objects.isNull(apiKey)) {
+            StatusCode unauthorized = StatusCode.UNAUTHORIZED;
+            throw new BadCredentialsException(String.valueOf(unauthorized.code()));
+        }
 
         ClientMetadata metadata = clientMetadataReader.read(apiKey);
 

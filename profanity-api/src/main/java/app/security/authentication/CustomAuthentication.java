@@ -27,13 +27,12 @@ public class CustomAuthentication extends AbstractAuthenticationToken {
 
     @Override
     public Object getCredentials() {
-        log.info("getCredentials() called");
+        ;
         return apiKey;
     }
 
     @Override
     public Object getPrincipal() {
-        log.info("getPrincipal() called");
         return details;
     }
 }

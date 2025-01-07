@@ -1,5 +1,6 @@
 package app.application.client;
 
+import app.core.data.response.constant.StatusCode;
 import app.domain.client.ClientMetadata;
 import app.domain.client.Clients;
 import app.domain.client.ClientsRepository;
@@ -9,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Slf4j
 @Service
@@ -19,7 +21,8 @@ public class ClientMetadataReader {
     public ClientMetadata read(String apiKey) {
 
         Clients clients = clientsRepository.findByApiKey(apiKey)
-                .orElseThrow(() -> new IllegalArgumentException("not found client key:" + apiKey));
+                .orElseThrow(() -> new NoSuchElementException(StatusCode.NOT_FOUND_CLIENT.stringCode()));
+
         final List<String> permissions = clients.getPermissions().stream().map(PermissionsType::getValue).toList();
 
         return ClientMetadata.builder()
