@@ -1,19 +1,34 @@
 package app.fixture;
 
+import app.application.apikey.KeyGenerator;
 import app.application.client.MetadataReader;
 import app.core.data.response.constant.StatusCode;
 import app.domain.client.ClientMetadata;
 import app.domain.client.PermissionsType;
 
+import java.security.NoSuchAlgorithmException;
 import java.util.NoSuchElementException;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class FakeClientMetadataReader implements MetadataReader {
+    public static final CopyOnWriteArrayList<String> validKeys = new CopyOnWriteArrayList<>();
+    private final KeyGenerator apiKeyGenerator;
+
+    public FakeClientMetadataReader(KeyGenerator apiKeyGenerator) throws NoSuchAlgorithmException {
+        this.apiKeyGenerator = apiKeyGenerator;
+        validKeys.add(apiKeyGenerator.generateApiKey());
+        validKeys.add(apiKeyGenerator.generateApiKey());
+    }
 
     @Override
     public ClientMetadata read(String apiKey) {
 
-        if (apiKey.equals("valid-api-key")) {
+        if (Boolean.FALSE.equals(apiKeyGenerator.validateApiKey(apiKey))) {
+            throw new IllegalArgumentException(StatusCode.INVALID_API_KEY.stringCode());
+        }
+
+        if (validKeys.contains(apiKey)) {
             return ClientMetadata.builder()
                     .id(UUID.randomUUID())
                     .email("fake@mail.com")

@@ -1,5 +1,6 @@
 package app;
 
+import app.application.apikey.KeyGenerator;
 import app.application.client.MetadataReader;
 import app.application.filter.ProfanityHandler;
 import app.fixture.FakeClientMetadataReader;
@@ -11,6 +12,8 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 
+import java.security.NoSuchAlgorithmException;
+
 @TestConfiguration
 public class TestConfig {
     @Bean
@@ -21,9 +24,10 @@ public class TestConfig {
 
     @Bean
     @Primary
-    public MetadataReader fakeMetadataReader() {
-        return new FakeClientMetadataReader();
+    public MetadataReader fakeMetadataReader(KeyGenerator apiKeyGenerator) throws NoSuchAlgorithmException {
+        return new FakeClientMetadataReader(apiKeyGenerator);
     }
+
 
     @Bean
     public ObjectMapper objectMapper() {
