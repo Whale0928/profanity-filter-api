@@ -6,6 +6,7 @@ import app.core.data.response.constant.StatusCode;
 import app.dto.request.ApiRequest;
 import app.fixture.ApiTestFixture;
 import app.fixture.FakeClientMetadataReader;
+import app.fixture.SecurityFakeStubConfig;
 import app.security.SecurityConfig;
 import app.security.authentication.AuthenticationService;
 import app.security.filter.CustomAuthenticationEntryPoint;
@@ -28,6 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(controllers = ProfanityController.class)
 @Import({
         TestConfig.class,
+        SecurityFakeStubConfig.class,
         SecurityConfig.class,
         CustomAuthenticationFilter.class,
         CustomAuthenticationEntryPoint.class,
