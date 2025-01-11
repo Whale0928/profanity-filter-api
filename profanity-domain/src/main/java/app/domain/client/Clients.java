@@ -1,6 +1,7 @@
 package app.domain.client;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -14,6 +15,7 @@ import org.hibernate.annotations.Comment;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.UUID;
 
 import static lombok.AccessLevel.PRIVATE;
@@ -54,6 +56,12 @@ public class Clients {
     @Comment("비고")
     @Column(name = "note")
     private String note;
+
+    @Builder.Default
+    @Comment("권한")
+    @Column(name = "permissions", nullable = false, columnDefinition = "TEXT")
+    @Convert(converter = PermissionsTypeConverter.class)
+    private List<PermissionsType> permissions = PermissionsType.defaultPermissions();
 
     @Builder.Default
     @Comment("발급일시")
