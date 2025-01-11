@@ -1,7 +1,7 @@
 ### 퀵 모델 비속어를 검증할 수 있다.
 POST {{host}}/api/v1/filter
 Content-Type: application/json
-x-api-key: L7tHdSsKmXCMsZOH5HYWr2LEFZx3DZUHnisS7NfFyHM
+x-api-key: {{api_key}}
 
 {
   "text": "{{text}}",
