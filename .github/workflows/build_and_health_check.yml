@@ -5,7 +5,7 @@ on:
     branches:
       - develop
       - release
-    types: [opened, synchronize, reopened]
+    types: [ opened, synchronize, reopened ]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -29,9 +29,13 @@ jobs:
           chmod +x gradlew
           ./gradlew clean build
 
-      - name: 애플리케이션 실행
+      - name: 환경 변수 파일 생성
         run: |
-          nohup java -jar build/libs/*.jar &
+          echo "${{ secrets.ENV }}" > .env
+
+      - name: Docker Compose 실행
+        run: |
+          docker compose up -d profanity-filter-api-blue-1
           echo "애플리케이션 시작 대기 중..."
           sleep 30
 
