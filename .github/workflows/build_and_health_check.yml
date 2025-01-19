@@ -1,0 +1,45 @@
+name: build and health check
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - release
+    types: [ opened, synchronize, reopened ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: JDK 21 설정
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Gradle 빌드
+        run: |
+          chmod +x gradlew
+          ./gradlew clean build
+
+      - name: 헬스체크 수행
+        id: health_check
+        run: |
+          for i in {1..5}; do
+            response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/system/actuator/health)
+            if [ "$response" == "200" ]; then
+              echo "Health check succeeded with status 200"
+              exit 0
+            fi
+            echo "Attempt $i: Health check failed with status $response"
+            sleep 3
+          done
+          echo "Health check failed after 5 attempts"
+          exit 1
