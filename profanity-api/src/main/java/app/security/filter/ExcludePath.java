@@ -9,8 +9,8 @@ import java.util.List;
 @Getter
 @AllArgsConstructor
 public enum ExcludePath {
+    ACTUATOR("system/actuator", "시스템 관련 API", List.of(HttpMethod.GET)),
     CLIENTS("clients", "클라이언트 관련 API", List.of(HttpMethod.POST)),
-    FILTER("filter", "필터 관련 API", List.of(HttpMethod.GET, HttpMethod.POST)),
     RESOURCE("resource", "리소스 관련 API", List.of(HttpMethod.GET));
 
     private final String path;
@@ -31,9 +31,6 @@ public enum ExcludePath {
     }
 
     public boolean isMatch(String path, String method) {
-        if (!isPossibleMethod(method)) {
-            return false;
-        }
-        return path.contains("/" + this.getPath());
+        return path.contains("/" + this.getPath()) && !isPossibleMethod(method);
     }
 }

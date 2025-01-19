@@ -1,6 +1,9 @@
 server:
   port: ${SERVER_PORT:8080}
   forward-headers-strategy: native
+  tomcat:
+    mbeanregistry:
+      enabled: true
 
 spring:
   profiles:
@@ -9,5 +12,16 @@ spring:
       - redis
       - domain
       - core
+  security:
+    # Security 설정 추가
+    endpoints:
+      actuator:
+        ip-address-list: 127.0.0.1
 
-# 실행 환경에 따른 로그 레벨 설정
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: [ "health", "prometheus" ]
+      base-path: /system/actuator
