@@ -10,6 +10,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
@@ -24,8 +25,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
+@WebMvcTest(
+        controllers = ProfanityController.class,
+        excludeAutoConfiguration = SecurityAutoConfiguration.class
+)
 @Import(TestConfig.class)
-@WebMvcTest(ProfanityController.class)
 class ProfanityControllerTest {
     private static final String REQUEST_URL = "/api/v1/filter";
     private ApiTestFixture fixture;
@@ -51,6 +55,7 @@ class ProfanityControllerTest {
 
             // when
             var response = mockMvc.perform(post(REQUEST_URL)
+                            .header("x-api-key", "test")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(mapper.writeValueAsString(quickRequest)))
                     .andExpect(status().isOk())
@@ -72,6 +77,7 @@ class ProfanityControllerTest {
 
             // when
             var response = mockMvc.perform(post(REQUEST_URL)
+                            .header("x-api-key", "test")
                             .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                             .param("text", quickRequest.text())
                             .param("mode", quickRequest.mode().name()))
@@ -94,6 +100,7 @@ class ProfanityControllerTest {
 
             // when
             var response = mockMvc.perform(post(REQUEST_URL)
+                            .header("x-api-key", "test")
                             .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                             .param("text", quickRequest.text())
                             .param("mode", quickRequest.mode().name()))
@@ -114,6 +121,7 @@ class ProfanityControllerTest {
             // given
             // when
             mockMvc.perform(post(REQUEST_URL)
+                            .header("x-api-key", "test")
                             .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                             .param("text", "")
                             .param("mode", ""))
@@ -136,6 +144,7 @@ class ProfanityControllerTest {
 
             // when
             var response = mockMvc.perform(post(REQUEST_URL)
+                            .header("x-api-key", "test")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(mapper.writeValueAsString(normalRequest)))
                     .andExpect(status().isOk())
@@ -157,6 +166,7 @@ class ProfanityControllerTest {
 
             // when
             var response = mockMvc.perform(post(REQUEST_URL)
+                            .header("x-api-key", "test")
                             .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                             .param("text", normalRequest.text())
                             .param("mode", normalRequest.mode().name()))
@@ -186,6 +196,7 @@ class ProfanityControllerTest {
 
             // when
             var response = mockMvc.perform(post(REQUEST_URL)
+                            .header("x-api-key", "test")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(mapper.writeValueAsString(sanitizeRequest)))
                     .andExpect(status().isOk())
@@ -209,6 +220,7 @@ class ProfanityControllerTest {
 
             // when
             var response = mockMvc.perform(post(REQUEST_URL)
+                            .header("x-api-key", "test")
                             .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                             .param("text", sanitizeRequest.text())
                             .param("mode", sanitizeRequest.mode().name()))

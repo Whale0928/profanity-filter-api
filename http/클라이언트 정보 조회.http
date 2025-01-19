@@ -1,0 +1,4 @@
+### (성공 케이스) 유효한 클라이언트 등록 요청
+GET {{host}}/api/v1/clients
+Content-Type: application/json
+X-API-KEY: {{api_key}}
