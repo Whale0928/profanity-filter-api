@@ -5,7 +5,7 @@ on:
     branches:
       - develop
       - release
-    types: [ opened, synchronize, reopened ]
+    types: [opened, synchronize, reopened]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -33,18 +33,17 @@ jobs:
         run: |
           nohup java -jar build/libs/*.jar &
           echo "애플리케이션 시작 대기 중..."
-          sleep 30  # 애플리케이션 시작 대기
+          sleep 30
 
       - name: 헬스체크 수행
-        id: health_check
         run: |
           for i in {1..5}; do
-            response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/system/actuator/health)
-            if [ "$response" == "200" ]; then
-              echo "Health check succeeded with status 200"
+            response=$(curl -s -w "\n%{http_code}" http://127.0.0.1:9999/system/actuator/health)
+            if [[ $response == *"UP"* ]]; then
+              echo "Health check succeeded with UP status"
               exit 0
             fi
-            echo "Attempt $i: Health check failed with status $response"
+            echo "Attempt $i: Health check failed"
             sleep 3
           done
           echo "Health check failed after 5 attempts"
