@@ -1,4 +1,4 @@
-name: build and health check
+name: Build and Health Check
 
 on:
   pull_request:
@@ -28,6 +28,12 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew clean build
+
+      - name: 애플리케이션 실행
+        run: |
+          nohup java -jar build/libs/*.jar &
+          echo "애플리케이션 시작 대기 중..."
+          sleep 30  # 애플리케이션 시작 대기
 
       - name: 헬스체크 수행
         id: health_check
