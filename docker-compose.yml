@@ -12,7 +12,6 @@ services:
       - TZ=Asia/Seoul
     env_file: .env
     command: [ "java", "-jar", "/app.jar" ]
-
   profanity-filter-api-blue-2:
     build:
       context: .

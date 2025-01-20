@@ -30,6 +30,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+    private static final String DOCKER_LOCAL_IP_ADDRESS = "172.18.0.1";
     private final AuthenticationService authenticationService;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
@@ -48,7 +49,7 @@ public class SecurityConfig {
                         authorizationManagerRequestMatcherRegistry
                                 -> authorizationManagerRequestMatcherRegistry
                                 .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
-                                .requestMatchers("/system/actuator/**").access(IpAddressAuthorizationManager.hasIpAddress("127.0.0.1"))
+                                .requestMatchers("/system/actuator/**").access(IpAddressAuthorizationManager.hasIpAddress(DOCKER_LOCAL_IP_ADDRESS))
                                 .requestMatchers(HttpMethod.GET, "/", "/index.html").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/api/v1/clients/**").permitAll()
                                 .requestMatchers("/api/v1/auth/**").permitAll()
