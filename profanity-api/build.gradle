@@ -1,5 +1,17 @@
+plugins {
+    id "org.asciidoctor.jvm.convert" version "3.3.2"
+}
+
+
 bootJar.enabled = true
 jar.enabled = false
+
+configurations {
+    asciidoctorExt
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
 
 dependencies {
     runtimeOnly(project(':profanity-storage:redis'))
@@ -14,6 +26,38 @@ dependencies {
 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-registry-prometheus'
+
+    asciidoctorExt 'org.springframework.restdocs:spring-restdocs-asciidoctor'
+    testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
 }
 
 tasks.register("prepareKotlinBuildScriptModel") {}
+
+ext {
+    snippetsDir = file('build/generated-snippets') as File
+}
+
+test {
+    outputs.dir snippetsDir
+    useJUnitPlatform()
+}
+
+asciidoctor {
+    inputs.dir snippetsDir
+    configurations 'asciidoctorExt'
+    dependsOn test
+    sources {
+        include("**/index.adoc")
+    }
+    baseDirFollowsSourceFile()
+}
+
+tasks.register('copyRestDocs', Copy) {
+    dependsOn asciidoctor
+    from file("build/docs/asciidoc/index.html")
+    into 'docs'
+}
+
+build {
+    dependsOn copyRestDocs
+}
