@@ -12,12 +12,6 @@ spring:
       - redis
       - domain
       - core
-  security:
-    # Security 설정 추가
-    endpoints:
-      actuator:
-        ip-address-list: 127.0.0.1
-
 
 management:
   endpoints:
