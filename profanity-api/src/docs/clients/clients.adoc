@@ -2,12 +2,12 @@
 
 include::api/register.adoc[]
 
-
-
-
+'''
+include::api/info.adoc[]
 '''
 
-=== 정보 확인  ===
+=== 키 확인  ===
+
 [NOTE]
 ====
 미 개발된 기능입니다.
