@@ -1,8 +1,10 @@
-name: api documentation deploy
+name: Deploy Jekyll with GitHub Pages dependencies preinstalled
 
 on:
   push:
     branches: [ "release","pr/*" ]
+
+
   workflow_dispatch:
 
 permissions:
