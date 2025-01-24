@@ -1,8 +1,8 @@
-name: Deploy Jekyll with GitHub Pages dependencies preinstalled
+name: api documentation deploy
 
 on:
   push:
-    branches: [ "release" ]
+    branches: [ "release","pr/*" ]
   workflow_dispatch:
 
 permissions:
@@ -27,22 +27,24 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Build application
+      - name: build application
         run: ./gradlew build
 
-      - name: Setup Pages
+      - name: generate rest docs
+        run: ./gradlew generateRestDocs
+
+      - name: setup pages
         uses: actions/configure-pages@v5
 
-      - name: Build with Jekyll
+      - name: build with jekyll
         uses: actions/jekyll-build-pages@v1
         with:
-          source: ./docs
+          source: ./profanity-api/build/docs
           destination: ./_site
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
 
-  # 배포 작업
   deploy:
     environment:
       name: github-pages
