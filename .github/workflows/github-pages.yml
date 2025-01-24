@@ -28,9 +28,6 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: build application
-        run: ./gradlew build
-
       - name: generate rest docs
         run: ./gradlew generateRestDocs
 
