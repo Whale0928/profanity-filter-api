@@ -24,4 +24,14 @@ public record CustomPrincipal(
         }
         return null;
     }
+    public static CustomPrincipal anonymous() {
+        return CustomPrincipal.builder()
+                .apiKey("anonymous")
+                .id(UUID.fromString("00000000-0000-0000-0000-000000000000"))
+                .email("anonymous")
+                .issuerInfo("anonymous")
+                .permissions(List.of("anonymous"))
+                .issuedAt("anonymous")
+                .build();
+    }
 }

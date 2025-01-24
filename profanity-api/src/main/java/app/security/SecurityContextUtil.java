@@ -17,6 +17,9 @@ import java.util.UUID;
 public class SecurityContextUtil {
     public static CustomPrincipal getAuthentication() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            return CustomPrincipal.anonymous();
+        }
         return CustomPrincipal.of(authentication.getPrincipal());
     }
 
