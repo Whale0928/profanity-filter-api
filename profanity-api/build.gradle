@@ -6,6 +6,10 @@ plugins {
 bootJar.enabled = true
 jar.enabled = false
 
+ext {
+    snippetsDir = file('build/generated-snippets') as File
+}
+
 configurations {
     asciidoctorExt
     compileOnly {
@@ -33,31 +37,30 @@ dependencies {
 
 tasks.register("prepareKotlinBuildScriptModel") {}
 
-ext {
-    snippetsDir = file('build/generated-snippets') as File
+test {
+    useJUnitPlatform() {
+        excludeTags 'restdocs'
+    }
 }
 
-test {
+tasks.register('restdocs', Test) {
     outputs.dir snippetsDir
-    useJUnitPlatform()
+    useJUnitPlatform {
+        includeTags 'restdocs'
+    }
+}
+
+tasks.register('generateRestDocs') {
+    dependsOn restdocs, asciidoctor
 }
 
 asciidoctor {
     inputs.dir snippetsDir
     configurations 'asciidoctorExt'
-    dependsOn test
+    dependsOn restdocs
+    sourceDir file('src/docs')
     sources {
-        include("**/index.adoc")
+        include("index.adoc")
     }
     baseDirFollowsSourceFile()
-}
-
-tasks.register('copyRestDocs', Copy) {
-    dependsOn asciidoctor
-    from file("build/docs/asciidoc/index.html")
-    into 'docs'
-}
-
-build {
-    dependsOn copyRestDocs
 }

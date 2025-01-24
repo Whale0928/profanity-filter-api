@@ -1,0 +1,25 @@
+ifndef::snippets[]
+:snippets: ../../build/generated-snippets
+endif::[]
+= Profanity Filter API 문서
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toc-title: 목차
+:toclevels: 3
+:sectlinks:
+:sectnums:
+
+[NOTE]
+====
+이 API문서는 profanity-api 프로젝트의 API를 설명합니다.
+
+포함되면 좋을것 같은 내용이나 수정이 필요한 내용은 언제든지 이슈 혹은 PR을 통해 알려주세요.
+====
+
+'''
+
+include::clients/clients.adoc[]
+
+'''

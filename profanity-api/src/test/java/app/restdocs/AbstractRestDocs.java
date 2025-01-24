@@ -20,7 +20,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 @ExtendWith(RestDocumentationExtension.class)
 public abstract class AbstractRestDocs {
 
-
     protected MockMvc mockMvc;
     protected ObjectMapper objectMapper = new ObjectMapper();
 

@@ -20,7 +20,7 @@ import static org.springframework.restdocs.payload.PayloadDocumentation.requestF
 import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@Tag("RestDocs")
+@Tag("restdocs")
 class RestDocsClientsControllerTest extends AbstractRestDocs {
     private final ClientsCommandService clientsCommandService = mock(ClientsCommandService.class);
     private final ClientMetadataReader clientReader = mock(ClientMetadataReader.class);
@@ -31,13 +31,13 @@ class RestDocsClientsControllerTest extends AbstractRestDocs {
     }
 
     @Test
-    @DisplayName("클라이언트 등록 API 문서화")
+    @DisplayName("클라이언트 등록 API")
     void step_1() throws Exception {
         var request = ClientRegistRequest.builder()
-                .name("name")
-                .email("email@email.com")
-                .issuerInfo("팀 엑스코드")
-                .note("개인 사용 목적의 이유로 신청합니다")
+                .name("팀 보틀노트")
+                .email("bottlenote@email.com")
+                .issuerInfo("도메인(https://bottle-note.com)  ,  연락처(010-1234-5678)")
+                .note("학원에서 진행하는 팀 프로젝트 입니다. 피드 작성 시 비속어 검증을 위해 신청 합니다.")
                 .build();
         var response = ClientsRegistResponse.builder()
                 .name(request.name())
@@ -53,7 +53,7 @@ class RestDocsClientsControllerTest extends AbstractRestDocs {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andDo(
-                        document("api.clients/register",
+                        document("api/clients/register",
                                 requestFields(
                                         fieldWithPath("name").description("이름 또는 조직명")
                                                 .type(JsonFieldType.STRING),
@@ -67,14 +67,10 @@ class RestDocsClientsControllerTest extends AbstractRestDocs {
                                 responseFields(
                                         fieldWithPath("status").type(JsonFieldType.OBJECT)
                                                 .description("응답 상태 정보"),
-                                        fieldWithPath("status.code").type(JsonFieldType.NUMBER)
-                                                .description("응답 코드"),
-                                        fieldWithPath("status.message").type(JsonFieldType.STRING)
-                                                .description("응답 메시지"),
-                                        fieldWithPath("status.description").type(JsonFieldType.STRING)
-                                                .description("상세 설명"),
-                                        fieldWithPath("status.DetailDescription").type(JsonFieldType.STRING)
-                                                .description("추가 상세 설명"),
+                                        fieldWithPath("status.code").ignored(),
+                                        fieldWithPath("status.message").ignored(),
+                                        fieldWithPath("status.description").ignored(),
+                                        fieldWithPath("status.DetailDescription").ignored(),
                                         fieldWithPath("data").type(JsonFieldType.OBJECT)
                                                 .description("응답 데이터"),
                                         fieldWithPath("data.name").type(JsonFieldType.STRING)
