@@ -2,8 +2,7 @@ name: Deploy Jekyll with GitHub Pages dependencies preinstalled
 
 on:
   push:
-    branches: [ "release","pr/*" ]
-
+    branches: [ "pr/28-rest-docs-기반의-문서화-추가" ]
 
   workflow_dispatch:
 
