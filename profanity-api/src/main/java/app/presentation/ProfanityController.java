@@ -33,7 +33,7 @@ public class ProfanityController {
     private final ProfanityHandler profanityHandler;
 
 
-    @Cacheable(value = "request_filter", key = "{#request.text, #request.mode}")
+    @Cacheable(value = "request_filter", key = "#request.text + '_' + #request.mode")
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> basicProfanity(
             HttpServletRequest httpRequest,
@@ -50,7 +50,7 @@ public class ProfanityController {
         return ResponseEntity.ok(response);
     }
 
-    @Cacheable(value = "request_filter", key = "{#request.text, #request.mode}")
+    @Cacheable(value = "request_filter", key = "#request.text + '_' + #request.mode")
     @PostMapping(consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public ResponseEntity<?> basicProfanityByUrlencodedValue(
             HttpServletRequest httpRequest,
@@ -68,6 +68,7 @@ public class ProfanityController {
         );
     }
 
+    @Cacheable(value = "request_filter", key = "{#word}")
     @PostMapping("/advanced")
     public ResponseEntity<?> advancedProfanity(
             @RequestHeader(value = "x-api-key") String apiKey,
