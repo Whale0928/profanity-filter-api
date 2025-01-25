@@ -23,3 +23,6 @@ endif::[]
 include::clients/clients.adoc[]
 
 '''
+include::filter/filter.adoc[]
+
+'''

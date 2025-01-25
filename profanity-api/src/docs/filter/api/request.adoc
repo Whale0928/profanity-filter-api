@@ -1,0 +1,44 @@
+=== 필터링 요청  ===
+
+[NOTE]
+====
+비속어 검사를 요청하는 API입니다,
+====
+
+include::{snippets}/api/filter/request/curl-request.adoc[]
+
+[discrete]
+==== Request ====
+
+* 클라이언트 등록 후 발급받은 API Key를 사용하여 비속어를 검사할 수 있습니다.
+include::{snippets}/api/filter/request/request-headers.adoc[]
+include::{snippets}/api/filter/request/request-body.adoc[]
+include::{snippets}/api/filter/request/request-fields.adoc[]
+
+* 해당 API 요청 시 사용할 수 있는 mode 의 종류는 다음과 같습니다.
+
+[cols="1,4",options="header"]
+|===
+| 코드  | 설명
+
+|`QUICK`
+|매우 원색적인 표현 , 비속어만 간략하게 검증할 수 있습니다.
+
+|`NORMAL`
+|데이터베이스에 있는 모든 비속어를 검증할 수 있습니다.
+
+|`FILTER`
+|제공된 문자열에 검출된 모든 비속어를 마스킹 처리합니다.
+
+|===
+
+[discrete]
+==== Response ====
+
+include::{snippets}/api/filter/request/response-body.adoc[]
+include::{snippets}/api/filter/request/response-fields.adoc[]
+
+* elapsed 는 요청에 걸린 시간이 아닌 단어 탐색에 걸린 시간입니다.
+* 비속어가 검출되지 않은 경우에는 empty array 가 반환됩니다.
+* 비속어가 검출되었을 경우에는 해당 단어가 반환됩니다.
+* 비속어가 검출되었을 경우에 Mode가 `FILTER` 일 경우 해당 단어가 마스킹 처리되어 반환됩니다.
