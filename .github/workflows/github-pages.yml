@@ -2,7 +2,7 @@ name: Deploy Jekyll with GitHub Pages dependencies preinstalled
 
 on:
   push:
-    branches: [ "release","pr/28-rest-docs" ]
+    branches: [ "release" ]
   workflow_dispatch:
 
 permissions:
@@ -38,6 +38,7 @@ jobs:
         with:
           source: ./docs
           destination: ./_site
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
 
