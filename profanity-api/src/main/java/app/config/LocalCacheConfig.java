@@ -22,18 +22,40 @@ public class LocalCacheConfig {
     @Bean
     public CacheManager cacheManager() {
         List<CaffeineCache> caches = Arrays.stream(LocalCacheType.values())
-                .map(localCacheType ->
-                        new CaffeineCache(
-                                localCacheType.getCacheName(),
-                                Caffeine.newBuilder()
-                                        .recordStats()
-                                        .expireAfterWrite(localCacheType.getSecsToExpireAfterWrite(), TimeUnit.SECONDS)
-                                        .maximumSize(localCacheType.getEntryMaxSize())
-                                        .build()))
+                .map(this::createFilterCache)
                 .toList();
         SimpleCacheManager cacheManager = new SimpleCacheManager();
         cacheManager.setCaches(caches);
         log.info("{} :: cacheManager : {}", now(), cacheManager);
         return cacheManager;
     }
+
+    public CaffeineCache createFilterCache(LocalCacheType cacheType) {
+        // 캐시 설정을 위한 Caffeine 빌더 생성
+        Caffeine<Object, Object> caffeineBuilder = Caffeine.newBuilder();
+
+        // 캐시 통계 수집 활성화
+        caffeineBuilder.recordStats();
+
+        // 마지막 쓰기 이후 만료 시간 설정 (초 단위)
+        caffeineBuilder.expireAfterWrite(
+                cacheType.getSecsToExpireAfterWrite(),
+                TimeUnit.SECONDS
+        );
+
+        // 최대 캐시 항목 수 설정
+        caffeineBuilder.maximumWeight(cacheType.getEntryMaxSize())
+                .weigher((k, v) -> 1); // LFU 방식 사용을 위한 가중치 설정
+
+        var cache = caffeineBuilder.build();
+        log.info("Cache stats for {}: {}", cacheType.getCacheName(), cache.stats());
+
+
+        // CaffeineCache 객체 생성 및 반환
+        return new CaffeineCache(
+                cacheType.getCacheName(),
+                cache
+        );
+    }
+
 }
