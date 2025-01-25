@@ -36,9 +36,8 @@ jobs:
       - name: build with jekyll
         uses: actions/jekyll-build-pages@v1
         with:
-          source: ./profanity-api/build/docs
+          source: ./docs
           destination: ./_site
-
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
 

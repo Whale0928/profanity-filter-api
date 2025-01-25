@@ -50,10 +50,15 @@ tasks.register('restdocs', Test) {
     }
 }
 
-tasks.register('generateRestDocs') {
-    dependsOn restdocs, asciidoctor
+tasks.register('copyRestDocs', Copy) {
+    dependsOn asciidoctor
+    from file("build/docs/asciidoc/index.html")
+    into '../docs'
 }
 
+tasks.register('generateRestDocs') {
+    dependsOn restdocs, asciidoctor, copyRestDocs
+}
 asciidoctor {
     inputs.dir snippetsDir
     configurations 'asciidoctorExt'
