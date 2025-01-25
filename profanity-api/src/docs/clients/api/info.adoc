@@ -1,0 +1,19 @@
+=== 정보확인  ===
+
+[NOTE]
+====
+발급된 API 키를 사용하여 가입 시 작성한 클라이언트 정보를 확인합니다.
+====
+
+include::{snippets}/api/clients/info/curl-request.adoc[]
+
+[discrete]
+==== Request ====
+
+include::{snippets}/api/clients/info/request-headers.adoc[]
+
+[discrete]
+==== Response ====
+
+include::{snippets}/api/clients/info/response-body.adoc[]
+include::{snippets}/api/clients/info/response-fields.adoc[]
