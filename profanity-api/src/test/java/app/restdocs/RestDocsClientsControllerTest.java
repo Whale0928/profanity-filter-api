@@ -1,6 +1,5 @@
 package app.restdocs;
 
-import app.application.apikey.APIKeyGenerator;
 import app.application.apikey.ClientsCommandService;
 import app.application.client.ClientMetadataReader;
 import app.domain.client.ClientMetadata;
@@ -8,11 +7,9 @@ import app.dto.request.ClientRegistRequest;
 import app.dto.response.ClientsRegistResponse;
 import app.presentation.ClientsController;
 import app.security.SecurityContextUtil;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
 import org.springframework.http.MediaType;
 import org.springframework.restdocs.payload.JsonFieldType;
 
@@ -20,7 +17,6 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 import static org.springframework.restdocs.headers.HeaderDocumentation.headerWithName;
 import static org.springframework.restdocs.headers.HeaderDocumentation.requestHeaders;
@@ -36,18 +32,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class RestDocsClientsControllerTest extends AbstractRestDocs {
     private final ClientsCommandService clientsCommandService = mock(ClientsCommandService.class);
     private final ClientMetadataReader clientReader = mock(ClientMetadataReader.class);
-    private final MockedStatic<SecurityContextUtil> securityUtil = mockStatic(SecurityContextUtil.class);
-    private final APIKeyGenerator apiKeyGenerator = new APIKeyGenerator("solt", "SHA-256");
 
     @Override
     protected Object initController() {
         return new ClientsController(clientsCommandService, clientReader);
     }
 
-    @AfterEach
-    void tearDown() {
-        securityUtil.close();
-    }
 
     @Test
     @DisplayName("클라이언트 등록 API")
