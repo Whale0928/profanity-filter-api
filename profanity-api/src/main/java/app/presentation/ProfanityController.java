@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -31,6 +32,8 @@ public class ProfanityController {
 
     private final ProfanityHandler profanityHandler;
 
+
+    @Cacheable(value = "request_filter", key = "{#request.text, #request.mode}")
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> basicProfanity(
             HttpServletRequest httpRequest,
@@ -47,6 +50,7 @@ public class ProfanityController {
         return ResponseEntity.ok(response);
     }
 
+    @Cacheable(value = "request_filter", key = "{#request.text, #request.mode}")
     @PostMapping(consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public ResponseEntity<?> basicProfanityByUrlencodedValue(
             HttpServletRequest httpRequest,
