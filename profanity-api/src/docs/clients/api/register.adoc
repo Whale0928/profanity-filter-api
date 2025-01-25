@@ -1,0 +1,22 @@
+=== 신규 등록 ===
+
+[NOTE]
+====
+사용자 정보를 등록 후 API Key를 발급 받을 수 있는 API입니다
+
+발급된 API는 반드시 안전하게 보관해주세요
+====
+
+include::{snippets}/api/clients/register/curl-request.adoc[]
+
+[discrete]
+==== Request ====
+
+include::{snippets}/api/clients/register/request-body.adoc[]
+include::{snippets}/api/clients/register/request-fields.adoc[]
+
+[discrete]
+==== Response ====
+
+include::{snippets}/api/clients/register/response-body.adoc[]
+include::{snippets}/api/clients/register/response-fields.adoc[]

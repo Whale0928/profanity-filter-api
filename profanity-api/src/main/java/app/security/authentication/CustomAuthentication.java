@@ -27,7 +27,6 @@ public class CustomAuthentication extends AbstractAuthenticationToken {
 
     @Override
     public Object getCredentials() {
-        ;
         return apiKey;
     }
 

@@ -3,6 +3,8 @@ package app.presentation;
 import app.application.apikey.ClientsCommandService;
 import app.application.client.ClientMetadataReader;
 import app.core.data.response.ApiResponse;
+import app.core.data.response.Status;
+import app.core.data.response.constant.StatusCode;
 import app.domain.client.ClientMetadata;
 import app.dto.request.ClientRegistCommand;
 import app.dto.request.ClientRegistRequest;
@@ -29,6 +31,9 @@ public class ClientsController {
     @GetMapping
     public ResponseEntity<?> get() {
         final String apikey = SecurityContextUtil.getCurrentApikey();
+        if (apikey == null || apikey.isBlank()) {
+            return ApiResponse.error(Status.of(StatusCode.UNAUTHORIZED));
+        }
         ClientMetadata read = clientReader.read(apikey);
         return ApiResponse.ok(read);
     }
