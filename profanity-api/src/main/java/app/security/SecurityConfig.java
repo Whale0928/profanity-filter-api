@@ -16,7 +16,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.access.IpAddressAuthorizationManager;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -30,7 +29,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private static final String DOCKER_LOCAL_IP_ADDRESS = "172.18.0.1";
     private final AuthenticationService authenticationService;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
@@ -49,7 +47,7 @@ public class SecurityConfig {
                         authorizationManagerRequestMatcherRegistry
                                 -> authorizationManagerRequestMatcherRegistry
                                 .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
-                                .requestMatchers("/system/actuator/**").access(IpAddressAuthorizationManager.hasIpAddress(DOCKER_LOCAL_IP_ADDRESS))
+                                .requestMatchers(HttpMethod.GET,"/system/actuator/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/", "/index.html").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/api/v1/clients/**").permitAll()
                                 .requestMatchers("/api/v1/auth/**").permitAll()
