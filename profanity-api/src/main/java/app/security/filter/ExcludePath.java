@@ -26,11 +26,18 @@ public enum ExcludePath {
                 .anyMatch(excludePath -> path.contains("/" + excludePath));
     }
 
+    /**
+     * 가능한 메소드 타입인지 확인
+     * 같은 경우 true , 다른 경우 false
+     */
     public boolean isPossibleMethod(String method) {
-        return String.valueOf(this.getMethod()).equals(method);
+        return this.getMethod().stream()
+                .anyMatch(httpMethod -> httpMethod.matches(method));
     }
 
     public boolean isMatch(String path, String method) {
-        return path.contains("/" + this.getPath()) && !isPossibleMethod(method);
+        boolean contains = path.contains("/" + this.getPath());
+        boolean b = isPossibleMethod(method);
+        return contains && b;
     }
 }

@@ -1,6 +1,9 @@
 server:
   port: ${SERVER_PORT:8080}
   forward-headers-strategy: native
+  servlet:
+    encoding:
+      charset: UTF-8
   tomcat:
     mbeanregistry:
       enabled: true

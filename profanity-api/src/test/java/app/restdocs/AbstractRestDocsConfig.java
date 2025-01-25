@@ -15,9 +15,11 @@ public class AbstractRestDocsConfig {
     @Bean
     public RestDocumentationResultHandler write() {
         return MockMvcRestDocumentation.document(
-                "{class-name}/{method-name}", // 문서의 경로와 파일명을 지정
-                Preprocessors.preprocessRequest(Preprocessors.prettyPrint()),// 문서의 request 부분을 예쁘게 출력
-                Preprocessors.preprocessResponse(Preprocessors.prettyPrint())// 문서의 response 부분을 예쁘게 출력
+                "{class-name}/{method-name}",
+                Preprocessors.preprocessRequest(Preprocessors.prettyPrint(),
+                Preprocessors.modifyUris().scheme("https").host("api.profanity-filter.run").removePort()
+                ),
+                Preprocessors.preprocessResponse(Preprocessors.prettyPrint())
         );
     }
 }

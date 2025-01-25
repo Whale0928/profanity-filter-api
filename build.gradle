@@ -43,6 +43,11 @@ subprojects {
         // default lombok
         implementation 'org.projectlombok:lombok'
         annotationProcessor 'org.projectlombok:lombok'
+
+
+        // Cache
+        implementation 'org.springframework.boot:spring-boot-starter-cache'
+        implementation "com.github.ben-manes.caffeine:caffeine:3.1.8"
     }
 
     bootJar.enabled = false

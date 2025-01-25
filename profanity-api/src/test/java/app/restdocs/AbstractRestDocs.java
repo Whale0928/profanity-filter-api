@@ -36,7 +36,10 @@ public abstract class AbstractRestDocs {
 
                 .apply(documentationConfiguration(provider)
                         .operationPreprocessors()
-                        .withRequestDefaults(Preprocessors.prettyPrint())
+                        .withRequestDefaults(
+                                Preprocessors.prettyPrint(),
+                                Preprocessors.modifyUris().scheme("https").host("api.profanity-filter.run").removePort()
+                        )
                         .withResponseDefaults(Preprocessors.prettyPrint())
                 )
                 .alwaysDo(print())
