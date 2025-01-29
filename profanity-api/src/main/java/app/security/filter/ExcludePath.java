@@ -11,7 +11,9 @@ import java.util.List;
 public enum ExcludePath {
     ACTUATOR("actuator", "시스템 관련 API", List.of(HttpMethod.GET)),
     CLIENTS("clients", "클라이언트 관련 API", List.of(HttpMethod.POST)),
-    RESOURCE("resource", "리소스 관련 API", List.of(HttpMethod.GET));
+    RESOURCE("resource", "리소스 관련 API", List.of(HttpMethod.GET)),
+    EMAIL("send-email", "이메일 관련 API", List.of(HttpMethod.GET)),
+    ;
 
     private final String path;
     private final String description;
