@@ -24,15 +24,24 @@ dependencies {
     implementation project(':profanity-core')
     implementation project(':profanity-domain')
 
+    //web
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-security'
 
+    // monitoring
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-registry-prometheus'
 
+    // documentation
     asciidoctorExt 'org.springframework.restdocs:spring-restdocs-asciidoctor'
     testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
+
+    //Mail
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+    //thymeleaf(for email service)
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    implementation 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect'
 }
 
 tasks.register("prepareKotlinBuildScriptModel") {}
