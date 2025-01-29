@@ -1,5 +1,6 @@
 package app.presentation;
 
+import app.application.EmailService;
 import app.application.apikey.ClientsCommandService;
 import app.application.client.ClientMetadataReader;
 import app.core.data.response.ApiResponse;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
@@ -27,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ClientsController {
     private final ClientsCommandService clientsCommandService;
     private final ClientMetadataReader clientReader;
+    private final EmailService emailService;
 
     @GetMapping
     public ResponseEntity<?> get() {
@@ -36,6 +39,12 @@ public class ClientsController {
         }
         ClientMetadata read = clientReader.read(apikey);
         return ApiResponse.ok(read);
+    }
+
+    @GetMapping("/send-email")
+    public ResponseEntity<?> sendEmail(@RequestParam("email") String email) {
+        emailService.sendEmailNotice(email);
+        return ApiResponse.ok("send email");
     }
 
     @PostMapping("/register")
