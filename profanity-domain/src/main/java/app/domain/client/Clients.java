@@ -95,5 +95,6 @@ public class Clients {
      */
     public void discarded() {
         this.permissions = List.of(PermissionsType.DISCARD);
+        this.expiredAt = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
     }
 }
