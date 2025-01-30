@@ -6,7 +6,12 @@ include::api/register.adoc[]
 include::api/info.adoc[]
 '''
 
-=== 키 확인  ===
+include::api/send-email.adoc[]
+'''
+
+include::api/valid-email.adoc[]
+'''
+
 
 [NOTE]
 ====
