@@ -1,0 +1,20 @@
+=== 정보확인  ===
+
+[NOTE]
+====
+이메일과 코드를 확인해 인증합니다.
+====
+
+include::{snippets}/api/clients/valid-email/curl-request.adoc[]
+
+[discrete]
+==== Request ====
+
+include::{snippets}/api/clients/valid-email/request-body.adoc[]
+include::{snippets}/api/clients/valid-email/request-fields.adoc[]
+
+[discrete]
+==== Response ====
+
+include::{snippets}/api/clients/valid-email/response-body.adoc[]
+include::{snippets}/api/clients/valid-email/response-fields.adoc[]

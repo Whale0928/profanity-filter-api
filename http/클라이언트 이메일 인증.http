@@ -1,0 +1,12 @@
+### 이메일 인증 번호 요청
+@email =
+GET {{host}}/api/v1/clients/send-email?email={{email}}
+
+### 이메일 인증 후 API 키 조회
+PUT {{host}}/api/v1/clients/send-email
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "code": "298760"
+}

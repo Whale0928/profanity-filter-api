@@ -1,9 +1,11 @@
 package app.restdocs;
 
+import app.application.EmailService;
 import app.application.apikey.ClientsCommandService;
 import app.application.client.ClientMetadataReader;
 import app.domain.client.ClientMetadata;
 import app.dto.request.ClientRegistRequest;
+import app.dto.request.MailPayloadRequest;
 import app.dto.response.ClientsRegistResponse;
 import app.presentation.ClientsController;
 import app.security.SecurityContextUtil;
@@ -16,6 +18,7 @@ import org.springframework.restdocs.payload.JsonFieldType;
 import java.util.List;
 import java.util.UUID;
 
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.restdocs.headers.HeaderDocumentation.headerWithName;
@@ -25,17 +28,21 @@ import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuild
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
 import static org.springframework.restdocs.payload.PayloadDocumentation.requestFields;
 import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
+import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
+import static org.springframework.restdocs.request.RequestDocumentation.queryParameters;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("restdocs")
 class RestDocsClientsControllerTest extends AbstractRestDocs {
     private final ClientsCommandService clientsCommandService = mock(ClientsCommandService.class);
     private final ClientMetadataReader clientReader = mock(ClientMetadataReader.class);
+    private final EmailService mailSender = mock(EmailService.class);
 
     @Override
     protected Object initController() {
-        return new ClientsController(clientsCommandService, clientReader);
+        return new ClientsController(clientsCommandService, clientReader, mailSender);
     }
 
 
@@ -95,7 +102,6 @@ class RestDocsClientsControllerTest extends AbstractRestDocs {
                 );
     }
 
-
     @Test
     @DisplayName("클라이언트 메타 정보 조회 API")
     void step_2() throws Exception {
@@ -136,4 +142,64 @@ class RestDocsClientsControllerTest extends AbstractRestDocs {
                         )
                 );
     }
+
+    @Test
+    @DisplayName("이메일 인증을 위한 메시지 전송 API")
+    void step_3() throws Exception {
+        final String email = "email@email.com";
+        doNothing().when(mailSender).sendEmailNotice(email);
+        mockMvc.perform(get("/api/v1/clients/send-email").param("email", email))
+                .andExpect(status().isOk())
+                .andDo(
+                        document("api/clients/send-email",
+                                queryParameters(
+                                        parameterWithName("email").description("이메일 주소")
+                                ),
+                                responseFields(
+                                        fieldWithPath("status").ignored(),
+                                        fieldWithPath("status.code").ignored(),
+                                        fieldWithPath("status.message").ignored(),
+                                        fieldWithPath("status.description").ignored(),
+                                        fieldWithPath("status.DetailDescription").ignored(),
+                                        fieldWithPath("data").description("전송 결과")
+                                )
+                        )
+                );
+    }
+
+    @Test
+    @DisplayName("이메일 인증 코드를 검증하는 API")
+    void step_4() throws Exception {
+        final String email = "email@email.com";
+        final String code = "123456";
+        final String apikey = "apiKey-123456";
+        final MailPayloadRequest request = new MailPayloadRequest(email, code);
+
+        when(mailSender.verifyEmailCode(email, code)).thenReturn(true);
+        when(clientReader.getApiKeyByEmail(email)).thenReturn(apikey);
+
+        mockMvc.perform(put("/api/v1/clients/send-email")
+                        .content(objectMapper.writeValueAsString(request))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andDo(
+                        document("api/clients/valid-email",
+                                requestFields(
+                                        fieldWithPath("email").description("이메일 주소"),
+                                        fieldWithPath("code").description("인증 코드")
+                                ),
+                                responseFields(
+                                        fieldWithPath("status").ignored(),
+                                        fieldWithPath("status.code").ignored(),
+                                        fieldWithPath("status.message").ignored(),
+                                        fieldWithPath("status.description").ignored(),
+                                        fieldWithPath("status.DetailDescription").ignored(),
+                                        fieldWithPath("data").description("인증 결과"),
+                                        fieldWithPath("data.apikey").description("해당 이메일로 발급된 API 키")
+
+                                )
+                        )
+                );
+    }
+
 }
