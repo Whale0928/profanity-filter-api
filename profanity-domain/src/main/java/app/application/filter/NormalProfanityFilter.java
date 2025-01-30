@@ -75,7 +75,7 @@ public class NormalProfanityFilter implements ProfanityFilter, AhocorasickFilter
 
         ElapsedStartAt start = ElapsedStartAt.now();
 
-        String cleanedText = text.replaceAll("[^가-힣a-zA-Z\\s]", "");
+        String cleanedText = text.replaceAll("[^ㄱ-ㅎㅏ-ㅣ가-힣a-zA-Z\\s]", "");
         int currentPos = 0;
         Set<FilterWord> filterWords = new HashSet<>();
 
@@ -107,7 +107,7 @@ public class NormalProfanityFilter implements ProfanityFilter, AhocorasickFilter
 
         ElapsedStartAt start = ElapsedStartAt.now();
 
-        String cleanedText = text.replaceAll("[^가-힣a-zA-Z\\s]", "");
+        String cleanedText = text.replaceAll("[^ㄱ-ㅎㅏ-ㅣ가-힣a-zA-Z\\s]", "");
         Emit emit = trie.firstMatch(cleanedText);
 
         if (emit == null) {
