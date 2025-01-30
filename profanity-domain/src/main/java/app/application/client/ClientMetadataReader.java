@@ -46,6 +46,12 @@ public class ClientMetadataReader implements MetadataReader {
 
     @Override
     @Transactional(readOnly = true)
+    public boolean verifyClientByEmail(String email) {
+        return clientsRepository.findByEmail(email).isPresent();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public String getApiKeyByEmail(String email) {
         Clients clients = clientsRepository.findByEmail(email)
                 .orElseThrow(() -> new NoSuchElementException(StatusCode.NOT_FOUND_CLIENT.stringCode()));

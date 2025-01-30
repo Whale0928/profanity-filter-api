@@ -43,6 +43,11 @@ public class FakeClientMetadataReader implements MetadataReader {
     }
 
     @Override
+    public boolean verifyClientByEmail(String email) {
+        return validKeys.contains(email);
+    }
+
+    @Override
     public String getApiKeyByEmail(String email) {
         return validKeys.stream().findFirst().orElseThrow();
     }

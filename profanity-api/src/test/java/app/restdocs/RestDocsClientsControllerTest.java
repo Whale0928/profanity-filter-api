@@ -146,8 +146,12 @@ class RestDocsClientsControllerTest extends AbstractRestDocs {
     @Test
     @DisplayName("이메일 인증을 위한 메시지 전송 API")
     void step_3() throws Exception {
+
         final String email = "email@email.com";
+
+        when(clientReader.verifyClientByEmail(email)).thenReturn(true);
         doNothing().when(mailSender).sendEmailNotice(email);
+
         mockMvc.perform(get("/api/v1/clients/send-email").param("email", email))
                 .andExpect(status().isOk())
                 .andDo(
@@ -183,7 +187,7 @@ class RestDocsClientsControllerTest extends AbstractRestDocs {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andDo(
-                        document("api/clients/valid-email",
+                        document("api/clients/verify-email",
                                 requestFields(
                                         fieldWithPath("email").description("이메일 주소"),
                                         fieldWithPath("code").description("인증 코드")

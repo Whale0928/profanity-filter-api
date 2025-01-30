@@ -56,13 +56,16 @@ public class ClientsController {
 
     @GetMapping("/send-email")
     public ResponseEntity<?> sendEmail(@RequestParam("email") String email) {
-        //todo: 해당 사용자로 가입된 유저가 있는지 확인
+        boolean verified = clientReader.verifyClientByEmail(email);
+        if (Boolean.FALSE.equals(verified)) {
+            return ApiResponse.error(Status.of(StatusCode.BAD_REQUEST, "해당 이메일로 가입된 사용자가 없습니다."));
+        }
         emailService.sendEmailNotice(email);
         return ApiResponse.ok("send email");
     }
 
     @PutMapping("/send-email")
-    public ResponseEntity<?> validEmail(@Valid @RequestBody MailPayloadRequest request) {
+    public ResponseEntity<?> verifyEmail(@Valid @RequestBody MailPayloadRequest request) {
         boolean verified = emailService.verifyEmailCode(request.email(), request.code());
         if (Boolean.TRUE.equals(verified)) {
             String apikey = clientReader.getApiKeyByEmail(request.email());
@@ -72,5 +75,4 @@ public class ClientsController {
             return ApiResponse.error(Status.of(StatusCode.BAD_REQUEST, "이메일 인증 코드가 올바르지 않습니다."));
         }
     }
-
 }

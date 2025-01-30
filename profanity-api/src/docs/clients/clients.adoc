@@ -9,7 +9,7 @@ include::api/info.adoc[]
 include::api/send-email.adoc[]
 '''
 
-include::api/valid-email.adoc[]
+include::api/verify-email.adoc[]
 '''
 
 
