@@ -1,8 +1,8 @@
 redis:
-  host: localhost
+  host: ${REDIS_MAIN_HOST:localhost}
   main:
-    port: 10001
+    port: ${REDIS_MAIN_PORT:6379}
   sub:
     port:
-      - 10002
-      - 10003
+      - ${REDIS_SUB_PORT_A:6380}
+      - ${REDIS_SUB_PORT_B:6381}
