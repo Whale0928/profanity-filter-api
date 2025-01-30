@@ -26,8 +26,4 @@ public enum PermissionsType {
     public static List<PermissionsType> allPermissions() {
         return List.of(READ, WRITE, DELETE);
     }
-
-    public static List<PermissionsType> readOnlyPermissions() {
-        return List.of(READ);
-    }
 }
