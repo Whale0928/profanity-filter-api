@@ -1,14 +1,15 @@
 package app.presentation;
 
 import app.application.EmailService;
-import app.application.apikey.ClientsCommandService;
 import app.application.client.ClientMetadataReader;
+import app.application.client.ClientsCommandService;
 import app.core.data.response.ApiResponse;
 import app.core.data.response.Status;
 import app.core.data.response.constant.StatusCode;
 import app.domain.client.ClientMetadata;
 import app.dto.request.ClientRegistCommand;
 import app.dto.request.ClientRegistRequest;
+import app.dto.request.ClientUpdateRequest;
 import app.dto.request.MailPayloadRequest;
 import app.dto.response.ClientsRegistResponse;
 import app.security.SecurityContextUtil;
@@ -16,6 +17,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -45,12 +47,31 @@ public class ClientsController {
         return ApiResponse.ok(read);
     }
 
+    @DeleteMapping
+    public ResponseEntity<?> discardClient() {
+        final String apikey = SecurityContextUtil.getCurrentApikey();
+        clientsCommandService.discardClient(apikey);
+        return ApiResponse.ok(Boolean.TRUE);
+    }
+
     @PostMapping("/register")
     public ResponseEntity<?> registerClient(
             @RequestBody @Valid ClientRegistRequest request
     ) {
         final ClientRegistCommand command = request.toCommand();
         ClientsRegistResponse response = clientsCommandService.registerNewClient(command);
+        return ApiResponse.ok(response);
+    }
+
+    @PostMapping("/update")
+    public ResponseEntity<?> updateClient(
+            @RequestBody @Valid ClientUpdateRequest request
+    ) {
+        final String apikey = SecurityContextUtil.getCurrentApikey();
+        final String issuerInfo = request.issuerInfo();
+        final String note = request.note();
+
+        ClientMetadata response = clientsCommandService.updateClientInfo(apikey, issuerInfo, note);
         return ApiResponse.ok(response);
     }
 
@@ -75,4 +96,5 @@ public class ClientsController {
             return ApiResponse.error(Status.of(StatusCode.BAD_REQUEST, "이메일 인증 코드가 올바르지 않습니다."));
         }
     }
+
 }

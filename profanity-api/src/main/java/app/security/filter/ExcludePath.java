@@ -10,7 +10,7 @@ import java.util.List;
 @AllArgsConstructor
 public enum ExcludePath {
     ACTUATOR("actuator", "시스템 관련 API", List.of(HttpMethod.GET)),
-    CLIENTS("clients", "클라이언트 관련 API", List.of(HttpMethod.POST)),
+    CLIENTS("clients/register", "클라이언트 관련 API", List.of(HttpMethod.POST)),
     RESOURCE("resource", "리소스 관련 API", List.of(HttpMethod.GET)),
     EMAIL("send-email", "이메일 관련 API", List.of(HttpMethod.GET, HttpMethod.PUT)),
     ;

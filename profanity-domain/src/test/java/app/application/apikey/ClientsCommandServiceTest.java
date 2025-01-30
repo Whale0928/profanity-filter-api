@@ -1,5 +1,6 @@
 package app.application.apikey;
 
+import app.application.client.ClientsCommandService;
 import app.core.exception.BusinessException;
 import app.domain.InmemoryClientsRepository;
 import app.dto.request.ClientRegistCommand;

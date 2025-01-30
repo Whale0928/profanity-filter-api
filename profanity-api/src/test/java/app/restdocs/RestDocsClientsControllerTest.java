@@ -1,8 +1,8 @@
 package app.restdocs;
 
 import app.application.EmailService;
-import app.application.apikey.ClientsCommandService;
 import app.application.client.ClientMetadataReader;
+import app.application.client.ClientsCommandService;
 import app.domain.client.ClientMetadata;
 import app.dto.request.ClientRegistRequest;
 import app.dto.request.MailPayloadRequest;
