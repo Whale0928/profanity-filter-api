@@ -1,7 +1,8 @@
 redis:
-  cluster:
-    master:
-      - ${REDIS_MASTER_HOST:localhost}:${REDIS_MASTER_PORT:16379}
-    replica:
-      - ${REDIS_REPLICA_HOST:localhost}:${REDIS_REPLICA_PORT:16380}
-    password: ${REDIS_PASSWORD:demo-mutil-redis-cluster}
+  host: localhost
+  main:
+    port: 10001
+  sub:
+    port:
+      - 10002
+      - 10003
