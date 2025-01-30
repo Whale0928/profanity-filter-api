@@ -51,6 +51,7 @@ public class ProfanityController {
         return ResponseEntity.ok(response);
     }
 
+    @VerifiedClientOnly
     @Cacheable(value = "request_filter", key = "#request.text + '_' + #request.mode")
     @PostMapping(consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public ResponseEntity<?> basicProfanityByUrlencodedValue(
@@ -69,6 +70,7 @@ public class ProfanityController {
         );
     }
 
+    @VerifiedClientOnly
     @Cacheable(value = "request_filter", key = "{#word}")
     @PostMapping("/advanced")
     public ResponseEntity<?> advancedProfanity(
