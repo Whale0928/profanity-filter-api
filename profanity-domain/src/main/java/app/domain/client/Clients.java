@@ -97,4 +97,9 @@ public class Clients {
         this.permissions = List.of(PermissionsType.DISCARD);
         this.expiredAt = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
     }
+
+    public String updateApiKey(String newApiKey) {
+        this.apiKey = newApiKey;
+        return newApiKey;
+    }
 }

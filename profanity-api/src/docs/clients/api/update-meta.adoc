@@ -1,0 +1,22 @@
+=== 클라이언트 정보 업데이트  ===
+
+[NOTE]
+====
+발급된 API 키를 사용하여 클라이언트 정보를 업데이트합니다.
+====
+
+include::{snippets}/api/clients/update/curl-request.adoc[]
+
+[discrete]
+==== Request ====
+
+include::{snippets}/api/clients/update/request-headers.adoc[]
+include::{snippets}/api/clients/update/request-body.adoc[]
+include::{snippets}/api/clients/update/request-fields.adoc[]
+
+
+[discrete]
+==== Response ====
+
+include::{snippets}/api/clients/update/response-body.adoc[]
+include::{snippets}/api/clients/update/response-fields.adoc[]

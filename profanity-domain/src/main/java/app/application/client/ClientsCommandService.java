@@ -72,6 +72,14 @@ public class ClientsCommandService {
         clients.discarded();
     }
 
+    @Transactional
+    public String regenerateApiKey(String currentApiKey) {
+        Clients clients = clientRepository.findByApiKey(currentApiKey)
+                .orElseThrow(() -> new NoSuchElementException(StatusCode.NOT_FOUND_CLIENT.stringCode()));
+        String newApiKey = generateApiKey();
+        return clients.updateApiKey(newApiKey);
+    }
+
     private void validateEmail(String email) {
         if (clientRepository.existsByEmail(email)) {
             throw new BusinessException(StatusCode.BAD_REQUEST, "이미 등록된 이메일입니다.");
@@ -91,4 +99,5 @@ public class ClientsCommandService {
             throw new BusinessException(StatusCode.INTERNAL_SERVER_ERROR, "API 키 생성 중 오류가 발생했습니다.");
         }
     }
+
 }

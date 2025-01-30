@@ -75,6 +75,13 @@ public class ClientsController {
         return ApiResponse.ok(response);
     }
 
+    @PostMapping("/reissue")
+    public ResponseEntity<?> regenerateApiKey() {
+        String currentApiKey = SecurityContextUtil.getCurrentApikey();
+        String newApiKey = clientsCommandService.regenerateApiKey(currentApiKey);
+        return ApiResponse.ok(Map.of("newApiKey", newApiKey));
+    }
+
     @GetMapping("/send-email")
     public ResponseEntity<?> sendEmail(@RequestParam("email") String email) {
         boolean verified = clientReader.verifyClientByEmail(email);
