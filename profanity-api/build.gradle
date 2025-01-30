@@ -18,9 +18,8 @@ configurations {
 }
 
 dependencies {
-    runtimeOnly(project(':profanity-storage:redis'))
-    runtimeOnly(project(':profanity-storage:rdb'))
-
+    runtimeOnly project(':profanity-storage:rdb')
+    implementation project(':profanity-storage:redis')
     implementation project(':profanity-core')
     implementation project(':profanity-domain')
 
@@ -28,6 +27,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
     // monitoring
     implementation 'org.springframework.boot:spring-boot-starter-actuator'

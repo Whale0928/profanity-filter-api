@@ -1,5 +1,6 @@
 dependencies {
     implementation project(':profanity-core')
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 }
 
 tasks.register("prepareKotlinBuildScriptModel") {}
