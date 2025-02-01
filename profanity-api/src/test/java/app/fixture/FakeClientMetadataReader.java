@@ -41,4 +41,14 @@ public class FakeClientMetadataReader implements MetadataReader {
             throw new NoSuchElementException(StatusCode.NOT_FOUND_CLIENT.stringCode());
         }
     }
+
+    @Override
+    public boolean verifyClientByEmail(String email) {
+        return validKeys.contains(email);
+    }
+
+    @Override
+    public String getApiKeyByEmail(String email) {
+        return validKeys.stream().findFirst().orElseThrow();
+    }
 }

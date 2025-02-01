@@ -6,12 +6,22 @@ include::api/register.adoc[]
 include::api/info.adoc[]
 '''
 
-=== 키 확인  ===
+include::api/send-email.adoc[]
+'''
+
+include::api/verify-email.adoc[]
+'''
+
+include::api/discard.adoc[]
+'''
+
+include::api/update-meta.adoc[]
+'''
+
+include::api/reissue.adoc[]
+'''
 
 [NOTE]
 ====
-미 개발된 기능입니다.
-추후 개발 예정입니다.
-
-가입 시 이메일 인증을 통해 가입 정보를 조회 할 수 있습니다.
+미 개발된 기능 중 필요한 API 가 있는 경우 연락 주시기 바랍니다.
 ====

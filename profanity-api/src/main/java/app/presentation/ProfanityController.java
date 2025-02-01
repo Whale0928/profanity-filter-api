@@ -4,6 +4,7 @@ import app.application.filter.ProfanityHandler;
 import app.core.data.response.FilterApiResponse;
 import app.dto.request.ApiRequest;
 import app.dto.request.FilterRequest;
+import app.security.annotation.VerifiedClientOnly;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +33,7 @@ public class ProfanityController {
 
     private final ProfanityHandler profanityHandler;
 
-
+    @VerifiedClientOnly
     @Cacheable(value = "request_filter", key = "#request.text + '_' + #request.mode")
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> basicProfanity(
@@ -50,6 +51,7 @@ public class ProfanityController {
         return ResponseEntity.ok(response);
     }
 
+    @VerifiedClientOnly
     @Cacheable(value = "request_filter", key = "#request.text + '_' + #request.mode")
     @PostMapping(consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public ResponseEntity<?> basicProfanityByUrlencodedValue(
@@ -68,6 +70,7 @@ public class ProfanityController {
         );
     }
 
+    @VerifiedClientOnly
     @Cacheable(value = "request_filter", key = "{#word}")
     @PostMapping("/advanced")
     public ResponseEntity<?> advancedProfanity(

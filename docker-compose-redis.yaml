@@ -1,41 +1,48 @@
-version: '3.7'
-services:
-  redis-master:
-    image: redis:7.0
-    container_name: redis-master
-    ports:
-      - "16379:6379"
-    command: >
-      redis-server 
-      --port 6379 
-      --requirepass ${REDIS_PASSWORD}
-      --masterauth ${REDIS_PASSWORD}
-      --cluster-enabled yes 
-      --cluster-config-file nodes.conf 
-      --cluster-node-timeout 5000
-    env_file:
-      - .env.redis
-    networks:
-      - redis-net
+version: '3.8'
 
-  redis-replica:
-    image: redis:7.0
-    container_name: redis-replica
+services:
+  redis-main:
+    image: redis:latest
+    container_name: redis-main
+    command: redis-server --port 10001
     ports:
-      - "16380:6379"
-    command: >
-      redis-server 
-      --port 6379 
-      --requirepass ${REDIS_PASSWORD}
-      --masterauth ${REDIS_PASSWORD}
-      --cluster-enabled yes 
-      --cluster-config-file nodes.conf 
-      --cluster-node-timeout 5000
-    env_file:
-      - .env.redis
+      - "10001:10001"
+    volumes:
+      - redis-main-data:/data
     networks:
-      - redis-net
+      - redis-network
+
+  redis-sub-1:
+    image: redis:latest
+    container_name: redis-sub-1
+    command: redis-server --port 10002 --replicaof redis-main 10001
+    ports:
+      - "10002:10002"
+    depends_on:
+      - redis-main
+    volumes:
+      - redis-sub-1-data:/data
+    networks:
+      - redis-network
+
+  redis-sub-2:
+    image: redis:latest
+    container_name: redis-sub-2
+    command: redis-server --port 10003 --replicaof redis-main 10001
+    ports:
+      - "10003:10003"
+    depends_on:
+      - redis-main
+    volumes:
+      - redis-sub-2-data:/data
+    networks:
+      - redis-network
 
 networks:
-  redis-net:
+  redis-network:
     driver: bridge
+
+volumes:
+  redis-main-data:
+  redis-sub-1-data:
+  redis-sub-2-data:

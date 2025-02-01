@@ -1,0 +1,22 @@
+=== API Key 재 발급  ===
+
+[NOTE]
+====
+발급된 API 키를 사용하여 API Key를 재 발급합니다.
+====
+
+- 해당 API는 추후 이메일 인증등 보안 강화 처리가 공지 없이 추가될 수 있습니다.
+
+
+include::{snippets}/api/clients/reissue/curl-request.adoc[]
+
+[discrete]
+==== Request ====
+
+include::{snippets}/api/clients/reissue/request-headers.adoc[]
+
+[discrete]
+==== Response ====
+
+include::{snippets}/api/clients/reissue/response-body.adoc[]
+include::{snippets}/api/clients/reissue/response-fields.adoc[]

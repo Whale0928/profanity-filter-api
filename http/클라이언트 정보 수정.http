@@ -1,0 +1,13 @@
+### 클라이언트 정보 수정
+POST {{host}}/api/v1/clients/update
+Content-Type: application/json
+X-API-KEY: {{api_key}}
+
+{
+  "issuerInfo": "issuerInfo update",
+  "note": "note update"
+}
+
+### 클라이언트 정보 폐기
+DELETE {{host}}/api/v1/clients
+X-API-KEY: {{api_key}}

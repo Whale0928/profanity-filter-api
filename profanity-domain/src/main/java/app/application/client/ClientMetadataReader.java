@@ -9,6 +9,7 @@ import app.domain.client.PermissionsType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -21,6 +22,7 @@ public class ClientMetadataReader implements MetadataReader {
     private final APIKeyGenerator keyGenerator;
 
     @Override
+    @Transactional(readOnly = true)
     public ClientMetadata read(String apiKey) {
 
         if (Boolean.FALSE.equals(keyGenerator.validateApiKey(apiKey))) {
@@ -40,5 +42,19 @@ public class ClientMetadataReader implements MetadataReader {
                 .permissions(permissions)
                 .issuedAt(clients.getIssuedAt().toString())
                 .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean verifyClientByEmail(String email) {
+        return clientsRepository.findByEmail(email).isPresent();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public String getApiKeyByEmail(String email) {
+        Clients clients = clientsRepository.findByEmail(email)
+                .orElseThrow(() -> new NoSuchElementException(StatusCode.NOT_FOUND_CLIENT.stringCode()));
+        return clients.getApiKey();
     }
 }
