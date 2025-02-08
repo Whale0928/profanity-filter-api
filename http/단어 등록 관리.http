@@ -1,7 +1,7 @@
 ### 단어 등록 요청
 POST {{host}}/api/v1/word/request
 Content-Type: application/json
-x-api-key: 7RhvsEuIbOHCWneEsceEo3rqpDQkum7ZYyRpOQYFa1o
+x-api-key: 7RhvsEuIbOHCWneEsceEo3rqpDQkum7ZYyRpOQYFa1o # 유효하지 않은 테스트키
 
 {
   "word": "확인용 욕설",
