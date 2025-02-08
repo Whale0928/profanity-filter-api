@@ -1,0 +1,11 @@
+### 단어 등록 요청
+POST {{host}}/api/v1/word/request
+Content-Type: application/json
+x-api-key: 7RhvsEuIbOHCWneEsceEo3rqpDQkum7ZYyRpOQYFa1o
+
+{
+  "word": "확인용 욕설",
+  "reason": "확인용 욕설 사유",
+  "severity": "HIGH",
+  "type": ""
+}
