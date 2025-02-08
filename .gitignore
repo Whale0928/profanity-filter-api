@@ -51,3 +51,4 @@ application-prod.yml
 /logs/warn/**
 /.env.redis
 /docs/index.html
+/data/**

@@ -11,6 +11,7 @@ services:
       - redis-main-data:/data
     networks:
       - redis-network
+    restart: always
 
   redis-sub-1:
     image: redis:latest
@@ -24,6 +25,7 @@ services:
       - redis-sub-1-data:/data
     networks:
       - redis-network
+    restart: always
 
   redis-sub-2:
     image: redis:latest
@@ -37,6 +39,7 @@ services:
       - redis-sub-2-data:/data
     networks:
       - redis-network
+    restart: always
 
 networks:
   redis-network:
