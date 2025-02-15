@@ -1,10 +1,14 @@
 package app.dto.request;
 
+import app.application.EnumValidator;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
 
+@Builder
 public record WordRequest(
         @NotBlank(message = "요청할 단어는 필수입니다")
         String word,
@@ -13,15 +17,16 @@ public record WordRequest(
         @NotBlank(message = "요청 사유는 필수입니다")
         String reason,
 
-        @NotBlank(message = "단어의 심각도는 필수입니다")
         @NotNull(message = "단어의 심각도는 필수입니다")
+        @EnumValidator(enumClass = WordSeverity.class, message = "올바르지 않은 심각도입니다")
         WordSeverity severity,
 
-        @NotBlank(message = "요청 타입은 필수입니다")
         @NotNull(message = "요청 타입은 필수입니다")
+        @EnumValidator(enumClass = RequestType.class, message = "올바르지 않은 요청 타입입니다")
         RequestType type
 ) {
 
+    @Getter
     @AllArgsConstructor
     public enum WordSeverity {
         LOW("낮은 수위"),
@@ -30,6 +35,7 @@ public record WordRequest(
         private final String description;
     }
 
+    @Getter
     @AllArgsConstructor
     public enum RequestType {
         ADD("신규 등록 요청"),

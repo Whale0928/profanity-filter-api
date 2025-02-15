@@ -36,9 +36,9 @@ public class WordManagementController {
         String severity = request.severity().name();
         UUID currentUserId = SecurityContextUtil.getCurrentUserId();
         var response = switch (request.type()) {
-            case ADD -> wordManagement.requestNewWord(currentUserId,word, reason, severity);
-            case REMOVE -> wordManagement.exceptionWord(currentUserId,word, reason, severity);
-            case MODIFY -> wordManagement.modifyWord(currentUserId,word, reason, severity);
+            case ADD -> wordManagement.requestNewWord(currentUserId, word, reason, severity);
+            case REMOVE -> wordManagement.exceptionWord(currentUserId, word, reason, severity);
+            case MODIFY -> wordManagement.modifyWord(currentUserId, word, reason, severity);
         };
         return ApiResponse.ok(response);
     }
