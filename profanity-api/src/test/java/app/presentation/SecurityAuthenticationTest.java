@@ -1,7 +1,7 @@
 package app.presentation;
 
 import app.TestConfig;
-import app.application.apikey.APIKeyGenerator;
+import app.application.client.APIKeyGenerator;
 import app.core.data.response.constant.StatusCode;
 import app.dto.request.ApiRequest;
 import app.fixture.ApiTestFixture;
