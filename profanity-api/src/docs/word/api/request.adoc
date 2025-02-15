@@ -1,0 +1,55 @@
+=== 추가 요청  ===
+
+[NOTE]
+====
+단어의 추가/삭제/수정을 요청 할 수 있습니다.
+====
+
+include::{snippets}/api/word/request/curl-request.adoc[]
+
+[discrete]
+==== Request ====
+
+include::{snippets}/api/word/request/request-body.adoc[]
+include::{snippets}/api/word/request/request-fields.adoc[]
+
+
+* 해당 API 요청 시 사용할 수 있는 severity 의 종류는 다음과 같습니다.
+
+[cols="1,4",options="header"]
+|===
+| 코드  | 설명
+
+|`LOW`
+|낮은 수준의 중요도입니다.
+
+|`MEDIUM`
+|중간 수준의 중요도입니다.
+
+|`HIGH`
+|매운 높 수준의 중요도입니다.
+
+|===
+
+* 해당 API 요청 시 사용할 수 있는 type 의 종류는 다음과 같습니다.
+
+[cols="1,4",options="header"]
+|===
+| 코드  | 설명
+
+|`ADD`
+|추가 요청입니다.
+
+|`REMOVE`
+|삭제 요청입니다.
+
+|`MODIFY`
+|수정 요청입니다.
+
+|===
+
+[discrete]
+==== Response ====
+
+include::{snippets}/api/word/request/response-body.adoc[]
+include::{snippets}/api/word/request/response-fields.adoc[]
