@@ -1,6 +1,5 @@
 package app.application.client;
 
-import app.application.apikey.KeyGenerator;
 import app.core.data.response.constant.StatusCode;
 import app.core.exception.BusinessException;
 import app.domain.client.ClientMetadata;
