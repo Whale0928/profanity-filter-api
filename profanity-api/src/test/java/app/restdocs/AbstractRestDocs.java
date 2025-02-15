@@ -1,7 +1,7 @@
 package app.restdocs;
 
 
-import app.application.apikey.APIKeyGenerator;
+import app.application.client.APIKeyGenerator;
 import app.exception.GlobalExceptionHandler;
 import app.security.SecurityContextUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;

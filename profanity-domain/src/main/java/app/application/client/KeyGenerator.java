@@ -1,4 +1,4 @@
-package app.application.apikey;
+package app.application.client;
 
 import java.security.NoSuchAlgorithmException;
 

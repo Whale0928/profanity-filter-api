@@ -1,6 +1,6 @@
 package app.fixture;
 
-import app.application.apikey.KeyGenerator;
+import app.application.client.KeyGenerator;
 import app.application.client.MetadataReader;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;

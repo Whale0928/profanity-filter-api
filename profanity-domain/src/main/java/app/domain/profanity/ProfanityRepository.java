@@ -12,4 +12,6 @@ public interface ProfanityRepository {
     List<ProfanityWord> findAll();
 
     void deleteAll();
+
+    long countAll();
 }

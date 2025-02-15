@@ -1,6 +1,5 @@
 package app.application.client;
 
-import app.application.apikey.APIKeyGenerator;
 import app.core.data.response.constant.StatusCode;
 import app.domain.client.ClientMetadata;
 import app.domain.client.Clients;

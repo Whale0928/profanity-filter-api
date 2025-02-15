@@ -10,6 +10,9 @@ dependencies {
     implementation 'org.ahocorasick:ahocorasick:0.6.3'
     //UUID v7
     implementation 'com.github.f4b6a3:uuid-creator:5.3.3'
+
+    implementation 'net.javacrumbs.shedlock:shedlock-spring:5.10.0'
+    implementation 'net.javacrumbs.shedlock:shedlock-provider-jdbc-template:5.10.0'
 }
 
 tasks.register("prepareKotlinBuildScriptModel") {}
