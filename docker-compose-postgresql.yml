@@ -1,0 +1,15 @@
+services:
+  postgres:
+    build:
+      context: .
+      dockerfile: Dockerfile_Vector    # 사용할 Dockerfile 이름 지정
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data:/var/lib/postgresql/data
+      - ./init_pgvector.sql:/docker-entrypoint-initdb.d/init_pgvector.sql
+    environment:
+      POSTGRES_USER: local_user
+      POSTGRES_PASSWORD: local_password
+      POSTGRES_DB: local_db
+    restart: always

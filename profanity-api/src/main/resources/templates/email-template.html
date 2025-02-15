@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>한국어 비속어 검증 API [말조심하세욧] 인증 번호</title>
+</head>
+<body style="font-family: 'Nanum Gothic', sans-serif; background-color: #f8f9fa; margin: 0; padding: 0;">
+    <div style="max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+        <!-- 헤더 -->
+        <div style="background-color: #3E8B3E; padding: 30px 0; border-radius: 8px 8px 0 0; text-align: center;">
+            <h1 style="color: #ffffff; font-size: 32px; margin: 0; font-weight: bold; letter-spacing: 1px;">말조심하세욧</h1>
+        </div>
+
+        <!-- 콘텐츠 -->
+        <div style="padding: 40px 20px; text-align: center;">
+            <div style="color: #212529; font-size: 24px; margin-bottom: 30px;">
+                이메일 인증 번호 안내
+            </div>
+
+            <p style="color: #495057; font-size: 16px; line-height: 1.6;">
+                안녕하세요.<br>
+                한국어 비속어 검증 API [말조심하세욧] 입니다.
+            </p>
+
+            <!-- 인증번호 -->
+            <div style="background-color: #f1f3f5; padding: 20px; border-radius: 6px; font-size: 28px; letter-spacing: 4px; margin: 20px 0; color: #3E8B3E;">
+                <strong th:text="${code}">123456</strong>
+            </div>
+
+            <!-- 노트 -->
+            <div style="margin-top: 20px; color: #495057; font-size: 14px; line-height: 1.6; background-color: #f8f9fa; padding: 15px; border-radius: 6px; text-align: left;">
+                • 인증번호는 <span style="color: #dc3545; font-weight: bold;" th:text="${expirationTime}">12시 34분</span>까지 유효합니다.<br>
+                • 요청하지 않은 인증번호라면 무시하셔도 됩니다.
+            </div>
+        </div>
+
+        <!-- 푸터 -->
+        <div style="text-align: center; margin-top: 30px; padding: 20px; color: #868e96; font-size: 14px; border-top: 1px solid #e9ecef;">
+            © 2024 말조심하세욧 | 문의: rlagusrl928@gmail.com
+        </div>
+    </div>
+</body>
+</html>

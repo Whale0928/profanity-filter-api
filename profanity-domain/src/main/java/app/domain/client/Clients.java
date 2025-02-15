@@ -16,6 +16,7 @@ import org.hibernate.annotations.Comment;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import static lombok.AccessLevel.PRIVATE;
@@ -76,4 +77,29 @@ public class Clients {
     @Comment("요청 횟수")
     @Column(name = "request_count")
     private Long requestCount = 0L;
+
+    public void updateInfo(String issuerInfo, String note) {
+        this.issuerInfo = Objects.requireNonNullElseGet(issuerInfo, () -> this.issuerInfo);
+        this.note = Objects.requireNonNullElseGet(note, () -> this.note);
+    }
+
+    /**
+     * 권한 목록을 문자열 형태로 반환합니다.
+     */
+    public List<String> getPlainPermissions() {
+        return permissions.stream().map(PermissionsType::getValue).toList();
+    }
+
+    /**
+     * 클라이언트 정보를 폐기합니다.
+     */
+    public void discarded() {
+        this.permissions = List.of(PermissionsType.DISCARD);
+        this.expiredAt = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
+    }
+
+    public String updateApiKey(String newApiKey) {
+        this.apiKey = newApiKey;
+        return newApiKey;
+    }
 }

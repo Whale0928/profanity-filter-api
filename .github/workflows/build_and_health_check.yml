@@ -42,7 +42,7 @@ jobs:
       - name: 헬스체크 수행
         run: |
           for i in {1..5}; do
-            response=$(curl -s -w "\n%{http_code}" http://127.0.0.1:9999/system/actuator/health)
+            response=$(curl -s -w "\n%{http_code}" ${{ secrets.HEALTH_CHECK_URL }})
             if [[ $response == *"UP"* ]]; then
               echo "Health check succeeded with UP status"
               exit 0

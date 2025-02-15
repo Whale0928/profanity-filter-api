@@ -1,0 +1,19 @@
+=== 클라이언트 폐기  ===
+
+[NOTE]
+====
+발급된 API 키를 사용하여 클라이언트 정보를 폐기합니다.
+====
+
+include::{snippets}/api/clients/discard/curl-request.adoc[]
+
+[discrete]
+==== Request ====
+
+include::{snippets}/api/clients/discard/request-headers.adoc[]
+
+[discrete]
+==== Response ====
+
+include::{snippets}/api/clients/discard/response-body.adoc[]
+include::{snippets}/api/clients/discard/response-fields.adoc[]
