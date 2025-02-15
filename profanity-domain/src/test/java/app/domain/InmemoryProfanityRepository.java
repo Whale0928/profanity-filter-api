@@ -33,4 +33,9 @@ public class InmemoryProfanityRepository implements ProfanityRepository {
     public void deleteAll() {
         repository.clear();
     }
+
+    @Override
+    public long countAll() {
+        return repository.size();
+    }
 }

@@ -1,6 +1,6 @@
 package app.fixture;
 
-import app.application.apikey.KeyGenerator;
+import app.application.client.KeyGenerator;
 import app.domain.client.Clients;
 import app.dto.request.ClientRegistCommand;
 

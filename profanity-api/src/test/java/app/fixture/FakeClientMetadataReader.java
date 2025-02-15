@@ -1,6 +1,6 @@
 package app.fixture;
 
-import app.application.apikey.KeyGenerator;
+import app.application.client.KeyGenerator;
 import app.application.client.MetadataReader;
 import app.core.data.response.constant.StatusCode;
 import app.domain.client.ClientMetadata;
