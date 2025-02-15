@@ -12,6 +12,8 @@ services:
       - TZ=Asia/Seoul
     env_file: .env
     command: [ "java", "-jar", "/app.jar" ]
+    restart: always
+
   profanity-filter-api-blue-2:
     build:
       context: .
@@ -24,6 +26,7 @@ services:
       - TZ=Asia/Seoul
     env_file: .env
     command: [ "java", "-jar", "/app.jar" ]
+    restart: always
 
   profanity-filter-api-green-1:
     build:
@@ -37,6 +40,7 @@ services:
       - TZ=Asia/Seoul
     env_file: .env
     command: [ "java", "-jar", "/app.jar" ]
+    restart: always
 
   profanity-filter-api-green-2:
     build:
@@ -50,3 +54,4 @@ services:
       - TZ=Asia/Seoul
     env_file: .env
     command: [ "java", "-jar", "/app.jar" ]
+    restart: always

@@ -6,6 +6,7 @@ import app.core.data.response.constant.StatusCode;
 import app.core.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
@@ -58,6 +59,27 @@ public class GlobalExceptionHandler {
                 .map(fieldError -> fieldError.getField() + ": " + fieldError.getDefaultMessage())
                 .toList()));
     }
+
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiResponse<Void>> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
+        log.warn("JSON 파싱 예외 발생: {}", ex.getMessage());
+        String message = ex.getMessage();
+        if (message != null) {
+            // problem: 뒤의 실제 에러 메시지 추출
+            int problemIndex = message.indexOf("problem:");
+            if (problemIndex != -1) {
+                message = message.substring(problemIndex + 9).trim();
+            } else {
+                int colonIndex = message.indexOf(':');
+                if (colonIndex != -1) {
+                    message = "요청 데이터 형식이 올바르지 않습니다";
+                }
+            }
+        }
+        return ApiResponse.error(Status.of(StatusCode.BAD_REQUEST, message));
+    }
+
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ApiResponse<Void>> handleTypeMismatchExceptions(MethodArgumentTypeMismatchException ex) {
