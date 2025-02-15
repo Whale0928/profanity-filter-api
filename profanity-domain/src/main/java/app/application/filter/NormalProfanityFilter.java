@@ -8,10 +8,9 @@ import app.dto.response.FilterResponse;
 import app.dto.response.FilterWord;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.ahocorasick.trie.Emit;
 import org.ahocorasick.trie.Trie;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -20,12 +19,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class NormalProfanityFilter implements ProfanityFilter, AhocorasickFilter {
-
-    private static final Logger log = LoggerFactory.getLogger(NormalProfanityFilter.class);
-    private static Trie trie;
+    private static volatile Trie trie;
     private final ProfanityRepository profanityRepository;
     private Set<String> collect = new HashSet<>();
 
@@ -36,28 +34,27 @@ public class NormalProfanityFilter implements ProfanityFilter, AhocorasickFilter
 
     @Override
     public void synchronizeProfanityTrie() {
-        log.info("[NormalProfanityFilter] 비속어 자료 로딩 시작 : {}", LocalDateTime.now());
         ElapsedStartAt start = ElapsedStartAt.now();
-
-        collect.clear();
-        collect = profanityRepository.findAll()
+        Set<String> newWords = profanityRepository.findAll()
                 .stream()
                 .map(ProfanityWord::getWord)
                 .collect(Collectors.toSet());
-
-        trie = Trie.builder()
+        Trie newTrie = Trie.builder()
                 .ignoreOverlaps()
                 .ignoreCase()
-                .addKeywords(collect)
+                .addKeywords(newWords)
                 .build();
 
-        Elapsed elapsed = Elapsed.end(start);
-        log.info("[NormalProfanityFilter] 비속어 자료 로딩 완료 {}개 (지연 시간 : {}ms)", collect.size(), elapsed);
+        //원자적 재할당
+        this.collect = newWords;
+        trie = newTrie;
+
+        log.info("[AhocorasickFilter] 비속어 자료 로딩 완료 {}개 (지연 시간 : {}ms)", collect.size(), Elapsed.end(start));
     }
 
     @Override
     public List<?> getProfanityTrieList() {
-        log.info("[NormalProfanityFilter] 비속어 자료 목록 조회 : {}", LocalDateTime.now());
+        log.info("[AhocorasickFilter] 비속어 자료 목록 조회 : {}", LocalDateTime.now());
         return collect.stream().toList();
     }
 
@@ -69,7 +66,7 @@ public class NormalProfanityFilter implements ProfanityFilter, AhocorasickFilter
     @Override
     public FilterResponse allMatched(String text) {
         log.info("[NormalProfanityFilter] 전체 비속어 필터링 시작 : {}", LocalDateTime.now());
-        
+
         if (text == null || text.isBlank())
             return FilterResponse.create(text, new HashSet<>(), Elapsed.end(ElapsedStartAt.now()));
 
