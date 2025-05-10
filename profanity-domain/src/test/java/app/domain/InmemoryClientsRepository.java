@@ -78,6 +78,10 @@ public class InmemoryClientsRepository implements ClientsRepository {
                 .findFirst();
     }
 
+    @Override
+    public void updateClientRequestCount() {
+    }
+
     // 테스트를 위한 추가 메서드
     public void clear() {
         store.clear();
