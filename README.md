@@ -6,7 +6,7 @@
 >
 > [API DOCS](https://whale0928.github.io/profanity-filter-api/)
 
-#### 개발 진행중인 프로젝트입니다 문의사항은 Issue로 등록하거나 이메일로 문의바랍니다.
+#### 문의사항은 Issue로 등록하거나 이메일로 문의바랍니다.
 
 [ Post. 비속어 검증 API 서비스 만들기 ](https://deadwhale.me/posts/profanity-filter-api/)
 
