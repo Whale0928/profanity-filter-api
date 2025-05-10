@@ -79,6 +79,8 @@ public class InmemoryClientsRepository implements ClientsRepository {
     }
 
     @Override
+    // This method is intentionally left empty as this is a test-specific implementation
+    // of the ClientsRepository interface. It is not required for in-memory testing.
     public void updateClientRequestCount() {
     }
 
