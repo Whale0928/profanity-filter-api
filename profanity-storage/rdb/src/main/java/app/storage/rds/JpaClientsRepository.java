@@ -14,11 +14,11 @@ public interface JpaClientsRepository extends ClientsRepository, JpaRepository<C
     @Override
     @Modifying
     @Query("""
-            update clients
-            set requestCount = (select count(r.id)
-                                 from records r
-                                 where r.apiKey = clients.api_key)
-            where expiredAt is null
+            update Clients c
+            set c.requestCount = (select count(r.id)
+                                  from Records r
+                                  where r.apiKey = c.apiKey)
+            where c.expiredAt is null
             """)
     void updateClientRequestCount();
 }
