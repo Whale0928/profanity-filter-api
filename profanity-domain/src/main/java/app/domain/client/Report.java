@@ -97,6 +97,7 @@ public class Report {
     public static Report createTodayReport(Clients client) {
         return Report.builder()
                 .client(client)
+                .clientId(client.getId())
                 .apiKey(client.getApiKey())
                 .reportYear(Const.getCurrentYear())
                 .reportMonth(Const.getCurrentMonth())

@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class DailyReportScheduler {
     private final ClientsRepository clientsRepository;
+    private final ReportManagementService reportManagementService;
 
     /**
      * 클라이언트 요청 횟수 업데이트 스케줄러
@@ -30,4 +31,16 @@ public class DailyReportScheduler {
         long end = System.currentTimeMillis();
         log.info("클라이언트 요청 횟수 업데이트 완료 [소요시간: {}ms]", (end - start));
     }
+
+
+    @Scheduled(cron = "0 0 0/6 * * ?")
+    @SchedulerLock(name = "daily_report_scheduler", lockAtMostFor = "PT11H")
+    public void createDailyReport() {
+        long start = System.currentTimeMillis();
+        int dailyReport = reportManagementService.createDailyReport();
+        long end = System.currentTimeMillis();
+        log.info("일일 보고서 생성 완료 [소요시간: {}ms] [생성된 리포트 수: {}]", (end - start), dailyReport);
+    }
+
+
 }
