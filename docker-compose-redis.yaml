@@ -1,5 +1,4 @@
 version: '3.8'
-
 services:
   redis-main:
     image: redis:latest
@@ -12,8 +11,7 @@ services:
     networks:
       - redis-network
     restart: always
-
-  redis-sub-1:
+  redis-node-1:
     image: redis:latest
     container_name: redis-sub-1
     command: redis-server --port 10002 --replicaof redis-main 10001
@@ -26,8 +24,7 @@ services:
     networks:
       - redis-network
     restart: always
-
-  redis-sub-2:
+  redis-node-2:
     image: redis:latest
     container_name: redis-sub-2
     command: redis-server --port 10003 --replicaof redis-main 10001
@@ -40,11 +37,9 @@ services:
     networks:
       - redis-network
     restart: always
-
 networks:
   redis-network:
     driver: bridge
-
 volumes:
   redis-main-data:
   redis-sub-1-data:
