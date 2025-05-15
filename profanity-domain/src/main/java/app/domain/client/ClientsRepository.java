@@ -26,4 +26,6 @@ public interface ClientsRepository {
     Optional<Clients> findByEmailAndApiKey(String email, String apiKey);
 
     Optional<Clients> findByIssuerInfo(String issuerInfo);
+
+    void updateClientRequestCount();
 }
