@@ -32,7 +32,6 @@ public class DefaultReportManagementService implements ReportManagementService {
 
         clientsRepository.
                 findAll().
-                parallelStream().
                 forEach(
                         client -> {
                             Report todayReport = Report.createTodayReport(client);
