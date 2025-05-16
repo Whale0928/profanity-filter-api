@@ -50,6 +50,8 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.GET, "/system/actuator/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/", "/index.html").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/api/v1/clients/**").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/v1/health/**").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/v1/ping/**").permitAll()
                                 .requestMatchers("/api/v1/clients/send-email").permitAll()
                                 .requestMatchers("/api/v1/auth/**").permitAll()
                                 .anyRequest().authenticated()
