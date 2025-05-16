@@ -78,6 +78,12 @@ public class InmemoryClientsRepository implements ClientsRepository {
                 .findFirst();
     }
 
+    @Override
+    // This method is intentionally left empty as this is a test-specific implementation
+    // of the ClientsRepository interface. It is not required for in-memory testing.
+    public void updateClientRequestCount() {
+    }
+
     // 테스트를 위한 추가 메서드
     public void clear() {
         store.clear();

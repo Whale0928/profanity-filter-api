@@ -6,12 +6,17 @@
 >
 > [API DOCS](https://whale0928.github.io/profanity-filter-api/)
 
-#### 개발 진행중인 프로젝트입니다 문의사항은 Issue로 등록하거나 이메일로 문의바랍니다.
+#### 문의사항은 Issue로 등록하거나 이메일로 문의바랍니다.
 
 [ Post. 비속어 검증 API 서비스 만들기 ](https://deadwhale.me/posts/profanity-filter-api/)
 
 ## History
 
+- `2025-05-11` 클라이언트 일일 보고서 생성 기능 개발
+- `2025-05-11` 클라이언트 요청 횟수 업데이트
+- `2025-02-15` 신규 비속어 실시간 동기화 기능 개발
+- `2025-02-10` 적절하기 않은 비속어 혹은 비속어 추가를 위한 API 개발
+- `2025-1-25` API Key 기반의 인증 방식 적용
 - `2025-1-25` API Key 기반의 인증 방식 적용
 - `2025-1-3` API Key 기반의 인증 방식 개발
 - `2024-12-30`  특수문자를 고려한 검증 로직 개발 적용
@@ -50,7 +55,7 @@
     - `Content-Type: application/json` or `application/x-www-form-urlencoded`
     - `accept: application/json`
     - `x-api-key: {API_KEY}`
-        - API_KEY는 제공되는 API_KEY를 사용해주세요. 
+        - API_KEY는 제공되는 API_KEY를 사용해주세요.
 - parameters:
     - *`text`: 검증할 문장 (예: "나쁜말")
     - *`mode`: `QUICK`,`NORMAL`,`FILTER` 중 하나 선택
