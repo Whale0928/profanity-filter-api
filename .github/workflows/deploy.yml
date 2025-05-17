@@ -1,10 +1,131 @@
+# act workflow_dispatch -W .github/workflows/deploy.yml --secret-file .secrets --container-architecture linux/amd64
+
 name: deploy
 on:
-  workflow_call:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+# 추후 릴리즈로 변경
 
 jobs:
   deploy:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment: [
+          instance-node-1,
+          instance-node-2
+        ]
+    steps:
+      - name: Configure 1Password Service Account
+        uses: 1password/load-secrets-action/configure@v2
+        with:
+          service-account-token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+      - name: Server host secret setup
+        id: op-load-server-secret
+        uses: 1password/load-secrets-action@v2
+        with:
+          export-env: true
+          unset-previous: false
+        env:
+          SERVER_IP: op://instance/${{ matrix.environment }}/URL
+          SERVER_PORT: op://instance/${{ matrix.environment }}/PORT
+          SERVER_NAME: op://instance/${{ matrix.environment }}/USER NAME
+          SSH_KEY: op://instance/instance-node-ssh-key/private_key?ssh-format=openssh
+          ENV_FILE: op://instance/.env/.env
 
+      - name: remote server deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ env.SERVER_IP }}
+          port: ${{ env.SERVER_PORT }}
+          username: ${{ env.SERVER_NAME }}
+          key: ${{ env.SSH_KEY }}
+          script: |
+            PROJ_DIR="$HOME/profanity-filter-api"
+
+            if [ ! -d "$PROJ_DIR" ]; then
+              mkdir -p "$PROJ_DIR"
+              cd "$PROJ_DIR"
+              git clone https://github.com/Whale0928/profanity-filter-api.git .
+            else
+              cd "$PROJ_DIR"
+              git fetch --all
+              git reset --hard origin/main
+              git pull
+            fi
+
+            cat <<EOL > "$PROJ_DIR/.env"
+            ${{ env.ENV_FILE }}
+            EOL
+
+            chmod +x "$PROJ_DIR/script/"*.sh
+            cd "$PROJ_DIR/script"
+            
+            # 배포 스크립트 실행 및 결과 수집
+            DEPLOY_OUTPUT=$(./container_deploy.sh)
+            echo "$DEPLOY_OUTPUT"
+            
+            # 배포 결과에서 포트 추출
+            DEPLOYED_INFO=$(echo "$DEPLOY_OUTPUT" | grep "DEPLOY_RESULT:" | tail -n1)
+            DEPLOYED_PORT=$(echo "$DEPLOYED_INFO" | cut -d':' -f4)
+            
+            echo "배포된 포트: $DEPLOYED_PORT에서 헬스체크를 수행합니다."
+            
+            # 애플리케이션이 시작될 때까지 대기
+            MAX_RETRIES=30
+            RETRY_COUNT=0
+            HEALTH_CHECK_URL="http://localhost:$DEPLOYED_PORT/api/v1/health"
+            
+            while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+              HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" $HEALTH_CHECK_URL || echo "000")
+              if [ "$HTTP_STATUS" = "200" ]; then
+                echo "애플리케이션이 정상적으로 실행 중입니다. (HTTP 상태: $HTTP_STATUS)"
+                break
+              else
+                RETRY_COUNT=$((RETRY_COUNT + 1))
+                echo "애플리케이션이 아직 준비되지 않았습니다. 재시도 $RETRY_COUNT/$MAX_RETRIES (HTTP 상태: $HTTP_STATUS)"
+                sleep 10 
+              fi
+            done
+            
+            if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
+              echo "헬스 체크 실패: 애플리케이션이 제한 시간 내에 시작되지 않았습니다."
+              exit 1
+            fi
+            echo "배포 및 헬스 체크가 성공적으로 완료되었습니다."
+
+
+  switch-traffic:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure 1Password Service Account
+        uses: 1password/load-secrets-action/configure@v2
+        with:
+          service-account-token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+      - name: Server host secret setup
+        id: op-load-server-secret
+        uses: 1password/load-secrets-action@v2
+        with:
+          export-env: true
+          unset-previous: false
+        env:
+          SERVER_IP: op://instance/instance-proxy-node/URL
+          SERVER_PORT: op://instance/instance-proxy-node/PORT
+          SERVER_NAME: op://instance/instance-proxy-node/USER NAME
+          SSH_KEY: op://instance/instance-node-ssh-key/private_key?ssh-format=openssh
+      - name: switch-traffic
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ env.SERVER_IP }}
+          port: ${{ env.SERVER_PORT }}
+          username: ${{ env.SERVER_NAME }}
+          key: ${{ env.SSH_KEY }}
+          script: blue-green-swap.sh
+  clear_old_resources:
+    needs: switch-traffic
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -29,41 +150,22 @@ jobs:
           SERVER_PORT: op://instance/${{ matrix.environment }}/PORT
           SERVER_NAME: op://instance/${{ matrix.environment }}/USER NAME
           SSH_KEY: op://instance/instance-node-ssh-key/private_key?ssh-format=openssh
-  switch-traffic:
-    needs: deploy
-    runs-on: ubuntu-latest
-    steps:
-      - name: Configure 1Password Service Account
-        uses: 1password/load-secrets-action/configure@v2
+
+      - name: Clean old containers and images
+        uses: appleboy/ssh-action@master
         with:
-          service-account-token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-      - name: Server host secret setup
-        id: op-load-server-secret
-        uses: 1password/load-secrets-action@v2
-        with:
-          export-env: true
-          unset-previous: false
-        env:
-          SERVER_IP: op://instance/instance-proxy-node/URL
-          SERVER_PORT: op://instance/instance-proxy-node/PORT
-          SERVER_NAME: op://instance/instance-proxy-node/USER NAME
-          SSH_KEY: op://instance/instance-node-ssh-key/private_key?ssh-format=openssh
-  clear_old_resources:
-    needs: switch-traffic
-    runs-on: ubuntu-latest
-    steps:
-      - name: Configure 1Password Service Account
-        uses: 1password/load-secrets-action/configure@v2
-        with:
-          service-account-token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-      - name: Server host secret setup
-        id: op-load-server-secret
-        uses: 1password/load-secrets-action@v2
-        with:
-          export-env: true
-          unset-previous: false
-        env:
-          SERVER_IP: op://instance/${{ matrix.environment }}/URL
-          SERVER_PORT: op://instance/${{ matrix.environment }}/PORT
-          SERVER_NAME: op://instance/${{ matrix.environment }}/USER NAME
-          SSH_KEY: op://instance/instance-node-ssh-key/private_key?ssh-format=openssh
+          host: ${{ env.SERVER_IP }}
+          port: ${{ env.SERVER_PORT }}
+          username: ${{ env.SERVER_NAME }}
+          key: ${{ env.SSH_KEY }}
+          script: |
+            # 이전 컨테이너 정리
+            OLD_CONTAINERS=$(docker ps -a --filter "name=old_container_*" -q)
+            [ -n "$OLD_CONTAINERS" ] && docker rm -f $OLD_CONTAINERS || true
+            
+            # dangling 이미지 제거
+            DANGLING_IMAGES=$(docker images -f "dangling=true" -q)
+            [ -n "$DANGLING_IMAGES" ] && docker rmi $DANGLING_IMAGES || true
+            
+            # 불필요한 네트워크만 정리
+            docker network prune -f
