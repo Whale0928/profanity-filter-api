@@ -1,0 +1,69 @@
+name: deploy
+on:
+  workflow_call:
+
+jobs:
+  deploy:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment: [
+          instance-node-1,
+          instance-node-2
+        ]
+    steps:
+      - name: Configure 1Password Service Account
+        uses: 1password/load-secrets-action/configure@v2
+        with:
+          service-account-token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+
+      - name: Server host secret setup
+        id: op-load-server-secret
+        uses: 1password/load-secrets-action@v2
+        with:
+          export-env: true
+          unset-previous: false
+        env:
+          SERVER_IP: op://instance/${{ matrix.environment }}/URL
+          SERVER_PORT: op://instance/${{ matrix.environment }}/PORT
+          SERVER_NAME: op://instance/${{ matrix.environment }}/USER NAME
+          SSH_KEY: op://instance/instance-node-ssh-key/private_key?ssh-format=openssh
+  switch-traffic:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure 1Password Service Account
+        uses: 1password/load-secrets-action/configure@v2
+        with:
+          service-account-token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+      - name: Server host secret setup
+        id: op-load-server-secret
+        uses: 1password/load-secrets-action@v2
+        with:
+          export-env: true
+          unset-previous: false
+        env:
+          SERVER_IP: op://instance/instance-proxy-node/URL
+          SERVER_PORT: op://instance/instance-proxy-node/PORT
+          SERVER_NAME: op://instance/instance-proxy-node/USER NAME
+          SSH_KEY: op://instance/instance-node-ssh-key/private_key?ssh-format=openssh
+  clear_old_resources:
+    needs: switch-traffic
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure 1Password Service Account
+        uses: 1password/load-secrets-action/configure@v2
+        with:
+          service-account-token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+      - name: Server host secret setup
+        id: op-load-server-secret
+        uses: 1password/load-secrets-action@v2
+        with:
+          export-env: true
+          unset-previous: false
+        env:
+          SERVER_IP: op://instance/${{ matrix.environment }}/URL
+          SERVER_PORT: op://instance/${{ matrix.environment }}/PORT
+          SERVER_NAME: op://instance/${{ matrix.environment }}/USER NAME
+          SSH_KEY: op://instance/instance-node-ssh-key/private_key?ssh-format=openssh
