@@ -99,5 +99,4 @@ if [ -n "$OLD_CONTAINER" ]; then
 fi
 
 echo "$NEW_ENV 환경이 포트 $NEW_PORT에서 실행 중입니다."
-echo "프록시를 재시작한 후, 이름이 변경된 컨테이너를 확인하려면 다음 명령을 사용하세요:"
-echo "docker ps -a --filter \"name=old_container_*\""
+echo "DEPLOY_RESULT:SUCCESS:$NEW_ENV:$NEW_PORT"
