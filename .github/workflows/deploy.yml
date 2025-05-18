@@ -5,9 +5,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - main
-# 추후 릴리즈로 변경
-
+      - release
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -52,7 +50,7 @@ jobs:
             else
               cd "$PROJ_DIR"
               git fetch --all
-              git reset --hard origin/main
+              git reset --hard origin/release
               git pull
             fi
 
