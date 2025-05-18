@@ -46,7 +46,14 @@ public class ProfanityController {
 
         log.info("api key : {}", apiKey);
         log.info("[API-JSON] Client IP : {} / Referer : {} / Request : {}", clientIp, referrer, request);
+
         final FilterRequest filterRequest = FilterRequest.create(request.text(), request.mode(), apiKey, clientIp, referrer);
+
+        if (request.isAsync()) {
+            profanityHandler.requestAsyncFilter(filterRequest, request.callbackUrl());
+            return ResponseEntity.accepted().body(null);
+        }
+
         FilterApiResponse response = profanityHandler.requestFacadeFilter(filterRequest);
         return ResponseEntity.ok(response);
     }
