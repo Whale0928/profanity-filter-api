@@ -16,9 +16,15 @@
 
 > API 인증 키 발급 후 사용 가능합니다. 문서 링크를 참조해 주세요
 >
-> [API DOCS](https://whale0928.github.io/profanity-filter-api/)
+>  [API DOCS](https://whale0928.github.io/profanity-filter-api/)
+> 
+>  [테스트 페이지](https://api.profanity.kr-filter.com/)
 >
-> [ 테스트 페이지 ](https://api.profanity-filter.run/)
+> 헬스 체크
+> - https://api.profanity.kr-filter.com/api/v1/ping
+> - https://api.profanity.kr-filter.com/api/v1/health
+
+- key 발급 등 편의성을 위해 GUI 환경 별도 구축 예정입니다. 
 
 ## Overview
 
