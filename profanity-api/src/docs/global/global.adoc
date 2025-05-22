@@ -1,0 +1,3 @@
+== 기타  ==
+
+include::common/request.adoc[]

@@ -52,3 +52,5 @@ application-prod.yml
 /.env.redis
 /docs/index.html
 /data/**
+
+.secrets

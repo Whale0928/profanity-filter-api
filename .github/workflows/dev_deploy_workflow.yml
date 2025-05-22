@@ -1,11 +1,7 @@
 name: deploy workflow
 
 on:
-  pull_request:
-    branches:
-      - release
-    types:
-      - closed
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

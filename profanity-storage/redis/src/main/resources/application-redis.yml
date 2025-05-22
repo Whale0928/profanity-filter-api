@@ -2,7 +2,8 @@ redis:
   host: ${REDIS_MAIN_HOST:localhost}
   main:
     port: ${REDIS_MAIN_PORT:6379}
-  sub:
-    port:
-      - ${REDIS_SUB_PORT_A:6380}
-      - ${REDIS_SUB_PORT_B:6381}
+    password: ${REDIS_MAIN_PASSWORD}
+  # sub:
+  #   port:
+  #     - ${REDIS_SUB_PORT_A:}
+  #     - ${REDIS_SUB_PORT_B:}

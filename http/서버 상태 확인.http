@@ -1,7 +1,7 @@
 ### (동기 요청) API 상태를 확인할 수 있다.
-POST {{host}}/api/v1/filter/health
+GET {{host}}/api/v1/health
 Content-Type: application/json
 
 ### (비동기 요청) API 상태를 확인할 수 있다.
-POST {{host}}/api/v1/filter/health
+GET {{host}}/api/v1/ping
 Content-Type: application/json

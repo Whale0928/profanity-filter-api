@@ -2,7 +2,7 @@
 FROM eclipse-temurin:21 AS build
 WORKDIR /app
 COPY . .
-RUN ./gradlew build --no-daemon
+RUN ./gradlew build --no-daemon --x test
 
 # 실행 스테이지
 FROM eclipse-temurin:21

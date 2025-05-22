@@ -1,0 +1,39 @@
+=== 헬스 체크  ===
+
+====
+서버 상태를 확인하기 위한 API입니다.
+이 API는 서버의 상태를 확인하는 데 사용됩니다.
+
+health 요청 시 200 상태와 OK 응답을 반환합니다.
+====
+
+[discrete]
+==== Request ====
+
+include::{snippets}/api/health/curl-request.adoc[]
+include::{snippets}/api/health/httpie-request.adoc[]
+
+[discrete]
+==== Response ====
+
+include::{snippets}/api/health/response-body.adoc[]
+include::{snippets}/api/health/http-response.adoc[]
+
+====
+서버 상태를 확인하기 위한 API입니다.
+이 API는 서버의 상태를 확인하는 데 사용됩니다.
+
+PING 요청 시 PONG 응답을 반환합니다.
+====
+
+[discrete]
+==== Request ====
+
+include::{snippets}/api/ping/curl-request.adoc[]
+include::{snippets}/api/ping/httpie-request.adoc[]
+
+[discrete]
+==== Response ====
+
+include::{snippets}/api/ping/response-body.adoc[]
+include::{snippets}/api/ping/http-response.adoc[]

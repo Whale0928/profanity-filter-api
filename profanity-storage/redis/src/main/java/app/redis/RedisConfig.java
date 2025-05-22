@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.RedisStaticMasterReplicaConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
@@ -25,12 +26,40 @@ public class RedisConfig {
 
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
-        LettuceClientConfiguration lettuceClient = LettuceClientConfiguration.builder()
-                .readFrom(ReadFrom.REPLICA_PREFERRED)
-                .build();
-        RedisStaticMasterReplicaConfiguration subConfig = new RedisStaticMasterReplicaConfiguration(redisProperties.host(), redisProperties.main().port());
-        redisProperties.sub().port().forEach(sub -> subConfig.addNode(redisProperties.host(), sub));
-        return new LettuceConnectionFactory(subConfig, lettuceClient);
+        if (redisProperties.isSingleMode()) {
+            // 단일 Redis 모드
+            RedisStandaloneConfiguration config = new RedisStandaloneConfiguration();
+            config.setHostName(redisProperties.host());
+            config.setPort(redisProperties.main().port());
+
+            // 패스워드 설정
+            if (redisProperties.main().password() != null && !redisProperties.main().password().isBlank()) {
+                config.setPassword(redisProperties.main().password());
+            }
+
+            LettuceClientConfiguration lettuceClient = LettuceClientConfiguration.builder().build();
+            return new LettuceConnectionFactory(config, lettuceClient);
+
+        } else {
+            // 복제 Redis 모드 (기존 로직 유지)
+            LettuceClientConfiguration lettuceClient = LettuceClientConfiguration.builder()
+                    .readFrom(ReadFrom.REPLICA_PREFERRED)
+                    .build();
+
+            RedisStaticMasterReplicaConfiguration config =
+                    new RedisStaticMasterReplicaConfiguration(redisProperties.host(), redisProperties.main().port());
+
+            // 패스워드 설정
+            if (redisProperties.main().password() != null && !redisProperties.main().password().isBlank()) {
+                config.setPassword(redisProperties.main().password());
+            }
+
+            // 복제 노드들 추가
+            redisProperties.sub().port().forEach(port ->
+                    config.addNode(redisProperties.host(), port));
+
+            return new LettuceConnectionFactory(config, lettuceClient);
+        }
     }
 
     @Bean
@@ -57,6 +86,10 @@ public class RedisConfig {
         log.info("Redis 연결 정보");
         log.info("Host: {}", redisProperties.host());
         log.info("Main Port: {}", redisProperties.main().port());
-        log.info("Sub Ports: {}", redisProperties.sub().port());
+        if (!redisProperties.isSingleMode()) {
+            log.info("Sub Ports: {}", redisProperties.sub().port());
+        } else {
+            log.info("Single Redis Mode");
+        }
     }
 }
