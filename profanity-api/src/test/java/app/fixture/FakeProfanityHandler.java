@@ -106,4 +106,18 @@ public class FakeProfanityHandler implements ProfanityHandler {
         log.info("[domain]  fake call : advancedFilter");
         return sanitizeProfanity(text);
     }
+
+    @Override
+    public FilterApiResponse requestAsyncFilter(FilterRequest request, String callbackUrl) {
+        //todo : 비동기 처리
+        return null;
+    }
+
+    @Override
+    public FilterApiResponse getFilterStatus(UUID trackingId) {
+        //todo : 비동기 처리
+        return null;
+    }
+
+
 }

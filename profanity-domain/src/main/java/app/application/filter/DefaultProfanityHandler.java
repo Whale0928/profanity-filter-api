@@ -1,5 +1,6 @@
 package app.application.filter;
 
+import app.application.event.AsyncFilterEvent;
 import app.application.event.FilterEvent;
 import app.core.data.constant.Mode;
 import app.core.data.elapsed.Elapsed;
@@ -7,6 +8,7 @@ import app.core.data.elapsed.ElapsedStartAt;
 import app.core.data.response.Detected;
 import app.core.data.response.FilterApiResponse;
 import app.core.data.response.Status;
+import app.core.data.response.constant.StatusCode;
 import app.dto.request.FilterRequest;
 import app.dto.response.FilterResponse;
 import app.dto.response.FilterWord;
@@ -16,8 +18,10 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static app.core.data.response.constant.StatusCode.OK;
@@ -124,5 +128,49 @@ public class DefaultProfanityHandler implements ProfanityHandler {
 
     private UUID generateTrackingId() {
         return UuidCreator.getTimeOrderedEpoch();
+    }
+
+    // DefaultProfanityHandler 클래스에 추가
+
+    @Override
+    @Transactional(readOnly = true)
+    public FilterApiResponse requestAsyncFilter(FilterRequest request, String callbackUrl) {
+        // 1. trackingId 생성
+        UUID trackingId = generateTrackingId();
+
+        // 2. 수락 상태의 초기 응답 생성
+        FilterApiResponse acceptedResponse = FilterApiResponse.builder()
+                .trackingId(trackingId)
+                .status(Status.of(StatusCode.ACCEPTED))
+                .detected(Collections.emptySet())
+                .filtered("")
+                .elapsed(Elapsed.zero())
+                .build();
+
+        // 3. 비동기적으로 실제 필터링 수행
+        CompletableFuture.runAsync(() -> {
+            // 필터링 실행
+            FilterApiResponse response = requestFacadeFilter(request);
+
+            // 이벤트 발행 (CallbackEvent 또는 확장된 FilterEvent 사용)
+            publisher.publishEvent(AsyncFilterEvent.create(request, response, callbackUrl));
+        });
+
+        // 4. 즉시 수락 응답 반환
+        return acceptedResponse;
+    }
+
+    @Override
+    public FilterApiResponse getFilterStatus(UUID trackingId) {
+        // 요청 상태 저장소에서 상태 조회
+        // 요청 상태에 따라 적절한 응답 생성하여 반환
+        // 구현 예시:
+        return FilterApiResponse.builder()
+                .trackingId(trackingId)
+                .status(Status.of(StatusCode.PROCESSING))
+                .detected(Collections.emptySet())
+                .filtered("")
+                .elapsed(Elapsed.zero())
+                .build();
     }
 }
