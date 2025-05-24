@@ -4,22 +4,27 @@
 
 ## ⚠️ 도메인 이관 안내
 
-**현재 도메인**: [api.profanity-filter.run](https://api.profanity-filter.run/) (2025년 6월 10일까지만 지원)  
-**신규 도메인**: [api.profanity.kr-filter.com](https://api.profanity.kr-filter.com/) (2025년 5월 30일부터 사용 가능)
+**현재 도메인**: [api.profanity-filter.run](https://api.profanity-filter.run/) (2025년 5월 20일까지만 지원)  
+**신규 도메인**: [api.profanity.kr-filter.com](https://api.profanity.kr-filter.com/) (2025년 5월 19일부터 사용 가능)
 
 도메인 비용이 과도하게 많이 나와서 불가피하게 도메인 이관을 진행합니다. <br>
 기존 가비아에서 아마존 Route 53으로 이관하기 때문에 앞으로 이러한 문제는 발생하지 않을 예정입니다.
 
-* **기존 도메인**: 2025년 6월 10일까지만 지원됩니다.
-* **신규 도메인**: 2025년 5월 30일부터 사용 가능합니다.
+* **기존 도메인**: 2025년 5월 20일까지만 지원됩니다.
+* **신규 도메인**: 2025년 5월 19일부터 사용 가능합니다.
 
-서비스 연속성을 위해 2025년 5월 30일부터 6월 10일까지는 두 도메인 모두 사용 가능합니다. 6월 10일 이후에는 신규 도메인만 사용 가능하니 미리 준비해주시기 바랍니다.
 
 > API 인증 키 발급 후 사용 가능합니다. 문서 링크를 참조해 주세요
 >
-> [API DOCS](https://whale0928.github.io/profanity-filter-api/)
+>  [API DOCS](https://whale0928.github.io/profanity-filter-api/)
+> 
+>  [테스트 페이지](https://api.profanity.kr-filter.com/)
 >
-> [ 테스트 페이지 ](https://api.profanity-filter.run/)
+> 헬스 체크
+> - https://api.profanity.kr-filter.com/api/v1/ping
+> - https://api.profanity.kr-filter.com/api/v1/health
+
+- key 발급 등 편의성을 위해 GUI 환경 별도 구축 예정입니다. 
 
 ## Overview
 
