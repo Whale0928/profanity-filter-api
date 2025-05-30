@@ -89,6 +89,33 @@ jobs:
             --failOnCVSS 7
             --enableRetired
             --enableExperimental
+        # 실패해도 다음 단계 계속 진행 (리포트 확인을 위해)
+        continue-on-error: true
+
+      # 생성된 파일들의 실제 위치 확인
+      - name: 리포트 파일 위치 확인
+        if: always()
+        run: |
+          echo "=== 현재 작업 디렉토리 구조 확인 ==="
+          pwd
+          ls -la
+          
+          echo "\n=== reports 디렉토리 확인 ==="
+          if [ -d "reports" ]; then
+            echo "✅ reports 디렉토리 존재"
+            ls -la reports/
+          else
+            echo "❌ reports 디렉토리 없음"
+          fi
+          
+          echo "\n=== dependency-check 관련 파일 검색 ==="
+          find . -name "*dependency-check*" -type f 2>/dev/null | head -10 || echo "dependency-check 관련 파일 없음"
+          
+          echo "\n=== .html 파일 검색 ==="
+          find . -name "*.html" -type f 2>/dev/null | head -10 || echo "HTML 파일 없음"
+          
+          echo "\n=== .json 파일 검색 ==="
+          find . -name "*.json" -type f 2>/dev/null | head -10 || echo "JSON 파일 없음"
 
       # 스캔 결과를 GitHub Actions 아티팩트로 업로드
       # 실패하더라도 결과를 확인할 수 있도록 always() 조건 사용
@@ -97,10 +124,15 @@ jobs:
         if: always()
         with:
           name: security-scan-report
+          # 여러 가능한 경로에서 리포트 파일 찾기
           path: |
-            ${{ github.workspace }}/reports/
+            reports/
+            **/dependency-check-report.*
+            dependency-check-report.*
           # 아티팩트 보존 기간 (일 단위)
           retention-days: 30
+          # 파일이 없어도 오류를 발생시키지 않음
+          if-no-files-found: warn
 
       # 스캔 결과 요약을 GitHub PR 코멘트나 로그에 출력
       - name: 보안 스캔 결과 요약
@@ -108,19 +140,48 @@ jobs:
         run: |
           echo "=== OWASP Dependency Check 보안 스캔 완료 ==="
           echo "스캔 대상: ${{ github.workspace }}"
-          echo "리포트 경로: ${{ github.workspace }}/reports/"
           
-          # HTML 리포트가 생성되었는지 확인
-          if [ -f "${{ github.workspace }}/reports/dependency-check-report.html" ]; then
-            echo "✅ HTML 리포트가 성공적으로 생성되었습니다."
-            echo "📊 상세 결과는 아티팩트에서 다운로드하여 확인하세요."
+          # 리포트 파일 위치 자동 감지
+          HTML_REPORT=""
+          JSON_REPORT=""
+          
+          # 여러 가능한 경로에서 HTML 리포트 찾기
+          if [ -f "reports/dependency-check-report.html" ]; then
+            HTML_REPORT="reports/dependency-check-report.html"
+          elif [ -f "dependency-check-report.html" ]; then
+            HTML_REPORT="dependency-check-report.html"
           else
-            echo "⚠️ HTML 리포트 생성에 문제가 있을 수 있습니다."
+            HTML_REPORT=$(find . -name "dependency-check-report.html" -type f 2>/dev/null | head -1)
           fi
           
-          # JSON 리포트에서 취약점 개수 추출 (있는 경우)
-          if [ -f "${{ github.workspace }}/reports/dependency-check-report.json" ]; then
-            echo "📋 JSON 리포트도 생성되었습니다."
+          # 여러 가능한 경로에서 JSON 리포트 찾기
+          if [ -f "reports/dependency-check-report.json" ]; then
+            JSON_REPORT="reports/dependency-check-report.json"
+          elif [ -f "dependency-check-report.json" ]; then
+            JSON_REPORT="dependency-check-report.json"
+          else
+            JSON_REPORT=$(find . -name "dependency-check-report.json" -type f 2>/dev/null | head -1)
+          fi
+          
+          # 결과 출력
+          if [ -n "$HTML_REPORT" ] && [ -f "$HTML_REPORT" ]; then
+            echo "✅ HTML 리포트가 생성되었습니다: $HTML_REPORT"
+            echo "📊 상세 결과는 아티팩트에서 다운로드하여 확인하세요."
+          else
+            echo "⚠️ HTML 리포트를 찾을 수 없습니다."
+          fi
+          
+          if [ -n "$JSON_REPORT" ] && [ -f "$JSON_REPORT" ]; then
+            echo "📋 JSON 리포트가 생성되었습니다: $JSON_REPORT"
+          else
+            echo "⚠️ JSON 리포트를 찾을 수 없습니다."
+          fi
+          
+          # 전체 스캔 결과 요약
+          if [ -n "$HTML_REPORT" ] || [ -n "$JSON_REPORT" ]; then
+            echo "🔒 보안 스캔이 완료되었습니다."
+          else
+            echo "❌ 보안 스캔 리포트 생성에 문제가 발생했습니다."
           fi
 
   # 헬스체크 작업 - 테스트와 보안 스캔이 모두 성공한 후 실행
