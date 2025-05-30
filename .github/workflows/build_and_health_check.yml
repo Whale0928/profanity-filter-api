@@ -3,7 +3,7 @@ name: Test and Health Check
 on:
   pull_request:
     branches:
-      - *
+      - '**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
