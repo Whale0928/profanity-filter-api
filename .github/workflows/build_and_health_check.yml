@@ -1,4 +1,4 @@
-name: Build and Health Check
+name: Test and Health Check
 
 on:
   pull_request:
@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  health-check:
+  test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -23,31 +23,136 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Gradle 빌드
-        run: |
-          chmod +x gradlew
-          ./gradlew clean build
+      - name: Configure 1Password Service Account
+        uses: 1password/load-secrets-action/configure@v2
+        with:
+          service-account-token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+
+      - name: Server host secret setup
+        id: op-load-server-secret
+        uses: 1password/load-secrets-action@v2
+        with:
+          export-env: true
+          unset-previous: false
+        env:
+          ENV_FILE: op://instance/.env/.env
 
       - name: 환경 변수 파일 생성
         run: |
-          echo "${{ secrets.ENV }}" > .env
+          echo "${{ env.ENV_FILE }}" > .env
 
-      - name: Docker Compose 실행
+      - name: 테스트 실행
+        run: ./gradlew test
+
+      - name: 테스트 결과 업로드
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: |
+            **/build/reports/tests/
+            **/build/test-results/
+
+  health-check:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: JDK 21 설정
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Configure 1Password Service Account
+        uses: 1password/load-secrets-action/configure@v2
+        with:
+          service-account-token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+
+      - name: Server host secret setup
+        id: op-load-server-secret
+        uses: 1password/load-secrets-action@v2
+        with:
+          export-env: true
+          unset-previous: false
+        env:
+          ENV_FILE: op://instance/.env/.env
+
+      - name: 환경 변수 파일 생성
         run: |
-          docker compose up -d profanity-filter-api-blue-1
-          echo "애플리케이션 시작 대기 중..."
-          sleep 30
+          echo "${{ env.ENV_FILE }}" > .env
+
+      - name: Docker 이미지 빌드 및 컨테이너 실행
+        run: |
+          # 배포 스크립트와 동일한 로직으로 컨테이너 배포
+          chmod +x script/container_deploy.sh
+          cd script
+          
+          # 배포 스크립트 실행 및 결과 수집
+          DEPLOY_OUTPUT=$(./container_deploy.sh)
+          echo "$DEPLOY_OUTPUT"
+          
+          # 배포 결과에서 포트 추출 (deploy.yml과 동일한 로직)
+          DEPLOYED_INFO=$(echo "$DEPLOY_OUTPUT" | grep "DEPLOY_RESULT:" | tail -n1)
+          DEPLOYED_PORT=$(echo "$DEPLOYED_INFO" | cut -d':' -f4)
+          
+          echo "배포된 포트: $DEPLOYED_PORT"
+          echo "DEPLOYED_PORT=$DEPLOYED_PORT" >> $GITHUB_ENV
 
       - name: 헬스체크 수행
         run: |
-          for i in {1..5}; do
-            response=$(curl -s -w "\n%{http_code}" ${{ secrets.HEALTH_CHECK_URL }})
-            if [[ $response == *"UP"* ]]; then
-              echo "Health check succeeded with UP status"
-              exit 0
+          # 헬스체크 설정 (deploy.yml과 동일한 로직)
+          MAX_RETRIES=30
+          RETRY_COUNT=0
+          HEALTH_CHECK_URL="http://localhost:${{ env.DEPLOYED_PORT }}/api/v1/health"
+          
+          echo "배포된 포트: ${{ env.DEPLOYED_PORT }}에서 헬스체크를 수행합니다."
+          echo "헬스체크 URL: $HEALTH_CHECK_URL"
+          
+          # 애플리케이션이 시작될 때까지 대기
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" $HEALTH_CHECK_URL || echo "000")
+            if [ "$HTTP_STATUS" = "200" ]; then
+              echo "✅ 애플리케이션이 정상적으로 실행 중입니다. (HTTP 상태: $HTTP_STATUS)"
+              break
+            else
+              RETRY_COUNT=$((RETRY_COUNT + 1))
+              echo "⏳ 애플리케이션이 아직 준비되지 않았습니다. 재시도 $RETRY_COUNT/$MAX_RETRIES (HTTP 상태: $HTTP_STATUS)"
+              sleep 10 
             fi
-            echo "Attempt $i: Health check failed"
-            sleep 3
           done
-          echo "Health check failed after 5 attempts"
-          exit 1
+          
+          if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
+            echo "❌ 헬스 체크 실패: 애플리케이션이 제한 시간 내에 시작되지 않았습니다."
+            exit 1
+          fi
+          echo "🎉 배포 및 헬스 체크가 성공적으로 완료되었습니다."
+
+      - name: 컨테이너 정리
+        if: always()
+        run: |
+          # 테스트용으로 실행된 컨테이너들 정리
+          echo "테스트용 컨테이너 정리 중..."
+          
+          # 실행 중인 profanity 컨테이너들 확인 및 정리
+          BLUE_CONTAINER=$(docker ps -q --filter "name=profanity-blue")
+          GREEN_CONTAINER=$(docker ps -q --filter "name=profanity-green")
+          
+          if [ -n "$BLUE_CONTAINER" ]; then
+            echo "Blue 컨테이너 정리 중..."
+            docker stop $BLUE_CONTAINER || true
+            docker rm $BLUE_CONTAINER || true
+          fi
+          
+          if [ -n "$GREEN_CONTAINER" ]; then
+            echo "Green 컨테이너 정리 중..."
+            docker stop $GREEN_CONTAINER || true
+            docker rm $GREEN_CONTAINER || true
+          fi
+          
+          # 사용하지 않는 이미지 정리
+          docker image prune -f || true
+          
+          echo "컨테이너 정리가 완료되었습니다."
