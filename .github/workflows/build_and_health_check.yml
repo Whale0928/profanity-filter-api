@@ -65,124 +65,29 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      # OWASP Dependency Check를 사용한 보안 취약점 스캔
-      # - 프로젝트의 의존성에서 알려진 보안 취약점을 탐지
-      # - NIST NVD (National Vulnerability Database) 기반
-      # - CVSS 점수 7.0 이상의 취약점 발견 시 빌드 실패
-      - name: OWASP Dependency Check 보안 스캔
+      # OWASP Dependency Check - 공식 문서 기반 설정
+      - name: OWASP Dependency Check
         uses: dependency-check/Dependency-Check_Action@main
-        id: dep-check
         with:
-          # 프로젝트 이름 설정
           project: 'profanity-filter-api'
-          # 스캔할 경로 (현재 디렉토리 전체)
           path: '.'
-          # 리포트 형식 (HTML: 사람이 읽기 쉬운 형태, JSON: 기계 처리용)
-          format: 'HTML,JSON'
-          # 출력 디렉토리
+          format: 'HTML'
           out: 'reports'
-          # 추가 옵션:
-          # --failOnCVSS 7: CVSS 점수 7.0 이상의 취약점 발견 시 실패
-          # --enableRetired: 사용 중단된 의존성도 스캔에 포함
-          # --enableExperimental: 실험적 분석기 활성화
-          args: >
+          args: >-
             --failOnCVSS 7
             --enableRetired
-            --enableExperimental
-        # 실패해도 다음 단계 계속 진행 (리포트 확인을 위해)
-        continue-on-error: true
+        env:
+          # setup-java가 JAVA_HOME을 변경하므로 Docker 이미지에 맞게 재설정
+          JAVA_HOME: /opt/jdk
 
-      # 생성된 파일들의 실제 위치 확인
-      - name: 리포트 파일 위치 확인
-        if: always()
-        run: |
-          echo "=== 현재 작업 디렉토리 구조 확인 ==="
-          pwd
-          ls -la
-          
-          echo "\n=== reports 디렉토리 확인 ==="
-          if [ -d "reports" ]; then
-            echo "✅ reports 디렉토리 존재"
-            ls -la reports/
-          else
-            echo "❌ reports 디렉토리 없음"
-          fi
-          
-          echo "\n=== dependency-check 관련 파일 검색 ==="
-          find . -name "*dependency-check*" -type f 2>/dev/null | head -10 || echo "dependency-check 관련 파일 없음"
-          
-          echo "\n=== .html 파일 검색 ==="
-          find . -name "*.html" -type f 2>/dev/null | head -10 || echo "HTML 파일 없음"
-          
-          echo "\n=== .json 파일 검색 ==="
-          find . -name "*.json" -type f 2>/dev/null | head -10 || echo "JSON 파일 없음"
-
-      # 스캔 결과를 GitHub Actions 아티팩트로 업로드
-      # 실패하더라도 결과를 확인할 수 있도록 always() 조건 사용
+      # 스캔 결과 업로드
       - name: 보안 스캔 결과 업로드
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: security-scan-report
-          # 여러 가능한 경로에서 리포트 파일 찾기
-          path: |
-            reports/
-            **/dependency-check-report.*
-            dependency-check-report.*
-          # 아티팩트 보존 기간 (일 단위)
+          path: reports/
           retention-days: 30
-          # 파일이 없어도 오류를 발생시키지 않음
-          if-no-files-found: warn
-
-      # 스캔 결과 요약을 GitHub PR 코멘트나 로그에 출력
-      - name: 보안 스캔 결과 요약
-        if: always()
-        run: |
-          echo "=== OWASP Dependency Check 보안 스캔 완료 ==="
-          echo "스캔 대상: ${{ github.workspace }}"
-          
-          # 리포트 파일 위치 자동 감지
-          HTML_REPORT=""
-          JSON_REPORT=""
-          
-          # 여러 가능한 경로에서 HTML 리포트 찾기
-          if [ -f "reports/dependency-check-report.html" ]; then
-            HTML_REPORT="reports/dependency-check-report.html"
-          elif [ -f "dependency-check-report.html" ]; then
-            HTML_REPORT="dependency-check-report.html"
-          else
-            HTML_REPORT=$(find . -name "dependency-check-report.html" -type f 2>/dev/null | head -1)
-          fi
-          
-          # 여러 가능한 경로에서 JSON 리포트 찾기
-          if [ -f "reports/dependency-check-report.json" ]; then
-            JSON_REPORT="reports/dependency-check-report.json"
-          elif [ -f "dependency-check-report.json" ]; then
-            JSON_REPORT="dependency-check-report.json"
-          else
-            JSON_REPORT=$(find . -name "dependency-check-report.json" -type f 2>/dev/null | head -1)
-          fi
-          
-          # 결과 출력
-          if [ -n "$HTML_REPORT" ] && [ -f "$HTML_REPORT" ]; then
-            echo "✅ HTML 리포트가 생성되었습니다: $HTML_REPORT"
-            echo "📊 상세 결과는 아티팩트에서 다운로드하여 확인하세요."
-          else
-            echo "⚠️ HTML 리포트를 찾을 수 없습니다."
-          fi
-          
-          if [ -n "$JSON_REPORT" ] && [ -f "$JSON_REPORT" ]; then
-            echo "📋 JSON 리포트가 생성되었습니다: $JSON_REPORT"
-          else
-            echo "⚠️ JSON 리포트를 찾을 수 없습니다."
-          fi
-          
-          # 전체 스캔 결과 요약
-          if [ -n "$HTML_REPORT" ] || [ -n "$JSON_REPORT" ]; then
-            echo "🔒 보안 스캔이 완료되었습니다."
-          else
-            echo "❌ 보안 스캔 리포트 생성에 문제가 발생했습니다."
-          fi
 
   # 헬스체크 작업 - 테스트와 보안 스캔이 모두 성공한 후 실행
   health-check:
