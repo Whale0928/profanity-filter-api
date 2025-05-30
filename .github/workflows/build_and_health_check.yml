@@ -13,22 +13,22 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: checkout code
         uses: actions/checkout@v4
 
-      - name: JDK 21 설정
+      - name: setup java 21
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
+          cache: gradle
 
-      - name: Configure 1Password Service Account
+      - name: configure 1password
         uses: 1password/load-secrets-action/configure@v2
         with:
           service-account-token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
 
-      - name: Server host secret setup
-        id: op-load-server-secret
+      - name: load secrets
         uses: 1password/load-secrets-action@v2
         with:
           export-env: true
@@ -36,14 +36,13 @@ jobs:
         env:
           ENV_FILE: op://instance/.env/.env
 
-      - name: 환경 변수 파일 생성
-        run: |
-          echo "${{ env.ENV_FILE }}" > .env
+      - name: create env file
+        run: echo "${{ env.ENV_FILE }}" > .env
 
-      - name: 테스트 실행
+      - name: run tests
         run: ./gradlew test
 
-      - name: 테스트 결과 업로드
+      - name: upload test results
         uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -52,21 +51,39 @@ jobs:
             **/build/reports/tests/
             **/build/test-results/
 
-  # 보안 취약점 스캔 작업 - 테스트와 병렬로 실행
   security-scan:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: checkout code
         uses: actions/checkout@v4
 
-      - name: JDK 21 설정
+      - name: setup java 21
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
+          cache: gradle
 
-      # OWASP Dependency Check - 공식 문서 기반 설정
-      - name: OWASP Dependency Check
+      - name: configure 1password
+        uses: 1password/load-secrets-action/configure@v2
+        with:
+          service-account-token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+
+      - name: load secrets
+        uses: 1password/load-secrets-action@v2
+        with:
+          export-env: true
+          unset-previous: false
+        env:
+          ENV_FILE: op://instance/.env/.env
+
+      - name: create env file
+        run: echo "${{ env.ENV_FILE }}" > .env
+
+      - name: build project
+        run: ./gradlew build -x test
+
+      - name: run security scan
         uses: dependency-check/Dependency-Check_Action@main
         with:
           project: 'profanity-filter-api'
@@ -77,11 +94,9 @@ jobs:
             --failOnCVSS 7
             --enableRetired
         env:
-          # setup-java가 JAVA_HOME을 변경하므로 Docker 이미지에 맞게 재설정
           JAVA_HOME: /opt/jdk
 
-      # 스캔 결과 업로드
-      - name: 보안 스캔 결과 업로드
+      - name: upload security report
         uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -89,27 +104,26 @@ jobs:
           path: reports/
           retention-days: 30
 
-  # 헬스체크 작업 - 테스트와 보안 스캔이 모두 성공한 후 실행
   health-check:
     needs: [ test, security-scan ]
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: checkout code
         uses: actions/checkout@v4
 
-      - name: JDK 21 설정
+      - name: setup java 21
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
+          cache: gradle
 
-      - name: Configure 1Password Service Account
+      - name: configure 1password
         uses: 1password/load-secrets-action/configure@v2
         with:
           service-account-token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
 
-      - name: Server host secret setup
-        id: op-load-server-secret
+      - name: load secrets
         uses: 1password/load-secrets-action@v2
         with:
           export-env: true
@@ -117,79 +131,56 @@ jobs:
         env:
           ENV_FILE: op://instance/.env/.env
 
-      - name: 환경 변수 파일 생성
-        run: |
-          echo "${{ env.ENV_FILE }}" > .env
+      - name: create env file
+        run: echo "${{ env.ENV_FILE }}" > .env
 
-      - name: Docker 이미지 빌드 및 컨테이너 실행
+      - name: deploy container
         run: |
-          # 배포 스크립트와 동일한 로직으로 컨테이너 배포
           chmod +x script/container_deploy.sh
           cd script
-          
-          # 배포 스크립트 실행 및 결과 수집
           DEPLOY_OUTPUT=$(./container_deploy.sh)
           echo "$DEPLOY_OUTPUT"
-          
-          # 배포 결과에서 포트 추출 (deploy.yml과 동일한 로직)
           DEPLOYED_INFO=$(echo "$DEPLOY_OUTPUT" | grep "DEPLOY_RESULT:" | tail -n1)
           DEPLOYED_PORT=$(echo "$DEPLOYED_INFO" | cut -d':' -f4)
-          
-          echo "배포된 포트: $DEPLOYED_PORT"
           echo "DEPLOYED_PORT=$DEPLOYED_PORT" >> $GITHUB_ENV
 
-      - name: 헬스체크 수행
+      - name: health check
         run: |
-          # 헬스체크 설정 (deploy.yml과 동일한 로직)
           MAX_RETRIES=30
           RETRY_COUNT=0
           HEALTH_CHECK_URL="http://localhost:${{ env.DEPLOYED_PORT }}/api/v1/health"
           
-          echo "배포된 포트: ${{ env.DEPLOYED_PORT }}에서 헬스체크를 수행합니다."
-          echo "헬스체크 URL: $HEALTH_CHECK_URL"
-          
-          # 애플리케이션이 시작될 때까지 대기
           while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
             HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" $HEALTH_CHECK_URL || echo "000")
             if [ "$HTTP_STATUS" = "200" ]; then
-              echo "✅ 애플리케이션이 정상적으로 실행 중입니다. (HTTP 상태: $HTTP_STATUS)"
+              echo "health check passed"
               break
             else
               RETRY_COUNT=$((RETRY_COUNT + 1))
-              echo "⏳ 애플리케이션이 아직 준비되지 않았습니다. 재시도 $RETRY_COUNT/$MAX_RETRIES (HTTP 상태: $HTTP_STATUS)"
+              echo "waiting for app to start... $RETRY_COUNT/$MAX_RETRIES"
               sleep 10 
             fi
           done
           
           if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
-            echo "❌ 헬스 체크 실패: 애플리케이션이 제한 시간 내에 시작되지 않았습니다."
+            echo "health check failed"
             exit 1
           fi
-          echo "🎉 배포 및 헬스 체크가 성공적으로 완료되었습니다."
 
-      - name: 컨테이너 정리
+      - name: cleanup containers
         if: always()
         run: |
-          # 테스트용으로 실행된 컨테이너들 정리
-          echo "테스트용 컨테이너 정리 중..."
-          
-          # 실행 중인 profanity 컨테이너들 확인 및 정리
           BLUE_CONTAINER=$(docker ps -q --filter "name=profanity-blue")
           GREEN_CONTAINER=$(docker ps -q --filter "name=profanity-green")
           
           if [ -n "$BLUE_CONTAINER" ]; then
-            echo "Blue 컨테이너 정리 중..."
             docker stop $BLUE_CONTAINER || true
             docker rm $BLUE_CONTAINER || true
           fi
           
           if [ -n "$GREEN_CONTAINER" ]; then
-            echo "Green 컨테이너 정리 중..."
             docker stop $GREEN_CONTAINER || true
             docker rm $GREEN_CONTAINER || true
           fi
           
-          # 사용하지 않는 이미지 정리
           docker image prune -f || true
-          
-          echo "컨테이너 정리가 완료되었습니다."
