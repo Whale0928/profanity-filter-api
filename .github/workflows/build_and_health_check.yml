@@ -52,8 +52,80 @@ jobs:
             **/build/reports/tests/
             **/build/test-results/
 
+  # 보안 취약점 스캔 작업 - 테스트와 병렬로 실행
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: JDK 21 설정
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      # OWASP Dependency Check를 사용한 보안 취약점 스캔
+      # - 프로젝트의 의존성에서 알려진 보안 취약점을 탐지
+      # - NIST NVD (National Vulnerability Database) 기반
+      # - CVSS 점수 7.0 이상의 취약점 발견 시 빌드 실패
+      - name: OWASP Dependency Check 보안 스캔
+        uses: dependency-check/Dependency-Check_Action@main
+        id: dep-check
+        with:
+          # 프로젝트 이름 설정
+          project: 'profanity-filter-api'
+          # 스캔할 경로 (현재 디렉토리 전체)
+          path: '.'
+          # 리포트 형식 (HTML: 사람이 읽기 쉬운 형태, JSON: 기계 처리용)
+          format: 'HTML,JSON'
+          # 출력 디렉토리
+          out: 'reports'
+          # 추가 옵션:
+          # --failOnCVSS 7: CVSS 점수 7.0 이상의 취약점 발견 시 실패
+          # --enableRetired: 사용 중단된 의존성도 스캔에 포함
+          # --enableExperimental: 실험적 분석기 활성화
+          args: >
+            --failOnCVSS 7
+            --enableRetired
+            --enableExperimental
+
+      # 스캔 결과를 GitHub Actions 아티팩트로 업로드
+      # 실패하더라도 결과를 확인할 수 있도록 always() 조건 사용
+      - name: 보안 스캔 결과 업로드
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-scan-report
+          path: |
+            ${{ github.workspace }}/reports/
+          # 아티팩트 보존 기간 (일 단위)
+          retention-days: 30
+
+      # 스캔 결과 요약을 GitHub PR 코멘트나 로그에 출력
+      - name: 보안 스캔 결과 요약
+        if: always()
+        run: |
+          echo "=== OWASP Dependency Check 보안 스캔 완료 ==="
+          echo "스캔 대상: ${{ github.workspace }}"
+          echo "리포트 경로: ${{ github.workspace }}/reports/"
+          
+          # HTML 리포트가 생성되었는지 확인
+          if [ -f "${{ github.workspace }}/reports/dependency-check-report.html" ]; then
+            echo "✅ HTML 리포트가 성공적으로 생성되었습니다."
+            echo "📊 상세 결과는 아티팩트에서 다운로드하여 확인하세요."
+          else
+            echo "⚠️ HTML 리포트 생성에 문제가 있을 수 있습니다."
+          fi
+          
+          # JSON 리포트에서 취약점 개수 추출 (있는 경우)
+          if [ -f "${{ github.workspace }}/reports/dependency-check-report.json" ]; then
+            echo "📋 JSON 리포트도 생성되었습니다."
+          fi
+
+  # 헬스체크 작업 - 테스트와 보안 스캔이 모두 성공한 후 실행
   health-check:
-    needs: test
+    needs: [ test, security-scan ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
