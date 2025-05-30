@@ -9,6 +9,7 @@ import app.core.data.response.Detected;
 import app.core.data.response.FilterApiResponse;
 import app.core.data.response.Status;
 import app.core.data.response.constant.StatusCode;
+import app.core.exception.BusinessException;
 import app.dto.request.FilterRequest;
 import app.dto.response.FilterResponse;
 import app.dto.response.FilterWord;
@@ -18,6 +19,8 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
@@ -130,13 +133,21 @@ public class DefaultProfanityHandler implements ProfanityHandler {
         return UuidCreator.getTimeOrderedEpoch();
     }
 
-    // DefaultProfanityHandler 클래스에 추가
-
     @Override
     @Transactional(readOnly = true)
     public FilterApiResponse requestAsyncFilter(FilterRequest request, String callbackUrl) {
-        // 1. trackingId 생성
-        UUID trackingId = generateTrackingId();
+
+        //1. 콜백 URL 유효성 검사 및 UUID 생성
+        final UUID trackingId = generateTrackingId();
+        final URI callbackUri;
+
+
+        try {
+            callbackUri = new URI(callbackUrl);
+        } catch (URISyntaxException e) {
+            log.error("잘못된 콜백 URL: {}", callbackUrl);
+            throw new BusinessException(StatusCode.INVALID_CALLBACK_URL);
+        }
 
         // 2. 수락 상태의 초기 응답 생성
         FilterApiResponse acceptedResponse = FilterApiResponse.builder()
@@ -147,14 +158,20 @@ public class DefaultProfanityHandler implements ProfanityHandler {
                 .elapsed(Elapsed.zero())
                 .build();
 
-        // 3. 비동기적으로 실제 필터링 수행
-        CompletableFuture.runAsync(() -> {
-            // 필터링 실행
-            FilterApiResponse response = requestFacadeFilter(request);
-
-            // 이벤트 발행 (CallbackEvent 또는 확장된 FilterEvent 사용)
-            publisher.publishEvent(AsyncFilterEvent.create(request, response, callbackUrl));
-        });
+        // 4. 비동기적으로 실제 필터링 수행
+        CompletableFuture
+                .supplyAsync(() -> {
+                    log.info("백그라운드 필터링 처리 시작: trackingId={}", trackingId);
+                    return requestFacadeFilter(request);
+                })
+                .thenAccept(response -> {
+                    log.info("필터링 완료, 콜백 이벤트 발행: trackingId={}", trackingId);
+                    publisher.publishEvent(AsyncFilterEvent.create(request, response, callbackUri));
+                })
+                .exceptionally(throwable -> {
+                    log.error("비동기 필터링 처리 실패: trackingId={}, error={}", trackingId, throwable.getMessage(), throwable);
+                    return null;
+                });
 
         // 4. 즉시 수락 응답 반환
         return acceptedResponse;

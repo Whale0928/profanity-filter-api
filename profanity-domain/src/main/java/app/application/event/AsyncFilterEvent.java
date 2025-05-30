@@ -6,6 +6,8 @@ import app.dto.request.FilterRequest;
 import lombok.Getter;
 import org.springframework.context.ApplicationEvent;
 
+import java.net.URI;
+
 /**
  * 비동기 필터링 완료 후 콜백 처리를 위한 이벤트
  */
@@ -14,7 +16,7 @@ public class AsyncFilterEvent extends ApplicationEvent {
 
     private final FilterRequest request;
     private final FilterApiResponse response;
-    private final String callbackUrl;
+    private final URI callbackUrl;
 
     /**
      * 비동기 필터링 이벤트 생성
@@ -23,7 +25,7 @@ public class AsyncFilterEvent extends ApplicationEvent {
      * @param response    필터링 결과 응답
      * @param callbackUrl 결과를 전송할 콜백 URL
      */
-    public AsyncFilterEvent(FilterRequest request, FilterApiResponse response, String callbackUrl) {
+    public AsyncFilterEvent(FilterRequest request, FilterApiResponse response, URI callbackUrl) {
         super(response); // 이벤트 소스로 응답 객체 사용
         this.request = request;
         this.response = response;
@@ -33,7 +35,7 @@ public class AsyncFilterEvent extends ApplicationEvent {
     /**
      * 정적 팩토리 메서드
      */
-    public static AsyncFilterEvent create(FilterRequest request, FilterApiResponse response, String callbackUrl) {
+    public static AsyncFilterEvent create(FilterRequest request, FilterApiResponse response, URI callbackUrl) {
         return new AsyncFilterEvent(request, response, callbackUrl);
     }
 }
