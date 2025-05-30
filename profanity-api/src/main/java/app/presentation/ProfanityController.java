@@ -50,10 +50,9 @@ public class ProfanityController {
         final FilterRequest filterRequest = FilterRequest.create(request.text(), request.mode(), apiKey, clientIp, referrer);
 
         if (request.isAsync()) {
-            profanityHandler.requestAsyncFilter(filterRequest, request.callbackUrl());
-            return ResponseEntity.accepted().body(null);
+            FilterApiResponse response = profanityHandler.requestAsyncFilter(filterRequest, request.callbackUrl());
+            return ResponseEntity.ok(response);
         }
-
         FilterApiResponse response = profanityHandler.requestFacadeFilter(filterRequest);
         return ResponseEntity.ok(response);
     }
