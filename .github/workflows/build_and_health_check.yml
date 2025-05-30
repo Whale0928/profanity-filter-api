@@ -3,8 +3,7 @@ name: Build and Health Check
 on:
   pull_request:
     branches:
-      - develop
-      - release
+      - *
     types: [ opened, synchronize, reopened ]
 
 concurrency:
