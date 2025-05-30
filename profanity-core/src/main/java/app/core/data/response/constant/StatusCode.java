@@ -13,6 +13,7 @@ public enum StatusCode {
     NOT_FOUND_CLIENT(4031, "클라이언트 정보를 찾을 수 없습니다. 인증 키가 유효하지 않거나 권한이 없는 경우 발생합니다."),
     INVALID_API_KEY(4032, "API 키가 유효하지 않습니다. 인증 키가 유효하지 않거나 권한이 없는 경우 발생합니다."),
     TOO_MANY_REQUESTS(4290, "요청 횟수가 제한이 초과 되었습니다. 일정 시간이 지나면 다시 시도해 주세요."),
+    INVALID_CALLBACK_URL(4001, "콜백 URL 형식이 올바르지 않습니다. 콜백 URL을 확인해 주세요."),
     INTERNAL_SERVER_ERROR(5000, "서버 내부 오류가 발생 했습니다., 재시도 시 문제가 지속 되는 경우 관리자에게 문의 바랍니다."),
     SERVICE_UNAVAILABLE(5030, "현재 서비스가 점검중이므로 서비스 응답할 수 없는 경우 발생합니다."),
     ;
