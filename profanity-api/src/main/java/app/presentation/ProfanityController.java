@@ -12,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,7 +21,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Objects;
-import java.util.UUID;
 
 import static app.application.HttpClient.getClientIP;
 import static app.application.HttpClient.getReferrer;
@@ -90,14 +88,4 @@ public class ProfanityController {
         return ResponseEntity.ok(profanityHandler.advancedFilter(word)
         );
     }
-
-    @GetMapping("/async/status/${trackingId}")
-    public ResponseEntity<?> getAsyncRequestStatus(
-            @RequestHeader(value = "x-api-key") String apiKey,
-            @RequestParam("trackingId") UUID trackingId
-    ) {
-        Objects.requireNonNull(trackingId, "Tracking ID는 필수 입니다.");
-        return ResponseEntity.ok(profanityHandler.getFilterStatus(trackingId));
-    }
-
 }

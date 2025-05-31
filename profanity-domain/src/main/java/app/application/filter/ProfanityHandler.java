@@ -3,8 +3,6 @@ package app.application.filter;
 import app.core.data.response.FilterApiResponse;
 import app.dto.request.FilterRequest;
 
-import java.util.UUID;
-
 public interface ProfanityHandler {
 
     /**
@@ -58,12 +56,4 @@ public interface ProfanityHandler {
      * @return 요청 접수 상태와 trackingId를 포함한 응답
      */
     FilterApiResponse requestAsyncFilter(FilterRequest request, String callbackUrl);
-
-    /**
-     * 요청 처리 상태를 조회합니다.
-     *
-     * @param trackingId 요청 추적 ID
-     * @return 현재 처리 상태를 포함한 응답
-     */
-    FilterApiResponse getFilterStatus(UUID trackingId);
 }

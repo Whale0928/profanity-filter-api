@@ -113,11 +113,4 @@ public class FakeProfanityHandler implements ProfanityHandler {
         return null;
     }
 
-    @Override
-    public FilterApiResponse getFilterStatus(UUID trackingId) {
-        //todo : 비동기 처리
-        return null;
-    }
-
-
 }

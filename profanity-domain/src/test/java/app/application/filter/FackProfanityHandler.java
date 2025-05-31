@@ -3,8 +3,6 @@ package app.application.filter;
 import app.core.data.response.FilterApiResponse;
 import app.dto.request.FilterRequest;
 
-import java.util.UUID;
-
 public class FackProfanityHandler implements ProfanityHandler {
     @Override
     public FilterApiResponse requestFacadeFilter(FilterRequest filterRequest) {
@@ -36,8 +34,4 @@ public class FackProfanityHandler implements ProfanityHandler {
         return null;
     }
 
-    @Override
-    public FilterApiResponse getFilterStatus(UUID trackingId) {
-        return null;
-    }
 }

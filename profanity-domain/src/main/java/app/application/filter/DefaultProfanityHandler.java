@@ -10,8 +10,6 @@ import app.core.data.response.FilterApiResponse;
 import app.core.data.response.Status;
 import app.core.data.response.constant.StatusCode;
 import app.core.exception.BusinessException;
-import app.domain.record.RecordRepository;
-import app.domain.record.Records;
 import app.dto.request.FilterRequest;
 import app.dto.response.FilterResponse;
 import app.dto.response.FilterWord;
@@ -24,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
@@ -39,7 +36,6 @@ import static app.core.data.response.constant.StatusCode.OK;
 public class DefaultProfanityHandler implements ProfanityHandler {
 
     private final NormalProfanityFilter normalProfanityFilter;
-    private final RecordRepository recordRepository;
     private final ApplicationEventPublisher publisher;
 
     @Override
@@ -173,29 +169,5 @@ public class DefaultProfanityHandler implements ProfanityHandler {
 
         // 4. 즉시 수락 응답 반환
         return acceptedResponse;
-    }
-
-    @Override
-    public FilterApiResponse getFilterStatus(UUID trackingId) {
-
-        if (trackingId == null) {
-            throw new BusinessException(StatusCode.INVALID_TRACKING_ID, "Tracking ID는 필수 입니다.");
-        }
-        Records records = recordRepository.findByTrackingId(trackingId)
-                .orElse(null);
-
-        Status status = records == null ? Status.of(StatusCode.PROCESSING) : Status.of(OK);
-
-        Set<Detected> detected = records == null ? Collections.emptySet() : Arrays.stream(records.getWords().split("/"))
-                .map(i -> Detected.of(i.length(), i))
-                .collect(Collectors.toSet());
-
-        return FilterApiResponse.builder()
-                .trackingId(trackingId)
-                .status(status)
-                .detected(detected)
-                .filtered("")
-                .elapsed(Elapsed.zero())
-                .build();
     }
 }
