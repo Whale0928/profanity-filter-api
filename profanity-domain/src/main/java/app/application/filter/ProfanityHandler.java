@@ -3,47 +3,19 @@ package app.application.filter;
 import app.core.data.response.FilterApiResponse;
 import app.dto.request.FilterRequest;
 
+import java.util.UUID;
+
 public interface ProfanityHandler {
 
-    /**
-     * 모드에 따라 적절한 필터링을 수행합니다.
-     *
-     * @param request 요청 객체
-     * @return the api response
-     */
-    FilterApiResponse requestFacadeFilter(FilterRequest request);
+    FilterApiResponse requestFacadeFilter(FilterRequest request, UUID trackingId);
 
-    /**
-     * 빠른 필터링을 수행합니다.
-     * 비속어 발견 시 즉시 필터링을 종료합니다.
-     *
-     * @param text 검사 할 단어
-     * @return the api response
-     */
-    FilterApiResponse quickFilter(String text);
+    FilterApiResponse quickFilter(String text, UUID trackingId);
 
-    /**
-     * 일반적인 필터링을 수행합니다.
-     * 모든 비속어를 검사 하는 필터링을 수행합니다.
-     * <p>
-     * * @param text 검사 할 단어
-     *
-     * @return the api response
-     */
-    FilterApiResponse normalFilter(String text);
+    FilterApiResponse normalFilter(String text, UUID trackingId);
 
-    /**
-     * 일반적인 필터링을 수행합니다.
-     * 모든 비속어를 검사 하는 필터링을 수행합니다.
-     * 필터링 후 마스킹 처리를 수행합니다.
-     *
-     * @param text the text
-     * @return the api response
-     */
-    FilterApiResponse sanitizeProfanity(String text);
+    FilterApiResponse sanitizeProfanity(String text, UUID trackingId);
 
-    /**
-     * @param text the text
-     */
-    FilterApiResponse advancedFilter(String text);
+    FilterApiResponse advancedFilter(String text, UUID trackingId);
+
+    FilterApiResponse requestAsyncFilter(FilterRequest request, String callbackUrl);
 }

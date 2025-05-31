@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
+import java.util.UUID;
 
 public interface JpaRecordRepository extends RecordRepository, JpaRepository<Records, Long> {
 
@@ -18,4 +20,8 @@ public interface JpaRecordRepository extends RecordRepository, JpaRepository<Rec
             AND r.createdAt >= :yesterday
             """)
     Pair<Long, Long> getClientDailyUsageStatistics(String apiKey, LocalDateTime yesterday);
+
+    @Override
+    @Query("SELECT r FROM records r WHERE r.trackingId = :trackingId")
+    Optional<Records> findByTrackingId(UUID trackingId);
 }

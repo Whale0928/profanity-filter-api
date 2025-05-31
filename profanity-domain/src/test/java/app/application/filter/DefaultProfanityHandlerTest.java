@@ -12,6 +12,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.Set;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -42,9 +43,9 @@ class DefaultProfanityHandlerTest {
     void test_1() {
         // given
         String word = "'씨뻘'욕설이 들어간 문장입니다.";
-
+        UUID trackingId = UUID.randomUUID();
         // when
-        FilterApiResponse response = profanityHandler.quickFilter(word);
+        FilterApiResponse response = profanityHandler.quickFilter(word, trackingId);
 
         // then
         Set<Detected> detected = response.detected();
@@ -57,12 +58,12 @@ class DefaultProfanityHandlerTest {
     void test_2() {
         // given
         String word = "욕설이 들어간 문장입니다.";
+        UUID trackingId = UUID.randomUUID();
 
         // when
-        FilterApiResponse response = profanityHandler.normalFilter(word);
+        FilterApiResponse response = profanityHandler.normalFilter(word, trackingId);
 
         // then
-        log.info("응답 : {}", response);
         Set<Detected> detected = response.detected();
         assertEquals(1, detected.size());
         assertTrue(detected.stream().anyMatch(d -> d.filteredWord().equals("욕설") && d.length() == 2));
@@ -73,12 +74,12 @@ class DefaultProfanityHandlerTest {
     void test_3() {
         // given
         String word = "욕설이 들어간 문장입니다.";
+        UUID trackingId = UUID.randomUUID();
 
         // when
-        FilterApiResponse response = profanityHandler.sanitizeProfanity(word);
+        FilterApiResponse response = profanityHandler.sanitizeProfanity(word, trackingId);
 
         // then
-        log.info("응답 : {}", response);
         String filtered = response.filtered();
         Detected detected = response.detected().stream().findFirst().orElseThrow();
         assertTrue(detected.filteredWord().equals("욕설") && detected.length() == 2);

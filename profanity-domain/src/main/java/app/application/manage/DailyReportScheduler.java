@@ -23,7 +23,7 @@ public class DailyReportScheduler {
      * 클라이언트 요청 횟수 업데이트 스케줄러
      */
     @Transactional
-    @Scheduled(cron = "0 0 0/6 * * ?")
+    @Scheduled(cron = "0 0 1 * * ?")
     @SchedulerLock(name = "daily_report_scheduler", lockAtMostFor = "PT5H")
     public void updateReportSchedule() {
         long start = System.currentTimeMillis();
@@ -33,7 +33,7 @@ public class DailyReportScheduler {
     }
 
 
-    @Scheduled(cron = "0 0 0/6 * * ?")
+    @Scheduled(cron = "0 0 1 * * ?")
     @SchedulerLock(name = "daily_report_scheduler", lockAtMostFor = "PT11H")
     public void createDailyReport() {
         long start = System.currentTimeMillis();
