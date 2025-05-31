@@ -2,17 +2,16 @@ package app.application.event;
 
 import app.domain.record.RecordRepository;
 import app.domain.record.Records;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class TrackingRecorder {
 
-    private static final Logger log = LogManager.getLogger(TrackingRecorder.class);
     private final RecordRepository recordRepository;
 
     public TrackingRecorder(RecordRepository recordRepository) {
@@ -21,7 +20,6 @@ public class TrackingRecorder {
 
     @Transactional
     public void recordTracking(FilterEvent event) {
-        log.info("[DOMAIN] record tracking : {}", event);
         String words = event.words().stream()
                 .map(String::trim)
                 .collect(Collectors.joining("/"));
@@ -37,6 +35,6 @@ public class TrackingRecorder {
                 .build();
 
         Records save = recordRepository.save(records);
-        log.info("[DOMAIN] 레코드 데이터베이스 저장 완료  : {}", save);
+        log.info("record tracking : {}", save);
     }
 }

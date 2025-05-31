@@ -24,6 +24,6 @@ public record ApiRequest(
      */
     @JsonIgnore
     public Boolean isAsync() {
-        return callbackUrl != null;
+        return callbackUrl != null && !callbackUrl.trim().isEmpty();
     }
 }

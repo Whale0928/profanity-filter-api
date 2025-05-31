@@ -57,7 +57,7 @@ class RestDocsProfanityControllerTest extends AbstractRestDocs {
                 .build();
 
         securityUtil.when(SecurityContextUtil::getCurrentApikey).thenReturn(key);
-        when(profanityHandler.requestFacadeFilter(any(FilterRequest.class))).thenReturn(response);
+        when(profanityHandler.requestFacadeFilter(any(FilterRequest.class),any())).thenReturn(response);
 
         mockMvc.perform(post("/api/v1/filter")
                         .header("x-api-key", key)

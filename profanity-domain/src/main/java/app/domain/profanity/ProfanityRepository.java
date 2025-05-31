@@ -14,4 +14,5 @@ public interface ProfanityRepository {
     void deleteAll();
 
     long countAll();
+
 }
