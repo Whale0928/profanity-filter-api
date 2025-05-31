@@ -10,10 +10,13 @@ import app.core.data.response.FilterApiResponse;
 import app.core.data.response.Status;
 import app.core.data.response.constant.StatusCode;
 import app.core.exception.BusinessException;
+import app.domain.record.RecordRepository;
+import app.domain.record.Records;
 import app.dto.request.FilterRequest;
 import app.dto.response.FilterResponse;
 import app.dto.response.FilterWord;
 import com.github.f4b6a3.uuid.UuidCreator;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -21,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
@@ -30,19 +34,13 @@ import java.util.stream.Collectors;
 import static app.core.data.response.constant.StatusCode.OK;
 
 @Slf4j
+@RequiredArgsConstructor
 @Service
 public class DefaultProfanityHandler implements ProfanityHandler {
 
     private final NormalProfanityFilter normalProfanityFilter;
+    private final RecordRepository recordRepository;
     private final ApplicationEventPublisher publisher;
-
-    public DefaultProfanityHandler(
-            NormalProfanityFilter normalProfanityFilter,
-            ApplicationEventPublisher publisher
-    ) {
-        this.normalProfanityFilter = normalProfanityFilter;
-        this.publisher = publisher;
-    }
 
     @Override
     @Transactional(readOnly = true)
@@ -179,13 +177,23 @@ public class DefaultProfanityHandler implements ProfanityHandler {
 
     @Override
     public FilterApiResponse getFilterStatus(UUID trackingId) {
-        // 요청 상태 저장소에서 상태 조회
-        // 요청 상태에 따라 적절한 응답 생성하여 반환
-        // 구현 예시:
+
+        if (trackingId == null) {
+            throw new BusinessException(StatusCode.INVALID_TRACKING_ID, "Tracking ID는 필수 입니다.");
+        }
+        Records records = recordRepository.findByTrackingId(trackingId)
+                .orElse(null);
+
+        Status status = records == null ? Status.of(StatusCode.PROCESSING) : Status.of(OK);
+
+        Set<Detected> detected = records == null ? Collections.emptySet() : Arrays.stream(records.getWords().split("/"))
+                .map(i -> Detected.of(i.length(), i))
+                .collect(Collectors.toSet());
+
         return FilterApiResponse.builder()
                 .trackingId(trackingId)
-                .status(Status.of(StatusCode.PROCESSING))
-                .detected(Collections.emptySet())
+                .status(status)
+                .detected(detected)
                 .filtered("")
                 .elapsed(Elapsed.zero())
                 .build();
