@@ -40,16 +40,18 @@ public class DefaultProfanityHandler implements ProfanityHandler {
 
     @Override
     @Transactional(readOnly = true)
-    public FilterApiResponse requestFacadeFilter(FilterRequest request) {
+    public FilterApiResponse requestFacadeFilter(FilterRequest request, UUID trackingId) {
         Mode mode = request.mode();
         String text = request.text();
 
-        log.info("[DOMAIN] requestFacadeFilter : request={}", request);
+        if (trackingId == null) {
+            trackingId = generateTrackingId();
+        }
 
         FilterApiResponse response = switch (mode) {
-            case QUICK -> quickFilter(text);
-            case NORMAL -> normalFilter(text);
-            case FILTER -> sanitizeProfanity(text);
+            case QUICK -> quickFilter(text, trackingId);
+            case NORMAL -> normalFilter(text, trackingId);
+            case FILTER -> sanitizeProfanity(text, trackingId);
         };
 
         publisher.publishEvent(FilterEvent.create(request, response));
@@ -58,14 +60,18 @@ public class DefaultProfanityHandler implements ProfanityHandler {
     }
 
     @Override
-    public FilterApiResponse quickFilter(String word) {
+    public FilterApiResponse quickFilter(String word, UUID trackingId) {
         ElapsedStartAt start = ElapsedStartAt.now();
         FilterWord filterWord = normalProfanityFilter.firstMatched(word);
         Elapsed elapsed = Elapsed.end(start);
         Set<Detected> detected = Set.of(Detected.of(filterWord.length(), filterWord.word()));
 
+        if (trackingId == null) {
+            trackingId = generateTrackingId();
+        }
+
         return FilterApiResponse.builder()
-                .trackingId(generateTrackingId())
+                .trackingId(trackingId)
                 .status(Status.of(OK))
                 .detected(detected)
                 .filtered("")
@@ -74,12 +80,17 @@ public class DefaultProfanityHandler implements ProfanityHandler {
     }
 
     @Override
-    public FilterApiResponse normalFilter(String word) {
+    public FilterApiResponse normalFilter(String word, UUID trackingId) {
         final FilterResponse filterResponse = normalProfanityFilter.allMatched(word);
         final Set<Detected> detects = detects(filterResponse.filterWords());
 
+
+        if (trackingId == null) {
+            trackingId = generateTrackingId();
+        }
+
         return FilterApiResponse.builder()
-                .trackingId(generateTrackingId())
+                .trackingId(trackingId)
                 .status(Status.of(OK))
                 .detected(detects)
                 .filtered("")
@@ -88,13 +99,17 @@ public class DefaultProfanityHandler implements ProfanityHandler {
     }
 
     @Override
-    public FilterApiResponse sanitizeProfanity(String word) {
+    public FilterApiResponse sanitizeProfanity(String word, UUID trackingId) {
         final FilterResponse filterResponse = normalProfanityFilter.allMatched(word);
         final Set<Detected> detects = detects(filterResponse.filterWords());
         final String masked = masked(word, filterResponse.filterWords());
 
+        if (trackingId == null) {
+            trackingId = generateTrackingId();
+        }
+
         return FilterApiResponse.builder()
-                .trackingId(generateTrackingId())
+                .trackingId(trackingId)
                 .status(Status.of(OK))
                 .detected(detects)
                 .filtered(masked)
@@ -103,8 +118,8 @@ public class DefaultProfanityHandler implements ProfanityHandler {
     }
 
     @Override
-    public FilterApiResponse advancedFilter(String text) {
-        return sanitizeProfanity(text);
+    public FilterApiResponse advancedFilter(String text, UUID trackingId) {
+        return sanitizeProfanity(text, trackingId);
     }
 
     private Set<Detected> detects(Set<FilterWord> filterWords) {
@@ -131,7 +146,6 @@ public class DefaultProfanityHandler implements ProfanityHandler {
     @Transactional(readOnly = true)
     public FilterApiResponse requestAsyncFilter(FilterRequest request, String callbackUrl) {
 
-        //1. 콜백 URL 유효성 검사 및 UUID 생성
         final UUID trackingId = generateTrackingId();
         final URI callbackUri;
 
@@ -156,7 +170,7 @@ public class DefaultProfanityHandler implements ProfanityHandler {
         CompletableFuture
                 .supplyAsync(() -> {
                     log.info("백그라운드 필터링 처리 시작: trackingId={}", trackingId);
-                    return requestFacadeFilter(request);
+                    return requestFacadeFilter(request, trackingId);
                 })
                 .thenAccept(response -> {
                     log.info("필터링 완료, 콜백 이벤트 발행: trackingId={}", trackingId);

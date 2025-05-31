@@ -1,11 +1,12 @@
 ### 퀵 모델 비속어를 검증할 수 있다.
 POST {{host}}/api/v1/filter
 Content-Type: application/json
-x-api-key: {{api_key}}
+x-api-key: CWAAh7v3Z-Krd8ndSTiNX-n1M8Rnm-sZ_UB9HW8qF3k
 
 {
-  "text": "{{text}}",
-  "mode": "QUICK"
+  "text": "동기식 콜백 요청 {{text}}",
+  "mode": "FILTER",
+  "callbackUrl": null
 }
 
 ### 노말 모델 비속어를 검증할 수 있다.
@@ -27,3 +28,9 @@ x-api-key: dsadsads
   "text": "{{text}}",
   "mode": "FILTER"
 }
+
+
+###
+GET http://127.0.0.1:9999/api/v1/filter/async/status/01972599-c0ad-7efa-9741-c486e692fccf
+Content-Type: application/json
+x-api-key: CWAAh7v3Z-Krd8ndSTiNX-n1M8Rnm-sZ_UB9HW8qF3k

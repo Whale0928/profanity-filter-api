@@ -53,7 +53,7 @@ public class ProfanityController {
             FilterApiResponse response = profanityHandler.requestAsyncFilter(filterRequest, request.callbackUrl());
             return ResponseEntity.ok(response);
         }
-        FilterApiResponse response = profanityHandler.requestFacadeFilter(filterRequest);
+        FilterApiResponse response = profanityHandler.requestFacadeFilter(filterRequest, null);
         return ResponseEntity.ok(response);
     }
 
@@ -71,7 +71,7 @@ public class ProfanityController {
         log.info("[API-URLENCODED]  Client IP : {} / Referer : {} / Request : {}", clientIp, referrer, request);
 
         final FilterRequest filterRequest = FilterRequest.create(request.text(), request.mode(), apiKey, clientIp, referrer);
-        FilterApiResponse response = profanityHandler.requestFacadeFilter(filterRequest);
+        FilterApiResponse response = profanityHandler.requestFacadeFilter(filterRequest, null);
         return ResponseEntity.ok(response
         );
     }
@@ -85,7 +85,7 @@ public class ProfanityController {
     ) {
         log.info("[API-Advanced] Request : {} , key :{}", word, apiKey);
         Objects.requireNonNull(word, "단어는 필수 입니다.");
-        return ResponseEntity.ok(profanityHandler.advancedFilter(word)
+        return ResponseEntity.ok(profanityHandler.advancedFilter(word, null)
         );
     }
 }
