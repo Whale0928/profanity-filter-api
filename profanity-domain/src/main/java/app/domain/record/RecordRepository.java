@@ -5,6 +5,7 @@ import app.core.data.Pair;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.UUID;
 
 public interface RecordRepository {
 
@@ -15,4 +16,6 @@ public interface RecordRepository {
     void delete(Records records);
 
     Pair<Long, Long> getClientDailyUsageStatistics(String apiKey, LocalDateTime yesterday);
+
+    Optional<Records> findByTrackingId(UUID trackingId);
 }

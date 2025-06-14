@@ -23,19 +23,19 @@ public class FakeProfanityHandler implements ProfanityHandler {
     private static final Logger log = LogManager.getLogger(FakeProfanityHandler.class);
 
     @Override
-    public FilterApiResponse requestFacadeFilter(FilterRequest filterRequest) {
+    public FilterApiResponse requestFacadeFilter(FilterRequest filterRequest, UUID trackingId) {
         Mode mode = filterRequest.mode();
         String text = filterRequest.text();
 
         return switch (mode) {
-            case QUICK -> quickFilter(text);
-            case NORMAL -> normalFilter(text);
-            case FILTER -> sanitizeProfanity(text);
+            case QUICK -> quickFilter(text, trackingId);
+            case NORMAL -> normalFilter(text, trackingId);
+            case FILTER -> sanitizeProfanity(text, trackingId);
         };
     }
 
     @Override
-    public FilterApiResponse quickFilter(String text) {
+    public FilterApiResponse quickFilter(String text, UUID trackingId) {
         log.info("[domain] fake call : quickFilter");
 
         ElapsedStartAt startAt = ElapsedStartAt.now();
@@ -58,7 +58,7 @@ public class FakeProfanityHandler implements ProfanityHandler {
     }
 
     @Override
-    public FilterApiResponse normalFilter(String text) {
+    public FilterApiResponse normalFilter(String text, UUID trackingId) {
         log.info("[domain] fake call : normalFilter");
         ElapsedStartAt startAt = ElapsedStartAt.now();
         Set<Detected> collect = profaityWordList.stream()
@@ -77,7 +77,7 @@ public class FakeProfanityHandler implements ProfanityHandler {
     }
 
     @Override
-    public FilterApiResponse sanitizeProfanity(String text) {
+    public FilterApiResponse sanitizeProfanity(String text, UUID trackingId) {
 
         log.info("[domain] fake call : sanitizeProfanity");
 
@@ -102,8 +102,15 @@ public class FakeProfanityHandler implements ProfanityHandler {
     }
 
     @Override
-    public FilterApiResponse advancedFilter(String text) {
+    public FilterApiResponse advancedFilter(String text, UUID trackingId) {
         log.info("[domain]  fake call : advancedFilter");
-        return sanitizeProfanity(text);
+        return sanitizeProfanity(text, trackingId);
     }
+
+    @Override
+    public FilterApiResponse requestAsyncFilter(FilterRequest request, String callbackUrl) {
+        //todo : 비동기 처리
+        return null;
+    }
+
 }
