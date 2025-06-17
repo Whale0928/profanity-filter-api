@@ -54,3 +54,4 @@ application-prod.yml
 /data/**
 
 .secrets
+/http/http-client.env.json

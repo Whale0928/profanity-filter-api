@@ -24,7 +24,7 @@ public class ClientMetadataReader implements MetadataReader {
     @Transactional(readOnly = true)
     public ClientMetadata read(String apiKey) {
 
-        if (Boolean.FALSE.equals(keyGenerator.validateApiKey(apiKey))) {
+        if (!keyGenerator.validateApiKey(apiKey)) {
             throw new IllegalArgumentException(StatusCode.INVALID_API_KEY.stringCode());
         }
 
