@@ -1,7 +1,7 @@
 ### 퀵 모델 비속어를 검증할 수 있다.
 POST {{host}}/api/v1/filter
 Content-Type: application/json
-x-api-key: "{{api-key}}"
+x-api-key: {{api-key}}
 
 {
   "text": "{{text}}",
@@ -11,7 +11,7 @@ x-api-key: "{{api-key}}"
 ### 노말 모델 비속어를 검증할 수 있다.
 POST {{host}}/api/v1/filter
 Content-Type: application/json
-x-api-key: dsadsads
+x-api-key: {{api-key}}
 
 {
   "text": "{{text}}",
@@ -21,7 +21,7 @@ x-api-key: dsadsads
 ### 필터링 모델 비속어를 검증할 수 있다.
 POST {{host}}/api/v1/filter
 Content-Type: application/json
-x-api-key: dsadsads
+x-api-key: {{api-key}}
 
 {
   "text": "{{text}}",

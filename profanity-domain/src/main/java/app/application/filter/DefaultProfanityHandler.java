@@ -39,7 +39,7 @@ public class DefaultProfanityHandler implements ProfanityHandler {
     private final ApplicationEventPublisher publisher;
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public FilterApiResponse requestFacadeFilter(FilterRequest request, UUID trackingId) {
         Mode mode = request.mode();
         String text = request.text();
