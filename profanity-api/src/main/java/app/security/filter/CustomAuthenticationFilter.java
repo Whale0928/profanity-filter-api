@@ -43,7 +43,7 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
         String path = request.getRequestURI();
         String method = request.getMethod();
-        log.info("ip : {}, path : {}, method : {}", request.getRemoteAddr(), path, method);
+        log.debug("ip : {}, path : {}, method : {}", request.getRemoteAddr(), path, method);
         if (PathRequest.toStaticResources().atCommonLocations().matches(request)) {
             return true;
         }
