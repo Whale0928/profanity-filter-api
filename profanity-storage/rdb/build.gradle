@@ -1,5 +1,4 @@
 dependencies {
-    implementation project(':profanity-core')
     implementation project(':profanity-domain')
 
     //database

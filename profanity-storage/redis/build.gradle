@@ -1,5 +1,5 @@
 dependencies {
-    implementation project(':profanity-core')
+    implementation project(':profanity-shared')
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 }
 

@@ -20,7 +20,6 @@ configurations {
 dependencies {
     implementation project(':profanity-storage:rdb')
     implementation project(':profanity-storage:redis')
-    implementation project(':profanity-core')
     implementation project(':profanity-domain')
 
     //web

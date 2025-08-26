@@ -1,5 +1,5 @@
 dependencies {
-    implementation project(':profanity-core')
+    api project(':profanity-shared')
 
     implementation 'org.springframework:spring-tx'
 
