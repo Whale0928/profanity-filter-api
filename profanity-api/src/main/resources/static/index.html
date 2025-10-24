@@ -96,6 +96,8 @@
             <label for="apiKey">API Key:</label>
             <input id="apiKey" name="apiKey" required type="text" value="">
 
+            <button onclick="issueTemporaryKey()" type="button" style="background-color: #ff9800;">임시 키 발급 (10회 사용)</button>
+
             <label for="referrer">Referer:</label>
             <input id="referrer" name="referrer" required type="text" value="">
 
@@ -110,6 +112,40 @@
 </div>
 
 <script>
+    function issueTemporaryKey() {
+        const url = document.getElementById('url').value.replace('/filter', '/clients/temporary-key');
+        
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status && data.status.code === 200 && data.data) {
+                const apiKey = data.data.apiKey;
+                const remainingCount = data.data.remainingCount;
+                const message = data.data.message;
+                
+                document.getElementById('apiKey').value = apiKey;
+                document.getElementById('responseJson').textContent = 
+                    `임시 API 키 발급 완료!\n\n${message}\n\n키: ${apiKey}\n남은 횟수: ${remainingCount}회\n\n발급 시각: ${data.data.issuedAt}\n만료 시각: ${data.data.expiredAt}`;
+                
+                alert('임시 API 키가 발급되었습니다!\n' + remainingCount + '회 사용 가능합니다.');
+            } else {
+                const errorMessage = data.status ? data.status.message : '임시 키 발급 실패';
+                document.getElementById('responseJson').textContent = '에러: ' + errorMessage;
+                alert('임시 키 발급 실패: ' + errorMessage);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('responseJson').textContent = 'Error: ' + error;
+            alert('임시 키 발급 중 오류가 발생했습니다.');
+        });
+    }
+
     function sendJsonRequest() {
         const text = document.getElementById('text').value;
         const mode = document.getElementById('mode').value;

@@ -3,16 +3,20 @@ package app.presentation;
 import app.application.EmailService;
 import app.application.client.ClientMetadataReader;
 import app.application.client.ClientsCommandService;
+import app.application.client.TemporaryApiKeyService;
 import app.core.data.response.ApiResponse;
 import app.core.data.response.Status;
 import app.core.data.response.constant.StatusCode;
 import app.domain.client.ClientMetadata;
+import app.domain.client.TemporaryApiKey;
 import app.dto.request.ClientRegistCommand;
 import app.dto.request.ClientRegistRequest;
 import app.dto.request.ClientUpdateRequest;
 import app.dto.request.MailPayloadRequest;
 import app.dto.response.ClientsRegistResponse;
+import app.dto.response.TemporaryApiKeyResponse;
 import app.security.SecurityContextUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +40,7 @@ public class ClientsController {
     private final ClientsCommandService clientsCommandService;
     private final ClientMetadataReader clientReader;
     private final EmailService emailService;
+    private final TemporaryApiKeyService temporaryApiKeyService;
 
     @GetMapping
     public ResponseEntity<?> get() {
@@ -102,6 +107,55 @@ public class ClientsController {
         } else {
             return ApiResponse.error(Status.of(StatusCode.BAD_REQUEST, "이메일 인증 코드가 올바르지 않습니다."));
         }
+    }
+
+    /**
+     * 임시 API 키 발급
+     * 테스트 페이지에서 제한된 횟수(기본 10회)만큼 사용 가능한 임시 키 발급
+     */
+    @PostMapping("/temporary-key")
+    public ResponseEntity<?> issueTemporaryKey(HttpServletRequest request) {
+        String ipAddress = getClientIp(request);
+        log.info("임시 API 키 발급 요청: IP={}", ipAddress);
+        
+        TemporaryApiKey temporaryApiKey = temporaryApiKeyService.issueTemporaryKey(ipAddress);
+        TemporaryApiKeyResponse response = TemporaryApiKeyResponse.of(
+                temporaryApiKey.getApiKey(),
+                temporaryApiKey.getRemainingCount(),
+                temporaryApiKey.getIssuedAt(),
+                temporaryApiKey.getExpiredAt()
+        );
+        
+        return ApiResponse.ok(response);
+    }
+
+    /**
+     * 클라이언트 IP 주소 추출
+     */
+    private String getClientIp(HttpServletRequest request) {
+        String[] headers = {
+            "X-Forwarded-For",
+            "Proxy-Client-IP",
+            "WL-Proxy-Client-IP",
+            "HTTP_X_FORWARDED_FOR",
+            "HTTP_X_FORWARDED",
+            "HTTP_X_CLUSTER_CLIENT_IP",
+            "HTTP_CLIENT_IP",
+            "HTTP_FORWARDED_FOR",
+            "HTTP_FORWARDED",
+            "HTTP_VIA",
+            "REMOTE_ADDR"
+        };
+
+        for (String header : headers) {
+            String ip = request.getHeader(header);
+            if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
+                // X-Forwarded-For에는 여러 IP가 올 수 있으므로 첫 번째 IP를 사용
+                return ip.split(",")[0].trim();
+            }
+        }
+
+        return request.getRemoteAddr();
     }
 
 }
