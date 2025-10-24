@@ -25,8 +25,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiResponse<Void>> handleBusinessException(BusinessException ex) {
         log.warn("비즈니스 예외 발생: {}", ex.getMessage());
-        StatusCode resolve = StatusCode.resolve(ex.getMessage());
-        return ApiResponse.error(Status.of(resolve));
+        return ApiResponse.error(ex.getStatus());
     }
 
     @ExceptionHandler(BadCredentialsException.class)

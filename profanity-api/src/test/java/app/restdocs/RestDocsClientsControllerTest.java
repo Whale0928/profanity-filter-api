@@ -3,6 +3,7 @@ package app.restdocs;
 import app.application.EmailService;
 import app.application.client.ClientMetadataReader;
 import app.application.client.ClientsCommandService;
+import app.application.client.TemporaryApiKeyService;
 import app.domain.client.ClientMetadata;
 import app.dto.request.ClientRegistRequest;
 import app.dto.request.ClientUpdateRequest;
@@ -41,10 +42,11 @@ class RestDocsClientsControllerTest extends AbstractRestDocs {
     private final ClientsCommandService clientsCommandService = mock(ClientsCommandService.class);
     private final ClientMetadataReader clientReader = mock(ClientMetadataReader.class);
     private final EmailService mailSender = mock(EmailService.class);
+    private final TemporaryApiKeyService temporaryApiKeyService = mock(TemporaryApiKeyService.class);
 
     @Override
     protected Object initController() {
-        return new ClientsController(clientsCommandService, clientReader, mailSender);
+        return new ClientsController(clientsCommandService, clientReader, mailSender, temporaryApiKeyService);
     }
 
 
