@@ -1,0 +1,2 @@
+--container-architecture linux/arm64
+-P ubuntu-24.04-arm=catthehacker/ubuntu:runner-latest

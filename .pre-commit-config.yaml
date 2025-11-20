@@ -1,0 +1,21 @@
+---
+fail_fast: false
+exclude: |
+  (?x)^(
+    .*\.sops\.toml
+  )$
+repos:
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v3.1.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]
+        args: [feat, fix, docs, style, refactor, test, chore, remove]
+  - repo: local
+    hooks:
+      - id: gradle spotlessApply
+        name: gradle spotlessApply
+        entry: sh -c './gradlew spotlessApply && git add -A'
+        language: system
+        types: [java]
+        pass_filenames: false
