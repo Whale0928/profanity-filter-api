@@ -1,3 +1,0 @@
-[submodule "module.platform"]
-	path = module.platform
-	url = https://github.com/Whale0928/k8s-platform.git
