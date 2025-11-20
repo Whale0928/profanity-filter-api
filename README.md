@@ -2,18 +2,6 @@
 
 # 한국어 비속어 필터 API 서비스
 
-## ⚠️ 도메인 이관 안내
-
-**현재 도메인**: [api.profanity-filter.run](https://api.profanity-filter.run/) (2025년 5월 20일까지만 지원)  
-**신규 도메인**: [api.profanity.kr-filter.com](https://api.profanity.kr-filter.com/) (2025년 5월 19일부터 사용 가능)
-
-도메인 비용이 과도하게 많이 나와서 불가피하게 도메인 이관을 진행합니다. <br>
-기존 가비아에서 아마존 Route 53으로 이관하기 때문에 앞으로 이러한 문제는 발생하지 않을 예정입니다.
-
-* **기존 도메인**: 2025년 5월 20일까지만 지원됩니다.
-* **신규 도메인**: 2025년 5월 19일부터 사용 가능합니다.
-
-
 > API 인증 키 발급 후 사용 가능합니다. 문서 링크를 참조해 주세요
 >
 >  [API DOCS](https://whale0928.github.io/profanity-filter-api/)
@@ -53,7 +41,7 @@
 
 ## API Guide
 
-- 요청 URL: `POST https://api.profanity-filter.run/api/v1/filter/`
+- 요청 URL: `POST https://api.profanity.kr-filter.com/api/v1/filter/`
 - headers
     - `Content-Type: application/json` or `application/x-www-form-urlencoded`
     - `accept: application/json`
