@@ -24,15 +24,22 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
-          cache: gradle
+
+      - name: setup gradle
+        uses: gradle/actions/setup-gradle@v5
 
       - name: configure 1password
+        id: op-config
         uses: 1password/load-secrets-action/configure@v2
+        continue-on-error: true
         with:
           service-account-token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
 
       - name: load secrets
+        id: op-load
         uses: 1password/load-secrets-action@v2
+        continue-on-error: true
+        if: steps.op-config.outcome == 'success'
         with:
           export-env: true
           unset-previous: false
@@ -40,7 +47,12 @@ jobs:
           ENV_FILE: op://instance/.env/.env
 
       - name: create env file
-        run: echo "${{ env.ENV_FILE }}" > .env
+        run: |
+          if [ -n "${{ env.ENV_FILE }}" ]; then
+            echo "${{ env.ENV_FILE }}" > .env
+          else
+            echo "# Empty .env file for tests" > .env
+          fi
 
       - name: run tests
         run: ./gradlew test
@@ -66,7 +78,9 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
-          cache: gradle
+
+      - name: setup gradle
+        uses: gradle/actions/setup-gradle@v5
 
       - name: configure 1password
         uses: 1password/load-secrets-action/configure@v2
