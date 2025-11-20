@@ -83,7 +83,7 @@ subprojects {
             csv.required = false
         }
 
-        afterEvaluate {
+        doFirst {
             classDirectories.setFrom(files(classDirectories.files.collect {
                 fileTree(dir: it, exclude: [
                     '**/config/**',
@@ -182,26 +182,27 @@ tasks.register('jacocoRootReport', JacocoReport) {
     description = 'Generates an aggregate report from all subprojects'
     group = 'Reporting'
 
-    additionalSourceDirs.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
-    sourceDirectories.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
-    classDirectories.setFrom files(subprojects.sourceSets.main.output)
-    executionData.setFrom project.fileTree(dir: '.', include: '**/build/jacoco/test.exec')
-
     reports {
         xml.required = true
         html.required = true
         csv.required = true
     }
 
-    afterEvaluate {
-        classDirectories.setFrom(files(classDirectories.files.collect {
+    doFirst {
+        additionalSourceDirs.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
+        sourceDirectories.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
+
+        def allClassDirs = files(subprojects.sourceSets.main.output).files.collect {
             fileTree(dir: it, exclude: [
                 '**/config/**',
                 '**/entity/**',
                 '**/dto/**',
                 '**/*Application.class'
             ])
-        }))
+        }
+        classDirectories.setFrom files(allClassDirs)
+
+        executionData.setFrom project.fileTree(dir: '.', include: '**/build/jacoco/test.exec')
     }
 
     doLast {
