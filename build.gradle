@@ -204,8 +204,8 @@ tasks.register('jacocoRootReport', JacocoReport) {
 project.afterEvaluate {
     tasks.named('jacocoRootReport').configure {
         // Explicit dependencies on all test and jacocoTestReport tasks
-        dependsOn subprojects.collect { it.tasks.withType(Test) }
-        dependsOn subprojects.collect { it.tasks.named('jacocoTestReport') }
+        dependsOn subprojects.test
+        dependsOn subprojects.jacocoTestReport
 
         additionalSourceDirs.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
         sourceDirectories.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
