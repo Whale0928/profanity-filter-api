@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.4.0'
     id 'io.spring.dependency-management' version '1.1.6'
+    id 'jacoco'
 }
 
 configurations {
@@ -28,6 +29,7 @@ subprojects {
     apply plugin: 'java-library'
     apply plugin: 'org.springframework.boot'
     apply plugin: 'io.spring.dependency-management'
+    apply plugin: 'jacoco'
 
     dependencies {
         // default spring boot dependencies
@@ -54,6 +56,11 @@ subprojects {
     jar.enabled = true
     tasks.named('test') { useJUnitPlatform() }
 
+    // JaCoCo configuration
+    jacoco {
+        toolVersion = "0.8.11"
+    }
+
     test {
         outputs.upToDateWhen { false }
         useJUnitPlatform()
@@ -65,11 +72,181 @@ subprojects {
             showCauses = true
             showStackTraces = true
         }
+        finalizedBy jacocoTestReport
     }
+
+    jacocoTestReport {
+        dependsOn test
+        reports {
+            xml.required = true
+            html.required = true
+            csv.required = false
+        }
+
+        afterEvaluate {
+            classDirectories.setFrom(files(classDirectories.files.collect {
+                fileTree(dir: it, exclude: [
+                    '**/config/**',
+                    '**/entity/**',
+                    '**/dto/**',
+                    '**/*Application.class'
+                ])
+            }))
+        }
+    }
+
+    // Define coverage targets for each module
+    ext {
+        coverageTargets = [
+            'profanity-api': [
+                line: 0.70,
+                branch: 0.65,
+                instruction: 0.70
+            ],
+            'profanity-domain': [
+                line: 0.80,
+                branch: 0.75,
+                instruction: 0.80
+            ],
+            'profanity-shared': [
+                line: 0.60,
+                branch: 0.55,
+                instruction: 0.60
+            ],
+            'rdb': [
+                line: 0.70,
+                branch: 0.65,
+                instruction: 0.70
+            ],
+            'redis': [
+                line: 0.70,
+                branch: 0.65,
+                instruction: 0.70
+            ]
+        ]
+    }
+
+    // Task to check coverage targets (without enforcing)
+    tasks.register('checkCoverageTargets') {
+        dependsOn jacocoTestReport
+        doLast {
+            def reportFile = file("${buildDir}/reports/jacoco/test/jacocoTestReport.xml")
+            if (reportFile.exists()) {
+                def parser = new XmlParser()
+                parser.setFeature("http://apache.org/xml/features/disallow-doctype-decl", false)
+                parser.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false)
+                def report = parser.parse(reportFile)
+
+                def moduleName = project.name
+                def targets = project.coverageTargets[moduleName]
+
+                if (targets != null) {
+                    def counters = report.counter
+                    def lineCoverage = getCoverage(counters, 'LINE')
+                    def branchCoverage = getCoverage(counters, 'BRANCH')
+                    def instructionCoverage = getCoverage(counters, 'INSTRUCTION')
+
+                    println "\n=========================================="
+                    println "📊 Coverage Report for ${moduleName}"
+                    println "=========================================="
+                    println "Line Coverage:        ${String.format('%.2f%%', lineCoverage * 100)} (Target: ${String.format('%.0f%%', targets.line * 100)}) ${lineCoverage >= targets.line ? '✅' : '❌'}"
+                    println "Branch Coverage:      ${String.format('%.2f%%', branchCoverage * 100)} (Target: ${String.format('%.0f%%', targets.branch * 100)}) ${branchCoverage >= targets.branch ? '✅' : '❌'}"
+                    println "Instruction Coverage: ${String.format('%.2f%%', instructionCoverage * 100)} (Target: ${String.format('%.0f%%', targets.instruction * 100)}) ${instructionCoverage >= targets.instruction ? '✅' : '❌'}"
+                    println "==========================================\n"
+                }
+            }
+        }
+    }
+
+    test.finalizedBy checkCoverageTargets
+}
+
+// Helper function to calculate coverage
+def getCoverage(counters, type) {
+    def counter = counters.find { it.'@type' == type }
+    if (counter != null) {
+        def missed = counter.'@missed'.toInteger()
+        def covered = counter.'@covered'.toInteger()
+        def total = missed + covered
+        return total > 0 ? covered / total : 0.0
+    }
+    return 0.0
 }
 
 // Root 프로젝트의 test task를 수정
 test.dependsOn subprojects.test
+
+// Unified coverage report for all modules
+tasks.register('jacocoRootReport', JacocoReport) {
+    dependsOn subprojects.test
+    description = 'Generates an aggregate report from all subprojects'
+    group = 'Reporting'
+
+    additionalSourceDirs.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
+    sourceDirectories.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
+    classDirectories.setFrom files(subprojects.sourceSets.main.output)
+    executionData.setFrom project.fileTree(dir: '.', include: '**/build/jacoco/test.exec')
+
+    reports {
+        xml.required = true
+        html.required = true
+        csv.required = true
+    }
+
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                '**/config/**',
+                '**/entity/**',
+                '**/dto/**',
+                '**/*Application.class'
+            ])
+        }))
+    }
+
+    doLast {
+        println "\n=========================================="
+        println "📊 Unified Coverage Report Generated"
+        println "=========================================="
+        println "HTML Report: ${reports.html.outputLocation.get()}/index.html"
+        println "XML Report:  ${reports.xml.outputLocation.get()}"
+        println "==========================================\n"
+    }
+}
+
+// Task to check overall coverage target
+tasks.register('checkOverallCoverageTarget') {
+    dependsOn jacocoRootReport
+    doLast {
+        def reportFile = file("${buildDir}/reports/jacoco/jacocoRootReport/jacocoRootReport.xml")
+        if (reportFile.exists()) {
+            def parser = new XmlParser()
+            parser.setFeature("http://apache.org/xml/features/disallow-doctype-decl", false)
+            parser.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false)
+            def report = parser.parse(reportFile)
+
+            def counters = report.counter
+            def lineCoverage = getCoverage(counters, 'LINE')
+            def branchCoverage = getCoverage(counters, 'BRANCH')
+            def instructionCoverage = getCoverage(counters, 'INSTRUCTION')
+
+            // Overall project targets
+            def overallTargets = [
+                line: 0.75,
+                branch: 0.70,
+                instruction: 0.75
+            ]
+
+            println "\n=========================================="
+            println "🎯 Overall Project Coverage Report"
+            println "=========================================="
+            println "Line Coverage:        ${String.format('%.2f%%', lineCoverage * 100)} (Target: ${String.format('%.0f%%', overallTargets.line * 100)}) ${lineCoverage >= overallTargets.line ? '✅' : '❌'}"
+            println "Branch Coverage:      ${String.format('%.2f%%', branchCoverage * 100)} (Target: ${String.format('%.0f%%', overallTargets.branch * 100)}) ${branchCoverage >= overallTargets.branch ? '✅' : '❌'}"
+            println "Instruction Coverage: ${String.format('%.2f%%', instructionCoverage * 100)} (Target: ${String.format('%.0f%%', overallTargets.instruction * 100)}) ${instructionCoverage >= overallTargets.instruction ? '✅' : '❌'}"
+            println "==========================================\n"
+        }
+    }
+}
 
 bootJar.enabled = false
 jar.enabled = true

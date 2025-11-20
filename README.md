@@ -2,6 +2,9 @@
 
 # 한국어 비속어 필터 API 서비스
 
+[![Coverage](.github/badges/jacoco.svg)](https://github.com/Whale0928/profanity-filter-api/actions/workflows/build_and_health_check.yml)
+[![Branches](.github/badges/branches.svg)](https://github.com/Whale0928/profanity-filter-api/actions/workflows/build_and_health_check.yml)
+
 > API 인증 키 발급 후 사용 가능합니다. 문서 링크를 참조해 주세요
 >
 >  [API DOCS](https://whale0928.github.io/profanity-filter-api/)

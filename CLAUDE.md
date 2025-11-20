@@ -47,6 +47,34 @@ docker-compose up -d
 ./gradlew test --tests "*.NormalProfanityFilterTest"
 ```
 
+### 코드 커버리지
+```bash
+# 전체 프로젝트 커버리지 리포트 생성 (모듈별 + 통합)
+./gradlew test jacocoRootReport checkOverallCoverageTarget
+
+# 특정 모듈 커버리지 리포트 생성
+./gradlew :profanity-api:jacocoTestReport
+./gradlew :profanity-domain:jacocoTestReport
+
+# 모듈별 커버리지 목표치 확인
+./gradlew :profanity-api:checkCoverageTargets
+./gradlew :profanity-domain:checkCoverageTargets
+
+# 커버리지 리포트 위치
+# - 통합 리포트: build/reports/jacoco/jacocoRootReport/html/index.html
+# - 모듈별 리포트: {module}/build/reports/jacoco/test/html/index.html
+```
+
+#### 커버리지 목표치
+- **profanity-api**: 70% (Line), 65% (Branch), 70% (Instruction)
+- **profanity-domain**: 80% (Line), 75% (Branch), 80% (Instruction)
+- **profanity-shared**: 60% (Line), 55% (Branch), 60% (Instruction)
+- **profanity-storage:rdb**: 70% (Line), 65% (Branch), 70% (Instruction)
+- **profanity-storage:redis**: 70% (Line), 65% (Branch), 70% (Instruction)
+- **전체 프로젝트**: 75% (Line), 70% (Branch), 75% (Instruction)
+
+*참고: 목표치는 현재 빌드 실패를 유발하지 않으며, 달성 여부만 체크합니다.*
+
 ### 의존성 관리
 ```bash
 # 의존성 확인

@@ -45,6 +45,9 @@ jobs:
       - name: run tests
         run: ./gradlew test
 
+      - name: generate coverage report
+        run: ./gradlew jacocoRootReport checkOverallCoverageTarget
+
       - name: upload test results
         uses: actions/upload-artifact@v4
         if: always()
@@ -53,6 +56,44 @@ jobs:
           path: |
             **/build/reports/tests/
             **/build/test-results/
+
+      - name: upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: |
+            **/build/reports/jacoco/
+            build/reports/jacoco/jacocoRootReport/
+
+      - name: add coverage pr comment
+        uses: madrapps/jacoco-report@v1.6.1
+        if: github.event_name == 'pull_request'
+        with:
+          paths: |
+            ${{ github.workspace }}/build/reports/jacoco/jacocoRootReport/jacocoRootReport.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          min-coverage-overall: 75
+          min-coverage-changed-files: 70
+          title: 'Code Coverage Report'
+          update-comment: true
+
+      - name: generate coverage badge
+        uses: cicirello/jacoco-badge-generator@v2
+        if: github.ref == 'refs/heads/main'
+        with:
+          jacoco-csv-file: build/reports/jacoco/jacocoRootReport/jacocoRootReport.csv
+          badges-directory: .github/badges
+          generate-branches-badge: true
+          generate-summary: true
+
+      - name: commit and push badge
+        if: github.ref == 'refs/heads/main'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add .github/badges
+          git diff --quiet && git diff --staged --quiet || (git commit -m "docs: update coverage badge [skip ci]" && git push)
 
   health-check:
     needs: [ test ]
