@@ -204,6 +204,7 @@ tasks.register('jacocoRootReport', JacocoReport) {
 project.afterEvaluate {
     tasks.named('jacocoRootReport').configure {
         // Explicit dependencies on all test and jacocoTestReport tasks
+        dependsOn test  // Root project test task
         dependsOn subprojects.test
         dependsOn subprojects.jacocoTestReport
 
