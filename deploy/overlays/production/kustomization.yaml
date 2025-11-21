@@ -4,9 +4,6 @@ kind: Kustomization
 namespace: profanity-production
 
 resources:
-  - namespace.yaml
+  - resources.yaml
   - deployment.yaml
-  - service.yaml
-  - ingress.yaml
-  - secret-store.yaml
   - external-secret.yaml
