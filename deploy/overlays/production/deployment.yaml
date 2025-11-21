@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
       - name: profanity-api
-        image: ghcr.io/whale0928/profanity-api:main-SHA
+        image: ghcr.io/whale0928/profanity-api:deploy-877aa7d
         imagePullPolicy: Always
         ports:
         - name: http
