@@ -4,7 +4,7 @@ metadata:
   name: profanity-filter
   namespace: argocd
 spec:
-  project: default
+  project: profanity
   source:
     repoURL: https://github.com/Whale0928/profanity-filter-api
     path: deploy/overlays/production
