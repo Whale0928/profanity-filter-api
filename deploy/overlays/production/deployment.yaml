@@ -22,6 +22,8 @@ spec:
         app: profanity-api
         environment: production
     spec:
+      imagePullSecrets:
+      - name: ghcr-secret
       containers:
       - name: profanity-api
         image: ghcr.io/whale0928/profanity-api:deploy-877aa7d
