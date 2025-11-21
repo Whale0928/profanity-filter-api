@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: profanity-production
+  labels:
+    app: profanity-api
+    environment: production
