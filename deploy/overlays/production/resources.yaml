@@ -40,10 +40,10 @@ spec:
   ingressClassName: nginx
   tls:
   - hosts:
-    - api-profanity.kr-filter.com
+    - api.profanity.kr-filter.com
     secretName: profanity-api-tls
   rules:
-  - host: api-profanity.kr-filter.com
+  - host: api.profanity.kr-filter.com
     http:
       paths:
       - path: /
