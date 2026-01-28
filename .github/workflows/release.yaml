@@ -1,29 +1,37 @@
-name: Release Branch Merged
+name: Release
 
 on:
-  pull_request:
-    branches:
-      - main
-    types: [closed]
+  release:
+    types: [published, created]
 
 jobs:
-  log-release-merge:
-    if: github.event.pull_request.merged == true && startsWith(github.head_ref, 'release/')
+  prepare-release:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Log merged release branch
+      - name: Checkout tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Extract version info
+        id: version
+        run: |
+          TAG_NAME="${{ github.event.release.tag_name }}"
+          VERSION="${TAG_NAME#v}"
+          echo "tag=${TAG_NAME}" >> $GITHUB_OUTPUT
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Log release info
         run: |
           echo "=========================================="
-          echo "Release branch merged to main"
+          echo "Release Created"
           echo "=========================================="
-          echo "Branch: ${{ github.head_ref }}"
-          echo "PR: #${{ github.event.pull_request.number }}"
-          echo "Title: ${{ github.event.pull_request.title }}"
-          echo "Merged by: ${{ github.event.pull_request.merged_by.login }}"
-          echo "Merged at: ${{ github.event.pull_request.merged_at }}"
+          echo "Tag: ${{ steps.version.outputs.tag }}"
+          echo "Version: ${{ steps.version.outputs.version }}"
+          echo "Release: ${{ github.event.release.name }}"
+          echo "Published by: ${{ github.event.release.author.login }}"
+          echo "Release URL: ${{ github.event.release.html_url }}"
           echo "=========================================="
           echo ""
-          echo "⚠️  릴리즈 브랜치는 자동 삭제되지 않도록 설정되어야 합니다."
-          echo "Repository Settings → General → Pull Requests"
-          echo "→ 'Automatically delete head branches' 체크 해제"
+          echo "배포는 deploy.yml 워크플로우에서 처리됩니다."
