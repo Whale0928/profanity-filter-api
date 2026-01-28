@@ -39,7 +39,7 @@ out/
 
 ### VS Code ###
 .vscode/
-/.env
+/module.secrets/.env
 
 # Ignore Gradle build output directory
 build
@@ -55,3 +55,4 @@ application-prod.yml
 
 .secrets
 /http/http-client.env.json
+.omc/

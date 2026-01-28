@@ -3,7 +3,7 @@ POST {{host}}/api/v1/clients/register
 Content-Type: application/json
 
 {
-  "name": "ABC Corporation",
+  "name": "ABCD Corporation",
   "email": "contact@abccorp.com",
   "issuerInfo": "발급자 정보",
   "note": "메모 내용"
