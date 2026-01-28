@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: profanity-filter
+  namespace: argocd
+spec:
+  project: profanity
+  source:
+    repoURL: https://github.com/Whale0928/profanity-filter-api
+    path: deploy/overlays/production
+    targetRevision: deploy
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: profanity-production
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
