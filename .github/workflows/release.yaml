@@ -1,26 +1,29 @@
-name: Release
+name: Release Branch Merged
+
 on:
   pull_request:
-#    branches:
-#      - release
-#    types: [ closed ]
+    branches:
+      - main
+    types: [closed]
+
 jobs:
-  build:
+  log-release-merge:
+    if: github.event.pull_request.merged == true && startsWith(github.head_ref, 'release/')
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v2
-      - name: Get branch names
-        id: branch-name
-        uses: tj-actions/branch-names@v4.9
-
-      - name: 버전 정보 추출(from Branch Name)
-        run: echo "TAG=$(echo '${{ steps.branch-name.outputs.current_branch }}' | egrep -o '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')" >> $GITHUB_ENV
-
-      - name: Release & Tag 생성
-        if: github.event.pull_request.merged == true
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ env.TAG }}
-          release_name: ${{ env.TAG }}
+      - name: Log merged release branch
+        run: |
+          echo "=========================================="
+          echo "Release branch merged to main"
+          echo "=========================================="
+          echo "Branch: ${{ github.head_ref }}"
+          echo "PR: #${{ github.event.pull_request.number }}"
+          echo "Title: ${{ github.event.pull_request.title }}"
+          echo "Merged by: ${{ github.event.pull_request.merged_by.login }}"
+          echo "Merged at: ${{ github.event.pull_request.merged_at }}"
+          echo "=========================================="
+          echo ""
+          echo "⚠️  릴리즈 브랜치는 자동 삭제되지 않도록 설정되어야 합니다."
+          echo "Repository Settings → General → Pull Requests"
+          echo "→ 'Automatically delete head branches' 체크 해제"
