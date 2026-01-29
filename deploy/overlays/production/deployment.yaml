@@ -22,13 +22,11 @@ spec:
         app: profanity-api
         environment: production
     spec:
-      imagePullSecrets:
-        - name: ghcr-secret
       nodeSelector:
         kubernetes.io/arch: arm64
       containers:
         - name: profanity-api
-          image: ghcr.io/whale0928/profanity-api:deploy-877aa7d
+          image: docker-registry.bottle-note.com/profanity-api
           imagePullPolicy: Always
           ports:
             - name: http

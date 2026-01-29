@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: https://github.com/Whale0928/profanity-filter-api
     path: deploy/overlays/production
-    targetRevision: deploy
+    targetRevision: main
   destination:
     server: https://kubernetes.default.svc
     namespace: profanity-production
