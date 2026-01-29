@@ -1,652 +1,544 @@
-# ArgoCD Image Updater 배포 계획
+# ArgoCD Image Updater v1.0.2 배포 가이드 (CRD 기반)
 
 **작성일:** 2026-01-29
-**대상 프로젝트:** profanity-filter-api
-**배포 방식:** 빅뱅 (Big Bang)
-**목표:** 릴리즈 태그 기반 자동 배포 구현
+**버전:** v1.0.2 (CRD 기반)
+**대상:** Zot Self-Hosted Registry 연동
+**상태:** 구현 완료
 
 ---
 
 ## 📋 목차
 
-1. [현재 상태 분석](#현재-상태-분석)
-2. [목표 아키텍처](#목표-아키텍처)
-3. [구현 계획](#구현-계획)
-4. [변경 파일 목록](#변경-파일-목록)
-5. [설정값 및 Secret](#설정값-및-secret)
-6. [배포 순서](#배포-순서)
-7. [검증 방법](#검증-방법)
-8. [롤백 방안](#롤백-방안)
+1. [배포 완료 사항](#배포-완료-사항)
+2. [아키텍처 개요](#아키텍처-개요)
+3. [CRD 기반 vs Annotation 기반](#crd-기반-vs-annotation-기반)
+4. [구현된 리소스](#구현된-리소스)
+5. [ArgoCD Sync Wave 전략](#argocd-sync-wave-전략)
+6. [ImageUpdater CR 생성 가이드](#imageupdater-cr-생성-가이드)
+7. [트러블슈팅](#트러블슈팅)
+8. [참고 자료](#참고-자료)
 
 ---
 
-## 현재 상태 분석
+## 배포 완료 사항
 
-### 배포 구조
-```yaml
-레포지토리: profanity-filter-api
-ArgoCD Application:
-  - 소스: deploy 브랜치
-  - Auto-sync: enabled
-  - 이미지: ghcr.io/whale0928/profanity-api:deploy-877aa7d (하드코딩)
+### ✅ 완료된 작업
 
-워크플로우:
-  - release.yaml: 로그만 출력 (실제 배포 없음)
-  - build_and_health_check.yml: Docker 로컬 테스트만
+1. **CRD 설치**
+   - `imageupdaters.argocd-image-updater.argoproj.io` CRD 설치
+   - Sync Wave `-1`로 가장 먼저 배포
+
+2. **Controller 배포**
+   - Image: `quay.io/argoprojlabs/argocd-image-updater:v1.0.2`
+   - ClusterRole 기반 RBAC (multi-namespace 지원)
+   - Leader Election 비활성화 (단일 replica)
+   - Zot Registry 인증 정보 구성
+
+3. **Credentials 구조 개선**
+   - Secret: `zot.credentials` (username:password 통합 형식)
+   - ConfigMap: `env:ZOT_CREDENTIALS` 참조
+
+4. **검증**
+   - Pod Running 상태
+   - Zot Registry 연결 확인
+
+### 📂 배포된 파일 구조
+
 ```
-
-### 문제점
-1. ❌ deploy 브랜치 수동 관리 필요
-2. ❌ 이미지 태그 하드코딩 (수동 업데이트)
-3. ❌ 릴리즈 태그 생성 시 배포 자동화 없음
-4. ❌ main 브랜치 커밋마다 배포되는 구조 불가능
-
----
-
-## 목표 아키텍처
-
-### 배포 플로우
-```
-┌─────────────────────────────────────────────────────────┐
-│ 1. Developer: GitHub Release v1.2.3 생성               │
-└─────────────────────────────────────────────────────────┘
-                         ↓
-┌─────────────────────────────────────────────────────────┐
-│ 2. GitHub Actions (release.yaml)                        │
-│    → Gradle 빌드                                         │
-│    → Docker 이미지 빌드                                  │
-│    → Zot 푸시: docker-registry.kr-filter.com/profanity-api:v1.2.3 │
-└─────────────────────────────────────────────────────────┘
-                         ↓
-┌─────────────────────────────────────────────────────────┐
-│ 3. ArgoCD Image Updater (5분 간격)                      │
-│    → Zot API 폴링                                        │
-│    → v*.*.* 패턴 태그 발견                              │
-│    → Kustomization images.newTag 업데이트               │
-│    → ArgoCD 파라미터 오버라이드                          │
-└─────────────────────────────────────────────────────────┘
-                         ↓
-┌─────────────────────────────────────────────────────────┐
-│ 4. ArgoCD Application                                   │
-│    → Source: main 브랜치 (manifest 추적)                │
-│    → Auto-sync: enabled                                 │
-│    → 이미지 파라미터 변경 감지 → 배포 시작               │
-└─────────────────────────────────────────────────────────┘
-                         ↓
-┌─────────────────────────────────────────────────────────┐
-│ 5. Kubernetes Cluster                                   │
-│    → Pod 재시작 (Rolling Update)                        │
-│    → 새 이미지 v1.2.3 적용 완료                          │
-└─────────────────────────────────────────────────────────┘
-```
-
-### 배포 트리거 정책
-| 이벤트 | ArgoCD 동작 |
-|--------|-----------|
-| main 브랜치 코드 커밋 | ❌ 배포 안됨 (이미지 태그 동일) |
-| main 브랜치 manifest 변경 | ✅ 즉시 배포 (ConfigMap, Service 등) |
-| Release v*.*.* 태그 생성 | ✅ 이미지 빌드 → Image Updater 감지 → 배포 |
-| 수동 이미지 푸시 | ✅ Image Updater 감지 → 배포 |
-
----
-
-## 구현 계획
-
-### Phase 1: Platform에 Image Manager 설치
-
-#### 1.1 디렉토리 생성
-```bash
-module.platform/
-└── platform/
-    └── image-manager/
-        ├── README.md              # ArgoCD Image Updater 사용 명시
-        ├── kustomization.yaml
-        ├── 00-namespace.yaml
-        ├── 10-rbac.yaml
-        ├── 20-deployment.yaml
-        └── 30-configmap.yaml
-```
-
-**폴더명 선택 이유:**
-- 기능 중심 네이밍 (`monitoring`과 일관성)
-- 향후 다른 이미지 관리 도구 추가 가능
-- 프로젝트별 선택적 참조 지원
-
-#### 1.2 RBAC 설정
-```yaml
-# 10-rbac.yaml
-- ServiceAccount: argocd-image-updater
-- Role: ArgoCD Application 읽기/쓰기 권한
-- RoleBinding: ServiceAccount ↔ Role 연결
-```
-
-#### 1.3 Deployment 설정
-```yaml
-# 20-deployment.yaml
-image: quay.io/argoprojlabs/argocd-image-updater:v0.14.0
-args:
-  - run
-  - --interval=5m
-  - --health-port=8080
-  - --registries-conf-path=/app/config/registries.conf
-  - --argocd-server-addr=argocd-server.argocd
-```
-
-#### 1.4 레지스트리 설정
-```yaml
-# 30-configmap.yaml
-registries:
-  - name: GitHub Container Registry
-    prefix: ghcr.io
-    api_url: https://ghcr.io
-    default: true
-    # GHCR은 public 레지스트리면 인증 불필요
-```
-
-#### 1.5 README 작성
-```markdown
-# platform/image-manager/README.md
-
-# Image Manager
-
-컨테이너 이미지 자동 업데이트 관리 컴포넌트
-
-## Implementation
-
-현재 구현: **ArgoCD Image Updater v0.14.0**
-- Repository: https://github.com/argoproj-labs/argocd-image-updater
-- Documentation: https://argocd-image-updater.readthedocs.io/
-
-## Usage
-
-각 Application의 `metadata.annotations`에 추가:
-
-\`\`\`yaml
-argocd-image-updater.argoproj.io/image-list: <name>=<registry>/<image>
-argocd-image-updater.argoproj.io/<name>.update-strategy: semver
-argocd-image-updater.argoproj.io/<name>.allow-tags: regexp:^v[0-9]+\.[0-9]+\.[0-9]+$
-\`\`\`
-
-## Supported Registries
-
-- GitHub Container Registry (ghcr.io)
-- Zot Self-Hosted (docker-registry.kr-filter.com)
-
-## Future Plans
-
-- Flux Image Automation Controller (선택적 추가)
-- Keel (대안)
-- 프로젝트별 이미지 매니저 선택 지원
-```
-
-#### 1.6 Platform Kustomization 업데이트
-```yaml
-# platform/kustomization.yaml
-resources:
-  - cert-manager
-  - ingress-nginx
-  - external-secrets
-  - image-manager  # ← 추가
+module.platform/platform/image-manager/
+├── 00-crd.yaml                      # CRD (sync-wave: -1)
+├── 10-rbac.yaml                     # ClusterRole, ServiceAccount
+├── 20-deployment.yaml               # Controller Deployment
+├── 30-configmap.yaml                # Registry 설정
+├── image-updater-secret.sops.yaml   # Zot Credentials (SOPS 암호화)
+├── ksops-generator.yaml             # SOPS 통합
+└── kustomization.yaml               # 리소스 통합
 ```
 
 ---
 
-### Phase 2: profanity-filter-api 설정
+## 아키텍처 개요
 
-#### 2.1 ArgoCD Application 수정
+### 전체 구조
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    ArgoCD Image Updater v1.0.2                  │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌───────────────┐   ┌───────────────┐   ┌──────────────────┐  │
+│  │  CRD          │   │  Controller   │   │  ImageUpdater CR │  │
+│  │  (Cluster)    │   │  (argocd ns)  │   │  (사용자 정의)   │  │
+│  └───────────────┘   └───────────────┘   └──────────────────┘  │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+           │                      │                      │
+           │                      │                      │
+           ▼                      ▼                      ▼
+┌─────────────────┐   ┌─────────────────┐   ┌─────────────────┐
+│ Kubernetes API  │   │ Zot Registry    │   │ ArgoCD Apps     │
+│ (CRD 저장)      │   │ (Image 폴링)    │   │ (Image 업데이트)│
+└─────────────────┘   └─────────────────┘   └─────────────────┘
+```
+
+### 동작 흐름
+
+```
+1. ImageUpdater CR 생성
+   └─> Controller가 CR 감지 (watch)
+
+2. Controller 동작
+   ├─> CR spec.applicationRefs에서 대상 Application 선택
+   ├─> spec.images에 정의된 이미지 목록 확인
+   └─> Registry API 호출 (5분 간격)
+
+3. 새 태그 발견 시
+   ├─> updateStrategy에 따라 태그 선택 (예: semver)
+   ├─> ArgoCD Application 파라미터 업데이트
+   └─> Application 자동 sync (syncPolicy.automated)
+
+4. 배포
+   └─> Kubernetes에 새 이미지 적용
+```
+
+---
+
+## CRD 기반 vs Annotation 기반
+
+### v1.x (CRD 기반) - 현재 구현
+
 ```yaml
-# deploy/application.yaml
-apiVersion: argoproj.io/v1alpha1
-kind: Application
+# ImageUpdater CR 생성
+apiVersion: argocd-image-updater.argoproj.io/v1alpha1
+kind: ImageUpdater
+metadata:
+  name: profanity-filter
+  namespace: argocd
+spec:
+  namespace: argocd
+  applicationRefs:
+    - namePattern: "profanity-*"
+      images:
+        - imageName: "docker-registry.bottle-note.com/profanity-api"
+          updateStrategy: semver
+          allowTags:
+            - regex: ^v[0-9]+\.[0-9]+\.[0-9]+$
+  writeBackConfig:
+    method: argocd
+```
+
+**장점:**
+- ✅ 독립적 리소스 관리
+- ✅ Kubernetes 유효성 검증
+- ✅ 여러 Application 패턴 매칭 가능
+- ✅ 구조화된 YAML 설정
+
+### v0.x (Annotation 기반)
+
+```yaml
+# Application에 annotation 추가
+metadata:
+  annotations:
+    argocd-image-updater.argoproj.io/image-list: myapp=registry/image
+    argocd-image-updater.argoproj.io/myapp.update-strategy: semver
+```
+
+**단점:**
+- ❌ 문자열 기반 설정 (파싱 필요)
+- ❌ Application마다 개별 설정
+- ❌ 타입 검증 약함
+
+---
+
+## 구현된 리소스
+
+### 1. CRD (00-crd.yaml)
+
+```yaml
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: imageupdaters.argocd-image-updater.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  group: argocd-image-updater.argoproj.io
+  names:
+    kind: ImageUpdater
+    plural: imageupdaters
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      # ... (schema 생략)
+```
+
+**핵심 필드:**
+- `spec.applicationRefs`: Application 선택 규칙
+- `spec.images`: 관리할 이미지 목록
+- `spec.commonUpdateSettings`: 전역 업데이트 전략
+- `spec.writeBackConfig`: 업데이트 방식 (argocd/git)
+
+### 2. RBAC (10-rbac.yaml)
+
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: argocd-image-updater
+rules:
+  # ArgoCD Application 관리
+  - apiGroups: ["argoproj.io"]
+    resources: ["applications"]
+    verbs: ["get", "list", "watch", "patch", "update"]
+
+  # Application 상태 확인
+  - apiGroups: ["argoproj.io"]
+    resources: ["applications/status"]
+    verbs: ["get", "list", "watch"]
+
+  # Secret/ConfigMap 읽기
+  - apiGroups: [""]
+    resources: ["secrets", "configmaps"]
+    verbs: ["get", "list", "watch"]
+
+  # Event 생성 (디버깅)
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create"]
+
+  # Leader Election (필요 시)
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["get", "list", "create", "update", "patch"]
+```
+
+**주요 변경사항:**
+- `Role` → `ClusterRole` (multi-namespace 지원)
+- `applications/status` 권한 추가
+- `leases` 권한 추가 (Leader Election용)
+
+### 3. Deployment (20-deployment.yaml)
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: argocd-image-updater
+  namespace: argocd
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+        - name: argocd-image-updater
+          image: quay.io/argoprojlabs/argocd-image-updater:v1.0.2
+          args:
+            - run
+            - --interval=5m
+            - --health-probe-bind-address=:8080
+            - --registries-conf-path=/app/config/registries.conf
+            - --loglevel=info
+            - --leader-election=false  # 단일 replica
+          env:
+            - name: ARGOCD_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: argocd-image-updater-secret
+                  key: argocd.token
+            - name: ZOT_CREDENTIALS
+              valueFrom:
+                secretKeyRef:
+                  name: argocd-image-updater-secret
+                  key: zot.credentials
+```
+
+**v1.0.2 변경사항:**
+- `--health-port` → `--health-probe-bind-address`
+- `--log-level` → `--loglevel`
+- `--argocd-server-addr`, `--argocd-grpc-web` 제거 (ConfigMap 사용)
+- 환경변수: `ZOT_USERNAME + ZOT_PASSWORD` → `ZOT_CREDENTIALS`
+
+### 4. ConfigMap (30-configmap.yaml)
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-image-updater-config
+  namespace: argocd
+data:
+  registries.conf: |
+    registries:
+      - name: Zot Self-Hosted
+        prefix: docker-registry.bottle-note.com
+        api_url: https://docker-registry.bottle-note.com
+        ping: yes
+        insecure: no
+        default: yes
+        credentials: env:ZOT_CREDENTIALS
+```
+
+**Credentials 형식:**
+- v0.x: `env:USERNAME:PASSWORD` (분리)
+- v1.x: `env:CREDENTIALS` (통합, `username:password` 형식)
+
+### 5. Secret (image-updater-secret.sops.yaml)
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: argocd-image-updater-secret
+  namespace: argocd
+type: Opaque
+stringData:
+  argocd.token: "eyJ..."
+  zot.credentials: "hgkim:hqu*yvw-nwn9NYA3bnz"  # username:password
+```
+
+**SOPS 암호화:**
+- Age 키 기반 암호화
+- Git에 안전하게 저장
+- KSOPS로 ArgoCD 배포 시 복호화
+
+---
+
+## ArgoCD Sync Wave 전략
+
+### Sync Wave 설정
+
+```
+Wave -1: CRD 설치
+  └─> 00-crd.yaml
+
+Wave 0 (기본): Controller 배포
+  ├─> 10-rbac.yaml
+  ├─> 20-deployment.yaml
+  ├─> 30-configmap.yaml
+  └─> image-updater-secret.sops.yaml
+
+Wave 1: ImageUpdater CR 생성
+  └─> 40-imageupdater-cr.yaml (미래)
+```
+
+### CRD Annotation
+
+```yaml
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+```
+
+**이유:**
+1. CRD가 먼저 설치되어야 CR 생성 가능
+2. `SkipDryRunOnMissingResource`: CRD 없을 때 dry-run 스킵
+3. Wave 간 2초 대기 (기본값)
+
+---
+
+## ImageUpdater CR 생성 가이드
+
+### 기본 예제
+
+```yaml
+apiVersion: argocd-image-updater.argoproj.io/v1alpha1
+kind: ImageUpdater
 metadata:
   name: profanity-filter
   namespace: argocd
   annotations:
-    # ✅ Image Updater 활성화
-    argocd-image-updater.argoproj.io/image-list: profanity-api=docker-registry.kr-filter.com/profanity-api
-    argocd-image-updater.argoproj.io/profanity-api.update-strategy: semver
-    argocd-image-updater.argoproj.io/profanity-api.allow-tags: regexp:^v[0-9]+\.[0-9]+\.[0-9]+$
-    argocd-image-updater.argoproj.io/write-back-method: argocd
+    argocd.argoproj.io/sync-wave: "1"  # Controller 다음
 spec:
-  source:
-    targetRevision: main  # ✅ deploy → main 변경
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
+  # Application 선택
+  namespace: argocd
+  applicationRefs:
+    - namePattern: "profanity-filter"
+      images:
+        - imageName: "docker-registry.bottle-note.com/profanity-api"
+          updateStrategy: semver
+          allowTags:
+            - regex: ^v[0-9]+\.[0-9]+\.[0-9]+$
+
+  # 업데이트 방식
+  writeBackConfig:
+    method: argocd  # ArgoCD 파라미터 사용 (Git commit 없음)
 ```
 
-#### 2.2 Kustomization 수정
+### 여러 Application 관리
+
 ```yaml
-# deploy/overlays/production/kustomization.yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-
-namespace: profanity-production
-
-resources:
-  - resources.yaml
-  - deployment.yaml
-  - external-secret.yaml
-
-# ✅ 추가: Image Updater가 이 필드 업데이트
-images:
-  - name: docker-registry.kr-filter.com/profanity-api
-    newName: docker-registry.kr-filter.com/profanity-api
-    newTag: v1.0.0  # 초기값 (Image Updater가 변경)
-```
-
-#### 2.3 Deployment 수정
-```yaml
-# deploy/overlays/production/deployment.yaml
 spec:
-  containers:
-    - name: profanity-api
-      # ❌ 삭제: image: ghcr.io/whale0928/profanity-api:deploy-877aa7d
-      # ✅ 변경: 태그 없이 (Kustomize가 주입)
-      image: docker-registry.kr-filter.com/profanity-api
+  applicationRefs:
+    - namePattern: "profanity-*"  # 패턴 매칭
+      images:
+        - imageName: "docker-registry.bottle-note.com/profanity-api"
+          updateStrategy: semver
+
+    - namePattern: "bottle-note-*"
+      images:
+        - imageName: "docker-registry.bottle-note.com/bottle-note-api"
+          updateStrategy: latest
 ```
 
-#### 2.4 Release Workflow 수정
+### Update Strategy
+
 ```yaml
-# .github/workflows/release.yaml
-on:
-  release:
-    types: [published]
+# 1. Semver (추천)
+updateStrategy: semver
+allowTags:
+  - regex: ^v[0-9]+\.[0-9]+\.[0-9]+$
 
-jobs:
-  build-and-push:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout tag
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.release.tag_name }}
+# 2. Latest
+updateStrategy: latest
 
-      - name: Setup Java 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-          cache: gradle
-
-      - name: Configure 1Password
-        uses: 1password/load-secrets-action/configure@v2
-        with:
-          service-account-token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-
-      - name: Load secrets
-        uses: 1password/load-secrets-action@v2
-        with:
-          export-env: true
-        env:
-          ENV_FILE: op://instance/.env/.env
-
-      - name: Create env file
-        run: echo "${{ env.ENV_FILE }}" > .env
-
-      - name: Build with Gradle
-        run: ./gradlew :profanity-api:bootJar
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to Zot Registry
-        uses: docker/login-action@v3
-        with:
-          registry: docker-registry.kr-filter.com
-          username: ${{ secrets.ZOT_USERNAME }}
-          password: ${{ secrets.ZOT_PASSWORD }}
-
-      - name: Extract version
-        id: version
-        run: |
-          TAG_NAME="${{ github.event.release.tag_name }}"
-          echo "tag=${TAG_NAME}" >> $GITHUB_OUTPUT
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./profanity-api/Dockerfile
-          push: true
-          tags: |
-            docker-registry.kr-filter.com/profanity-api:${{ steps.version.outputs.tag }}
-            docker-registry.kr-filter.com/profanity-api:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Log deployment info
-        run: |
-          echo "✅ Image pushed successfully"
-          echo "Registry: Zot Self-Hosted"
-          echo "Image: docker-registry.kr-filter.com/profanity-api:${{ steps.version.outputs.tag }}"
-          echo "ArgoCD Image Updater will detect this tag within 5 minutes"
+# 3. Name (알파벳 순)
+updateStrategy: name
 ```
 
----
+### Git Write-Back
 
-## 변경 파일 목록
-
-### module.platform (k8s-platform 저장소)
-
-```
-✅ 신규 생성:
-  platform/image-manager/README.md
-  platform/image-manager/kustomization.yaml
-  platform/image-manager/00-namespace.yaml
-  platform/image-manager/10-rbac.yaml
-  platform/image-manager/20-deployment.yaml
-  platform/image-manager/30-configmap.yaml
-
-✅ 수정:
-  platform/kustomization.yaml (resources에 image-manager 추가)
-```
-
-### profanity-filter-api 저장소
-
-```
-✅ 수정:
-  deploy/application.yaml (annotations 추가, targetRevision 변경)
-  deploy/overlays/production/kustomization.yaml (images 필드 추가)
-  deploy/overlays/production/deployment.yaml (이미지 태그 제거)
-  .github/workflows/release.yaml (이미지 빌드/푸시 로직 추가)
-```
-
----
-
-## 설정값 및 Secret
-
-### ArgoCD Image Updater 설정
-
-| 설정 | 값 | 설명 |
-|------|---|------|
-| `interval` | `5m` | 레지스트리 폴링 간격 |
-| `argocd-server-addr` | `argocd-server.argocd` | ArgoCD 서버 주소 |
-| `registries.prefix` | `docker-registry.kr-filter.com` | 레지스트리 prefix |
-| `registries.api_url` | `https://docker-registry.kr-filter.com` | API 엔드포인트 |
-
-### Application Annotations
-
-| Annotation | 값 | 설명 |
-|-----------|---|------|
-| `image-list` | `profanity-api=docker-registry.kr-filter.com/profanity-api` | 추적할 이미지 |
-| `update-strategy` | `semver` | Semantic Versioning |
-| `allow-tags` | `regexp:^v[0-9]+\.[0-9]+\.[0-9]+$` | v1.2.3 형식만 허용 |
-| `write-back-method` | `argocd` | Git commit 없이 ArgoCD 파라미터 사용 |
-
-### GitHub Secrets
-
-| Secret | 용도 | 생성 방법 |
-|--------|------|----------|
-| `ZOT_USERNAME` | Zot 레지스트리 인증 | htpasswd 사용자명 (hgkim 또는 신규) |
-| `ZOT_PASSWORD` | Zot 레지스트리 인증 | htpasswd 비밀번호 |
-| `OP_SERVICE_ACCOUNT_TOKEN` | 1Password 연동 | 이미 존재 |
-
----
-
-## 배포 순서
-
-### 1단계: Platform 배포 (Image Manager 설치)
-
-```bash
-# 1. module.platform 저장소로 이동
-cd /Users/hgkim/workspace/etc/profanity-filter-api/module.platform
-
-# 2. image-manager 디렉토리 및 파일 생성 (위 내용대로)
-mkdir -p platform/image-manager
-
-# 3. Git commit & push
-git add platform/image-manager/
-git add platform/kustomization.yaml
-git commit -m "feat: add Image Manager (ArgoCD Image Updater) to platform"
-git push origin main
-
-# 4. ArgoCD 자동 동기화 대기 (약 3분)
-# 또는 수동 sync
-kubectl apply -k apps/
-
-# 5. Image Updater Pod 확인
-kubectl get pods -n argocd -l app.kubernetes.io/name=argocd-image-updater
-kubectl logs -n argocd -l app.kubernetes.io/name=argocd-image-updater --tail=50
-```
-
-### 2단계: profanity-filter-api 설정 변경
-
-```bash
-# 1. profanity-filter-api 저장소로 이동
-cd /Users/hgkim/workspace/etc/profanity-filter-api
-
-# 2. 파일 수정 (위 내용대로)
-#    - deploy/application.yaml
-#    - deploy/overlays/production/kustomization.yaml
-#    - deploy/overlays/production/deployment.yaml
-#    - .github/workflows/release.yaml
-
-# 3. Git commit & push to main
-git add deploy/ .github/workflows/release.yaml
-git commit -m "feat: integrate ArgoCD Image Updater for tag-based deployment"
-git push origin main
-
-# 4. ArgoCD Application 재배포 확인
-kubectl get application -n argocd profanity-filter -o yaml
-# annotations에 image-updater 설정 확인
-```
-
-### 3단계: 검증 (테스트 릴리즈)
-
-```bash
-# 1. GitHub에서 Release v1.0.0 생성 (또는 다음 버전)
-# https://github.com/Whale0928/profanity-filter-api/releases/new
-
-# 2. release.yaml 워크플로우 실행 확인
-# https://github.com/Whale0928/profanity-filter-api/actions
-
-# 3. Zot 레지스트리에 이미지 푸시 확인
-# https://docker-registry.kr-filter.com (Zot UI)
-
-# 4. Image Updater 로그 모니터링 (5분 이내)
-kubectl logs -n argocd -l app.kubernetes.io/name=argocd-image-updater -f
-
-# 5. ArgoCD Application 상태 확인
-argocd app get profanity-filter
-# 또는
-kubectl get application -n argocd profanity-filter -o yaml | grep newTag
-
-# 6. Pod 재시작 확인
-kubectl get pods -n profanity-production -w
-
-# 7. 새 이미지로 배포 완료 확인
-kubectl describe pod -n profanity-production -l app=profanity-api | grep Image:
-```
-
----
-
-## 검증 방법
-
-### 1. Image Updater 정상 동작 확인
-
-```bash
-# Pod 실행 확인
-kubectl get pods -n argocd -l app.kubernetes.io/name=argocd-image-updater
-
-# 로그 확인 (정상 케이스)
-kubectl logs -n argocd -l app.kubernetes.io/name=argocd-image-updater --tail=100
-
-# 예상 로그:
-# INFO  Connecting to ArgoCD server at argocd-server.argocd
-# INFO  Checking registry ghcr.io for new tags
-# INFO  Found new tag v1.0.0 for profanity-api
-# INFO  Updating application profanity-filter
-```
-
-### 2. Application Annotation 확인
-
-```bash
-kubectl get application -n argocd profanity-filter -o yaml | grep -A 10 annotations
-```
-
-**예상 출력:**
 ```yaml
-annotations:
-  argocd-image-updater.argoproj.io/image-list: profanity-api=ghcr.io/whale0928/profanity-api
-  argocd-image-updater.argoproj.io/profanity-api.allow-tags: regexp:^v[0-9]+\.[0-9]+\.[0-9]+$
-  argocd-image-updater.argoproj.io/profanity-api.update-strategy: semver
-  argocd-image-updater.argoproj.io/write-back-method: argocd
+writeBackConfig:
+  method: git
+  gitCommitUser: "argocd-image-updater"
+  gitCommitEmail: "noreply@argoproj.io"
 ```
 
-### 3. 배포 시나리오 테스트
-
-#### 시나리오 A: ConfigMap 변경 (즉시 배포되어야 함)
-```bash
-# 1. ConfigMap 수정 후 main에 push
-# 2. ArgoCD 즉시 동기화 확인 (이미지 변경 없음)
-# 3. Pod 재시작 없이 ConfigMap만 업데이트
-```
-
-#### 시나리오 B: 릴리즈 태그 생성 (5분 이내 배포)
-```bash
-# 1. GitHub Release v1.0.1 생성
-# 2. GitHub Actions 워크플로우 성공 확인
-# 3. 5분 이내 Image Updater 로그에서 태그 감지 확인
-# 4. Pod 재시작 및 새 이미지 적용 확인
-```
-
-#### 시나리오 C: main 브랜치 코드 커밋 (배포 안됨)
-```bash
-# 1. 소스 코드 수정 후 main에 push (manifest 변경 없음)
-# 2. ArgoCD Sync 안됨 (이미지 태그 동일)
-# 3. Pod 재시작 없음
-```
+**주의:**
+- Git write-back 사용 시 Repository 쓰기 권한 필요
+- SSH 키 또는 Personal Access Token 구성 필요
 
 ---
 
-## 롤백 방안
+## 트러블슈팅
 
-### 긴급 롤백 (Image Manager 문제 발생 시)
+### 1. CRD 설치 실패
 
-```bash
-# 1. Image Updater Deployment 스케일 다운
-kubectl scale deployment -n argocd argocd-image-updater --replicas=0
-
-# 2. Application annotations 제거
-kubectl patch application -n argocd profanity-filter --type=json \
-  -p='[{"op": "remove", "path": "/metadata/annotations/argocd-image-updater.argoproj.io~1image-list"}]'
-
-# 3. deploy 브랜치로 targetRevision 복구
-kubectl patch application -n argocd profanity-filter --type=merge \
-  -p='{"spec":{"source":{"targetRevision":"deploy"}}}'
-
-# 4. 이전 이미지 태그로 수동 배포
-kubectl set image deployment/profanity-api -n profanity-production \
-  profanity-api=docker-registry.kr-filter.com/profanity-api:v1.0.0
+**증상:**
+```
+The server could not find the requested resource (imageupdaters.argocd-image-updater.argoproj.io)
 ```
 
-### 이미지 버전 롤백 (잘못된 릴리즈)
-
+**해결:**
 ```bash
-# 방법 1: Image Updater 우회하고 직접 이미지 변경
-kubectl set image deployment/profanity-api -n profanity-production \
-  profanity-api=ghcr.io/whale0928/profanity-api:v1.0.0
+# CRD 수동 설치
+kubectl apply -f https://raw.githubusercontent.com/argoproj-labs/argocd-image-updater/stable/config/install.yaml
 
-# 방법 2: Kustomization newTag 수정 후 ArgoCD sync
-# deploy/overlays/production/kustomization.yaml의 newTag를 이전 버전으로 수정
-# git push → ArgoCD sync
-
-# 방법 3: ArgoCD Application 파라미터 오버라이드
-argocd app set profanity-filter \
-  -p image.tag=v1.0.0 \
-  --grpc-web
+# CRD 확인
+kubectl get crd imageupdaters.argocd-image-updater.argoproj.io
 ```
 
-### 완전 복구 (이전 구조로)
+### 2. Leader Election 에러
 
-```bash
-# 1. profanity-filter-api 저장소에서 변경사항 revert
-git revert <commit-hash>
-git push origin main
-
-# 2. module.platform에서 Image Manager 제거
-kubectl delete -k platform/image-manager/
-
-# 3. platform/kustomization.yaml에서 image-manager 제거
-git revert <commit-hash>
-git push origin main
+**증상:**
 ```
+error retrieving resource lock argocd/c21b75f2.argoproj.io:
+leases.coordination.k8s.io is forbidden
+```
+
+**해결:**
+```yaml
+# Deployment args에 추가
+- --leader-election=false  # 단일 replica 환경
+```
+
+또는 RBAC에 leases 권한 추가.
+
+### 3. Registry 연결 실패
+
+**증상:**
+```
+Failed to get tags for docker-registry.bottle-note.com/profanity-api
+```
+
+**확인:**
+```bash
+# Secret 확인
+kubectl get secret -n argocd argocd-image-updater-secret -o yaml
+
+# Credentials 형식 확인 (username:password)
+kubectl get secret -n argocd argocd-image-updater-secret \
+  -o jsonpath='{.data.zot\.credentials}' | base64 -d
+
+# Registry 직접 테스트
+curl -u username:password \
+  https://docker-registry.bottle-note.com/v2/_catalog
+```
+
+### 4. ImageUpdater CR 생성 안됨
+
+**증상:**
+```
+Unable to create ImageUpdater: CRD not installed
+```
+
+**해결:**
+```bash
+# Sync Wave 확인
+kubectl get crd imageupdaters.argocd-image-updater.argoproj.io \
+  -o jsonpath='{.metadata.annotations}'
+
+# Wave -1 확인
+# argocd.argoproj.io/sync-wave: "-1"
+
+# ArgoCD 재동기화
+argocd app sync argocd/platform
+```
+
+### 5. Pod CrashLoopBackOff
+
+**로그 확인:**
+```bash
+kubectl logs -n argocd deployment/argocd-image-updater --tail=100
+```
+
+**일반적인 원인:**
+- 잘못된 CLI 플래그 (v0.x → v1.x 변경)
+- ARGOCD_TOKEN 없음
+- ConfigMap 마운트 실패
 
 ---
 
 ## 참고 자료
 
-- [ArgoCD Image Updater 공식 문서](https://argocd-image-updater.readthedocs.io/)
-- [Kustomize images 필드](https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/images/)
-- [GitHub Container Registry](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)
+### 공식 문서
+- [ArgoCD Image Updater Documentation](https://argocd-image-updater.readthedocs.io/)
+- [v1.0.2 Release Notes](https://github.com/argoproj-labs/argocd-image-updater/releases/tag/v1.0.2)
+- [Installation Guide](https://argocd-image-updater.readthedocs.io/en/stable/install/installation/)
+
+### ArgoCD Sync Wave
+- [Sync Waves Documentation](https://argo-cd.readthedocs.io/en/stable/user-guide/sync-waves/)
+- [CRD Sync Discussion](https://github.com/argoproj/argo-cd/discussions/11883)
+- [Sync Options](https://argo-cd.readthedocs.io/en/latest/user-guide/sync-options/)
+
+### CRD 관리
+- [Server-Side Apply for Large CRDs](https://medium.com/@paolocarta_it/argocd-server-side-apply-for-bulky-crds-373cd3c0ac2a)
+- [CRD Best Practices](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/)
 
 ---
 
 ## 체크리스트
 
-### Platform 준비
-- [ ] `platform/image-manager/` 디렉토리 생성
-- [ ] `README.md` 작성
-- [ ] `kustomization.yaml` 작성
-- [ ] `00-namespace.yaml` 작성
-- [ ] `10-rbac.yaml` 작성
-- [ ] `20-deployment.yaml` 작성
-- [ ] `30-configmap.yaml` 작성
-- [ ] `platform/kustomization.yaml` 수정
-- [ ] Git commit & push
-- [ ] ArgoCD 배포 확인
-- [ ] Image Updater Pod 정상 실행 확인
+### 배포 완료
+- [x] CRD 설치 (00-crd.yaml)
+- [x] ClusterRole RBAC (10-rbac.yaml)
+- [x] Deployment v1.0.2 (20-deployment.yaml)
+- [x] ConfigMap Zot 설정 (30-configmap.yaml)
+- [x] Secret 통합 형식 (zot.credentials)
+- [x] SOPS 암호화
+- [x] ArgoCD Sync 성공
+- [x] Pod Running 확인
+- [x] Sync Wave 적용
 
-### Application 준비
-- [ ] `deploy/application.yaml` annotations 추가
-- [ ] `deploy/application.yaml` targetRevision 변경
-- [ ] `deploy/overlays/production/kustomization.yaml` images 필드 추가
-- [ ] `deploy/overlays/production/deployment.yaml` 이미지 태그 제거
-- [ ] `.github/workflows/release.yaml` 빌드/푸시 로직 추가
-- [ ] Git commit & push to main
-- [ ] ArgoCD Application 재배포 확인
-
-### 검증
-- [ ] 테스트 릴리즈 생성 (v1.0.0 또는 다음 버전)
-- [ ] GitHub Actions 워크플로우 성공 확인
-- [ ] GHCR 이미지 푸시 확인
-- [ ] Image Updater 로그에서 태그 감지 확인 (5분 이내)
-- [ ] Pod 재시작 및 새 이미지 적용 확인
-- [ ] Health check 통과 확인
-- [ ] ConfigMap 변경 테스트 (즉시 배포)
-- [ ] 코드 커밋 테스트 (배포 안됨)
+### 다음 단계
+- [ ] ImageUpdater CR 생성 (40-imageupdater-cr.yaml)
+- [ ] Application에 매칭 패턴 적용
+- [ ] 이미지 업데이트 테스트
+- [ ] Git write-back 설정 (선택)
 
 ---
 
-**작성자:** Claude
-
-**폴더명 결정:**
-- ✅ `image-manager` 선택 (기능 중심 네이밍)
-- 이유: 향후 다른 이미지 관리 도구 추가 및 프로젝트별 선택적 참조 지원
-
-**향후 확장 계획:**
-```
-platform/image-manager/
-├── README.md                      # 전체 개요
-├── argocd-image-updater/          # 현재 구현
-│   ├── kustomization.yaml
-│   ├── 00-namespace.yaml
-│   ├── 10-rbac.yaml
-│   ├── 20-deployment.yaml
-│   └── 30-configmap.yaml
-├── flux-image-automation/         # 향후 추가 가능
-│   └── ...
-└── keel/                          # 향후 추가 가능
-    └── ...
-```
-
-**검토 필요 사항:**
-1. Dockerfile 경로 확인: `./profanity-api/Dockerfile` 존재 여부
-2. 초기 이미지 태그: `v1.0.0`으로 시작할지, 현재 버전으로 시작할지
-3. Image Updater 버전: `v0.14.0` (최신 안정 버전 확인 필요)
-4. Zot 레지스트리 도메인: `docker-registry.kr-filter.com` 활성화 필요
-5. Zot htpasswd: GitHub Actions용 계정 추가 또는 기존 hgkim 사용
-6. GitHub Secrets: `ZOT_USERNAME`, `ZOT_PASSWORD` 추가 필요
-7. ArgoCD namespace에 `zot-credentials` Secret 생성 필요
+**작성자:** Claude Sonnet 4.5
+**최종 업데이트:** 2026-01-29

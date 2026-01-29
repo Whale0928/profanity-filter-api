@@ -1,8 +1,9 @@
 name: Release
 
 on:
+  workflow_dispatch:
   release:
-    types: [published]
+    types: [ published ]
 
 jobs:
   prepare-release:
@@ -13,7 +14,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.release.tag_name }}
-
       - name: Extract version info
         id: version
         run: |
@@ -35,3 +35,15 @@ jobs:
           echo "=========================================="
           echo ""
           echo "배포는 deploy.yml 워크플로우에서 처리됩니다."
+
+      - name: 도커 이미지 빌드
+        run: echo ""
+
+      - name: zot repository login
+        run: echo ""
+
+      - name: zot repository image upload
+        run: echo ""
+
+      - name: 이때 argocd 배포 요청
+        run: echo ""
