@@ -24,6 +24,8 @@ spec:
     spec:
       nodeSelector:
         kubernetes.io/arch: arm64
+      imagePullSecrets:
+        - name: zot-registry-secret
       containers:
         - name: profanity-api
           image: docker-registry.bottle-note.com/profanity-api
