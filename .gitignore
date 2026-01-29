@@ -56,3 +56,4 @@ application-prod.yml
 .secrets
 /http/http-client.env.json
 .omc/
+/.env
