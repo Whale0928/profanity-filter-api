@@ -1,9 +1,5 @@
 <img width="1003" alt="image" src="https://github.com/Whale0928/profanity-filter-api/assets/75371249/924c007c-1b76-4c90-8b8b-ba361171e6f2">
 
-
-- OCP 서버 이슈로 인해 오류 대응중입니다. 2026.02.20
-
-
 # 한국어 비속어 필터 API 서비스
 
 > API 인증 키 발급 후 사용 가능합니다. 문서 링크를 참조해 주세요
