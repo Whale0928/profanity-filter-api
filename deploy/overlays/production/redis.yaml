@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: profanity-production
+  labels:
+    app: redis
+    environment: production
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+        environment: production
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          command:
+            - sh
+            - -c
+            - redis-server --save "" --appendonly no --maxmemory 200mb --maxmemory-policy allkeys-lru --requirepass "$(REDIS_MAIN_PASSWORD)"
+          env:
+            - name: REDIS_MAIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: profanity-secrets
+                  key: REDIS_MAIN_PASSWORD
+          ports:
+            - name: redis
+              containerPort: 6379
+              protocol: TCP
+          resources:
+            requests:
+              memory: 64Mi
+              cpu: 50m
+            limits:
+              memory: 256Mi
+              cpu: 200m
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - redis-cli -a "$REDIS_MAIN_PASSWORD" ping | grep PONG
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - redis-cli -a "$REDIS_MAIN_PASSWORD" ping | grep PONG
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: profanity-production
+  labels:
+    app: redis
+    environment: production
+spec:
+  type: ClusterIP
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: 6379
+      protocol: TCP
+  selector:
+    app: redis

@@ -8,6 +8,7 @@ resources:
   - deployment.yaml
   - external-secret.yaml
   - http-route.yaml
+  - redis.yaml
 
 images:
   - name: docker-registry.bottle-note.com/profanity-api
