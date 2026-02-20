@@ -22,13 +22,13 @@ spec:
         app: profanity-api
         environment: production
     spec:
-      imagePullSecrets:
-        - name: ghcr-secret
       nodeSelector:
         kubernetes.io/arch: arm64
+      imagePullSecrets:
+        - name: zot-registry-secret
       containers:
         - name: profanity-api
-          image: ghcr.io/whale0928/profanity-api:deploy-877aa7d
+          image: docker-registry.bottle-note.com/profanity-api
           imagePullPolicy: Always
           ports:
             - name: http
@@ -53,7 +53,7 @@ spec:
               cpu: "250m"
           livenessProbe:
             httpGet:
-              path: /health
+              path: /api/v1/health
               port: 8080
             initialDelaySeconds: 120
             periodSeconds: 10
@@ -61,7 +61,7 @@ spec:
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /health
+              path: /api/v1/health
               port: 8080
             initialDelaySeconds: 90
             periodSeconds: 5

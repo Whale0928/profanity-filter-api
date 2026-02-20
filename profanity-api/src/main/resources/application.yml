@@ -4,9 +4,9 @@ server:
   servlet:
     encoding:
       charset: UTF-8
-  tomcat:
-    mbeanregistry:
-      enabled: true
+  #tomcat:
+  #  mbeanregistry:
+  #    enabled: true
 
 spring:
   profiles:
@@ -26,9 +26,9 @@ spring:
       mail.starttls.enable: true
       mail.smtp.auth: true
 
-management:
-  endpoints:
-    web:
-      exposure:
-        include: [ "health", "prometheus" ]
-      base-path: ${ACTUATOR_PATH:/health}
+#management:
+#  endpoints:
+#    web:
+#      exposure:
+#        include: [ "health", "prometheus" ]
+#      base-path: ${ACTUATOR_PATH:/health}

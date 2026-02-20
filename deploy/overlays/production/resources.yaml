@@ -24,36 +24,6 @@ spec:
   selector:
     app: profanity-api
 ---
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: profanity-api
-  namespace: profanity-production
-  labels:
-    app: profanity-api
-    environment: production
-  annotations:
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
-spec:
-  ingressClassName: nginx
-  tls:
-  - hosts:
-    - api.profanity.kr-filter.com
-    secretName: profanity-api-tls
-  rules:
-  - host: api.profanity.kr-filter.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: profanity-api
-            port:
-              number: 80
----
 apiVersion: external-secrets.io/v1
 kind: SecretStore
 metadata:

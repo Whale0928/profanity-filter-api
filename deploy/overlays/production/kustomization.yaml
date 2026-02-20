@@ -7,3 +7,8 @@ resources:
   - resources.yaml
   - deployment.yaml
   - external-secret.yaml
+  - http-route.yaml
+
+images:
+  - name: docker-registry.bottle-note.com/profanity-api
+    newTag: v0.0.1
