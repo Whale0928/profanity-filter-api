@@ -22,3 +22,8 @@ spring:
       mail.smtp.connectiontimeout: 1000
       mail.starttls.enable: true
       mail.smtp.auth: true
+
+app:
+  response:
+    # 이 호스트로 들어온 요청에만 응답 meta 커스텀을 적용한다. 비우면 비활성화.
+    proxied-host: ${RESPONSE_PROXIED_HOST:api.kr-filter.com}

@@ -1,13 +1,17 @@
 package app.core.data.response;
 
 import app.core.data.response.constant.StatusCode;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.Builder;
 import org.springframework.http.ResponseEntity;
 
-public record ApiResponse<T>(Status status, T data) {
+public record ApiResponse<T>(
+    Status status, T data, @JsonInclude(JsonInclude.Include.NON_EMPTY) Map<String, Object> meta) {
   @Builder
   private static <T> ApiResponse<T> of(Status status, T data) {
-    return new ApiResponse<>(status, data);
+    return new ApiResponse<>(status, data, new HashMap<>());
   }
 
   public static <T> ResponseEntity<ApiResponse<T>> ok(T data) {
