@@ -3,6 +3,7 @@ plugins {
     id 'org.springframework.boot' version '3.4.0'
     id 'io.spring.dependency-management' version '1.1.6'
     id 'com.diffplug.spotless' version '6.25.0' apply false
+    id 'jacoco'
 }
 
 configurations {
@@ -30,6 +31,7 @@ subprojects {
     apply plugin: 'org.springframework.boot'
     apply plugin: 'io.spring.dependency-management'
     apply plugin: 'com.diffplug.spotless'
+    apply plugin: 'jacoco'
 
     spotless {
         java {
@@ -38,6 +40,10 @@ subprojects {
             trimTrailingWhitespace()
             endWithNewline()
         }
+    }
+
+    jacoco {
+        toolVersion = '0.8.12'
     }
 
     dependencies {
@@ -76,11 +82,38 @@ subprojects {
             showCauses = true
             showStackTraces = true
         }
+        finalizedBy jacocoTestReport
+    }
+
+    // 모듈별 커버리지 리포트 (build/reports/jacoco/test)
+    jacocoTestReport {
+        dependsOn test
+        reports {
+            xml.required = true
+            html.required = true
+        }
     }
 }
 
 // Root 프로젝트의 test task를 수정
 test.dependsOn subprojects.test
+
+// 전 모듈 통합 커버리지 리포트 (build/reports/jacoco/aggregate)
+tasks.register('jacocoRootReport', JacocoReport) {
+    dependsOn subprojects.test
+    dependsOn subprojects.jacocoTestReport
+
+    sourceDirectories.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
+    classDirectories.setFrom files(subprojects.sourceSets.main.output)
+    executionData.setFrom files(subprojects.jacocoTestReport.executionData)
+
+    reports {
+        xml.required = true
+        html.required = true
+        xml.outputLocation = layout.buildDirectory.file('reports/jacoco/aggregate/jacocoRootReport.xml')
+        html.outputLocation = layout.buildDirectory.dir('reports/jacoco/aggregate')
+    }
+}
 
 bootJar.enabled = false
 jar.enabled = true
