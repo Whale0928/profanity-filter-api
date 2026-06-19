@@ -8,10 +8,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface JpaWordManagementRepository extends WordManagementRepository, JpaRepository<WordManagementRequest, Long> {
+public interface JpaWordManagementRepository
+    extends WordManagementRepository, JpaRepository<WordManagementRequest, Long> {
 
-    @Override
-    @Modifying
-    @Query("UPDATE word_management SET status = 'OK' WHERE id = :id")
-    Boolean activateWord(Long id);
+  @Override
+  @Modifying
+  @Query("UPDATE word_management SET status = 'OK' WHERE id = :id")
+  Boolean activateWord(Long id);
 }

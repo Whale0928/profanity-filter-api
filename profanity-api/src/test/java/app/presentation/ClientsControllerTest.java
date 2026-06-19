@@ -6,6 +6,4 @@ import org.springframework.context.annotation.Import;
 
 @Import(TestConfig.class)
 @WebMvcTest(ClientsController.class)
-class ClientsControllerTest {
-
-}
+class ClientsControllerTest {}

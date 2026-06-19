@@ -1,9 +1,9 @@
 package app.dto.message;
 
 public interface BusinessMessage {
-    String getEngMessage();
+  String getEngMessage();
 
-    String getKorMessage();
+  String getKorMessage();
 
-    Boolean getResult();
+  Boolean getResult();
 }

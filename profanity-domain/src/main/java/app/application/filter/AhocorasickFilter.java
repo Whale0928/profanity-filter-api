@@ -3,7 +3,7 @@ package app.application.filter;
 import java.util.List;
 
 public interface AhocorasickFilter {
-    void synchronizeProfanityTrie();
+  void synchronizeProfanityTrie();
 
-    List<?> getProfanityTrieList();
+  List<?> getProfanityTrieList();
 }

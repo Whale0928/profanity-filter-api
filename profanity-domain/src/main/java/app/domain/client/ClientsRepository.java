@@ -5,27 +5,27 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface ClientsRepository {
-    Optional<Clients> findById(UUID id);
+  Optional<Clients> findById(UUID id);
 
-    Clients save(Clients clients);
+  Clients save(Clients clients);
 
-    List<Clients> findAll();
+  List<Clients> findAll();
 
-    void deleteById(UUID id);
+  void deleteById(UUID id);
 
-    boolean existsById(UUID id);
+  boolean existsById(UUID id);
 
-    boolean existsByEmail(String email);
+  boolean existsByEmail(String email);
 
-    boolean existsByApiKey(String apiKey);
+  boolean existsByApiKey(String apiKey);
 
-    Optional<Clients> findByEmail(String email);
+  Optional<Clients> findByEmail(String email);
 
-    Optional<Clients> findByApiKey(String apiKey);
+  Optional<Clients> findByApiKey(String apiKey);
 
-    Optional<Clients> findByEmailAndApiKey(String email, String apiKey);
+  Optional<Clients> findByEmailAndApiKey(String email, String apiKey);
 
-    Optional<Clients> findByIssuerInfo(String issuerInfo);
+  Optional<Clients> findByIssuerInfo(String issuerInfo);
 
-    void updateClientRequestCount();
+  void updateClientRequestCount();
 }
