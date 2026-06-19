@@ -3,6 +3,8 @@ package app.security;
 import app.security.authentication.AuthenticationService;
 import app.security.filter.CustomAuthenticationEntryPoint;
 import app.security.filter.CustomAuthenticationFilter;
+import java.util.Arrays;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
@@ -21,66 +23,75 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
-import java.util.List;
-
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final AuthenticationService authenticationService;
-    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+  private final AuthenticationService authenticationService;
+  private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        return http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .formLogin(AbstractHttpConfigurer::disable)
-                .httpBasic(AbstractHttpConfigurer::disable)
-                .sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .csrf(AbstractHttpConfigurer::disable)
-                .headers(
-                        headersConfigurer ->
-                                headersConfigurer.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
-                .authorizeHttpRequests(
-                        authorizationManagerRequestMatcherRegistry
-                                -> authorizationManagerRequestMatcherRegistry
-                                .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
-                                .requestMatchers(HttpMethod.GET, "/system/actuator/**").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/", "/index.html").permitAll()
-                                .requestMatchers(HttpMethod.POST, "/api/v1/clients/**").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/api/v1/health").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/api/v1/ping").permitAll()
-                                .requestMatchers("/api/v1/clients/send-email").permitAll()
-                                .requestMatchers("/api/v1/auth/**").permitAll()
-                                .anyRequest().authenticated()
-                )
-                .addFilterBefore(new CustomAuthenticationFilter(authenticationService, customAuthenticationEntryPoint), UsernamePasswordAuthenticationFilter.class)
-                .exceptionHandling(exceptionHandling -> exceptionHandling.authenticationEntryPoint(customAuthenticationEntryPoint))
-                .build();
-    }
+  @Bean
+  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    return http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
+        .formLogin(AbstractHttpConfigurer::disable)
+        .httpBasic(AbstractHttpConfigurer::disable)
+        .sessionManagement(
+            sessionManagement ->
+                sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .csrf(AbstractHttpConfigurer::disable)
+        .headers(
+            headersConfigurer ->
+                headersConfigurer.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
+        .authorizeHttpRequests(
+            authorizationManagerRequestMatcherRegistry ->
+                authorizationManagerRequestMatcherRegistry
+                    .requestMatchers(PathRequest.toStaticResources().atCommonLocations())
+                    .permitAll()
+                    .requestMatchers(HttpMethod.GET, "/", "/index.html")
+                    .permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/v1/clients/**")
+                    .permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/v1/health")
+                    .permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/v1/ping")
+                    .permitAll()
+                    .requestMatchers("/api/v1/clients/send-email")
+                    .permitAll()
+                    .requestMatchers("/api/v1/auth/**")
+                    .permitAll()
+                    .anyRequest()
+                    .authenticated())
+        .addFilterBefore(
+            new CustomAuthenticationFilter(authenticationService, customAuthenticationEntryPoint),
+            UsernamePasswordAuthenticationFilter.class)
+        .exceptionHandling(
+            exceptionHandling ->
+                exceptionHandling.authenticationEntryPoint(customAuthenticationEntryPoint))
+        .build();
+  }
 
-    /**
-     * Cors 구성 소스 빈 등록
-     *
-     * @return the cors configuration source
-     */
-    @Bean
-    CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowCredentials(false);  // 변경
-        configuration.setAllowedOrigins(List.of("*"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
+  /**
+   * Cors 구성 소스 빈 등록
+   *
+   * @return the cors configuration source
+   */
+  @Bean
+  CorsConfigurationSource corsConfigurationSource() {
+    CorsConfiguration configuration = new CorsConfiguration();
+    configuration.setAllowCredentials(false); // 변경
+    configuration.setAllowedOrigins(List.of("*"));
+    configuration.setAllowedMethods(
+        Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+    configuration.setAllowedHeaders(List.of("*"));
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
-    }
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/**", configuration);
+    return source;
+  }
 
-    @Bean
-    public UserDetailsService userDetailsService() {
-        return new InMemoryUserDetailsManager();
-    }
+  @Bean
+  public UserDetailsService userDetailsService() {
+    return new InMemoryUserDetailsManager();
+  }
 }

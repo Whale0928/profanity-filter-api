@@ -9,7 +9,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @ConfigurationPropertiesScan
 @SpringBootApplication
 public class ProfanityFilterApplication {
-    public static void main(String[] args) {
-        SpringApplication.run(ProfanityFilterApplication.class, args);
-    }
+  public static void main(String[] args) {
+    SpringApplication.run(ProfanityFilterApplication.class, args);
+  }
 }

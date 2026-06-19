@@ -1,5 +1,8 @@
 package app.restdocs;
 
+import static org.mockito.Mockito.mockStatic;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
 import app.application.client.APIKeyGenerator;
 import app.exception.GlobalExceptionHandler;
@@ -17,41 +20,40 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.filter.CharacterEncodingFilter;
 
-import static org.mockito.Mockito.mockStatic;
-import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-
 @Import(AbstractRestDocsConfig.class)
 @ExtendWith(RestDocumentationExtension.class)
 public abstract class AbstractRestDocs {
 
-    protected final MockedStatic<SecurityContextUtil> securityUtil = mockStatic(SecurityContextUtil.class);
-    protected final APIKeyGenerator apiKeyGenerator = new APIKeyGenerator("solt", "SHA-256");
-    protected MockMvc mockMvc;
-    protected ObjectMapper objectMapper = new ObjectMapper();
+  protected final MockedStatic<SecurityContextUtil> securityUtil =
+      mockStatic(SecurityContextUtil.class);
+  protected final APIKeyGenerator apiKeyGenerator = new APIKeyGenerator("solt", "SHA-256");
+  protected MockMvc mockMvc;
+  protected ObjectMapper objectMapper = new ObjectMapper();
 
-    @BeforeEach
-    void setUp(RestDocumentationContextProvider provider) {
-        this.mockMvc = MockMvcBuilders.standaloneSetup(initController())
+  @BeforeEach
+  void setUp(RestDocumentationContextProvider provider) {
+    this.mockMvc =
+        MockMvcBuilders.standaloneSetup(initController())
+            .apply(
+                documentationConfiguration(provider)
+                    .operationPreprocessors()
+                    .withRequestDefaults(
+                        Preprocessors.prettyPrint(),
+                        Preprocessors.modifyUris()
+                            .scheme("https")
+                            .host("api.profanity-filter.run")
+                            .removePort())
+                    .withResponseDefaults(Preprocessors.prettyPrint()))
+            .alwaysDo(print())
+            .setControllerAdvice(GlobalExceptionHandler.class)
+            .addFilters(new CharacterEncodingFilter("UTF-8", true))
+            .build();
+  }
 
-                .apply(documentationConfiguration(provider)
-                        .operationPreprocessors()
-                        .withRequestDefaults(
-                                Preprocessors.prettyPrint(),
-                                Preprocessors.modifyUris().scheme("https").host("api.profanity-filter.run").removePort()
-                        )
-                        .withResponseDefaults(Preprocessors.prettyPrint())
-                )
-                .alwaysDo(print())
-                .setControllerAdvice(GlobalExceptionHandler.class)
-                .addFilters(new CharacterEncodingFilter("UTF-8", true))
-                .build();
-    }
+  @AfterEach
+  void tearDown() {
+    securityUtil.close();
+  }
 
-    @AfterEach
-    void tearDown() {
-        securityUtil.close();
-    }
-
-    protected abstract Object initController();
+  protected abstract Object initController();
 }

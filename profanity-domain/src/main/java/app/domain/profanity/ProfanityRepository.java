@@ -5,14 +5,13 @@ import java.util.Optional;
 
 public interface ProfanityRepository {
 
-    Optional<ProfanityWord> findById(Long id);
+  Optional<ProfanityWord> findById(Long id);
 
-    ProfanityWord save(ProfanityWord profanityWord);
+  ProfanityWord save(ProfanityWord profanityWord);
 
-    List<ProfanityWord> findAll();
+  List<ProfanityWord> findAll();
 
-    void deleteAll();
+  void deleteAll();
 
-    long countAll();
-
+  long countAll();
 }

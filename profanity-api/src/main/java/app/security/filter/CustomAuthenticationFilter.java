@@ -17,42 +17,39 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @RequiredArgsConstructor
 public class CustomAuthenticationFilter extends OncePerRequestFilter {
 
-    private final AuthenticationService authenticationService;
-    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+  private final AuthenticationService authenticationService;
+  private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
-    @Override
-    protected void doFilterInternal(
-            @NonNull HttpServletRequest request,
-            @NonNull HttpServletResponse response,
-            @NonNull FilterChain filterChain) {
-        try {
-            Authentication authentication = authenticationService.getAuthentication(request);
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-            filterChain.doFilter(request, response);
+  @Override
+  protected void doFilterInternal(
+      @NonNull HttpServletRequest request,
+      @NonNull HttpServletResponse response,
+      @NonNull FilterChain filterChain) {
+    try {
+      Authentication authentication = authenticationService.getAuthentication(request);
+      SecurityContextHolder.getContext().setAuthentication(authentication);
+      filterChain.doFilter(request, response);
 
-        } catch (Exception exp) {
-            request.setAttribute("exception", exp);
-            customAuthenticationEntryPoint
-                    .commence(request, response, new AuthenticationException(exp.getMessage()) {
-                            }
-                    );
-        }
+    } catch (Exception exp) {
+      request.setAttribute("exception", exp);
+      customAuthenticationEntryPoint.commence(
+          request, response, new AuthenticationException(exp.getMessage()) {});
+    }
+  }
+
+  @Override
+  protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
+    String path = request.getRequestURI();
+    String method = request.getMethod();
+    log.debug("ip : {}, path : {}, method : {}", request.getRemoteAddr(), path, method);
+    if (PathRequest.toStaticResources().atCommonLocations().matches(request)) {
+      return true;
     }
 
-    @Override
-    protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
-        String path = request.getRequestURI();
-        String method = request.getMethod();
-        log.debug("ip : {}, path : {}, method : {}", request.getRemoteAddr(), path, method);
-        if (PathRequest.toStaticResources().atCommonLocations().matches(request)) {
-            return true;
-        }
-
-        if (path.equals("/") || path.equals("/index.html")) {
-            return true;
-        }
-        return ExcludePath.getPaths()
-                .stream()
-                .anyMatch(excludePath -> excludePath.isMatch(path, method));
+    if (path.equals("/") || path.equals("/index.html")) {
+      return true;
     }
+    return ExcludePath.getPaths().stream()
+        .anyMatch(excludePath -> excludePath.isMatch(path, method));
+  }
 }

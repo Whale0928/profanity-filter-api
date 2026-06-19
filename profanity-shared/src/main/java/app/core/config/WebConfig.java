@@ -7,14 +7,14 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
-    private final StringToModeConverter stringToModeConverter;
+  private final StringToModeConverter stringToModeConverter;
 
-    public WebConfig(StringToModeConverter stringToModeConverter) {
-        this.stringToModeConverter = stringToModeConverter;
-    }
+  public WebConfig(StringToModeConverter stringToModeConverter) {
+    this.stringToModeConverter = stringToModeConverter;
+  }
 
-    @Override
-    public void addFormatters(FormatterRegistry registry) {
-        registry.addConverter(stringToModeConverter);
-    }
+  @Override
+  public void addFormatters(FormatterRegistry registry) {
+    registry.addConverter(stringToModeConverter);
+  }
 }

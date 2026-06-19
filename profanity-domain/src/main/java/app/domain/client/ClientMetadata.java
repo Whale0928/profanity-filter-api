@@ -1,17 +1,14 @@
 package app.domain.client;
 
-import lombok.Builder;
-
 import java.util.List;
 import java.util.UUID;
+import lombok.Builder;
 
 @Builder
 public record ClientMetadata(
-        UUID id,
-        String email,
-        String issuerInfo,
-        String note,
-        List<String> permissions,
-        String issuedAt
-) {
-}
+    UUID id,
+    String email,
+    String issuerInfo,
+    String note,
+    List<String> permissions,
+    String issuedAt) {}

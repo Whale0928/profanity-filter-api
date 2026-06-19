@@ -4,13 +4,13 @@ import lombok.Getter;
 
 @Getter
 public class ElapsedStartAt {
-    private final Long startAt;
+  private final Long startAt;
 
-    private ElapsedStartAt() {
-        this.startAt = System.nanoTime();
-    }
+  private ElapsedStartAt() {
+    this.startAt = System.nanoTime();
+  }
 
-    public static ElapsedStartAt now() {
-        return new ElapsedStartAt();
-    }
+  public static ElapsedStartAt now() {
+    return new ElapsedStartAt();
+  }
 }
