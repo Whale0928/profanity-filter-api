@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>profanity-filter-api FE demo</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #172026;
+        --muted: #5f6b73;
+        --line: #d9e2e7;
+        --bg: #f7faf9;
+        --panel: #ffffff;
+        --green: #16805a;
+        --green-dark: #0d5f43;
+        --blue: #2864c7;
+        --amber: #ad6b00;
+        --red: #b42318;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: var(--ink);
+        background: var(--bg);
+      }
+
+      .shell {
+        min-height: 100vh;
+        display: grid;
+        grid-template-columns: 260px 1fr;
+      }
+
+      aside {
+        border-right: 1px solid var(--line);
+        background: #eef6f2;
+        padding: 24px;
+      }
+
+      main {
+        padding: 32px;
+      }
+
+      .brand {
+        font-size: 20px;
+        font-weight: 800;
+        line-height: 1.2;
+        margin-bottom: 6px;
+      }
+
+      .sub {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      nav {
+        display: grid;
+        gap: 8px;
+        margin-top: 28px;
+      }
+
+      nav button {
+        border: 1px solid transparent;
+        background: transparent;
+        text-align: left;
+        color: var(--ink);
+        padding: 10px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 650;
+      }
+
+      nav button.active {
+        background: var(--panel);
+        border-color: var(--line);
+        color: var(--green-dark);
+      }
+
+      h1 {
+        font-size: 28px;
+        margin: 0 0 10px;
+        letter-spacing: 0;
+      }
+
+      h2 {
+        font-size: 17px;
+        margin: 0 0 12px;
+      }
+
+      .lead {
+        color: var(--muted);
+        max-width: 760px;
+        line-height: 1.7;
+        margin: 0 0 24px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+
+      .card,
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 18px;
+      }
+
+      .card p,
+      .panel p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.55;
+        font-size: 14px;
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        min-height: 28px;
+        padding: 4px 9px;
+        border-radius: 999px;
+        background: #e8f3ff;
+        color: var(--blue);
+        font-size: 12px;
+        font-weight: 700;
+        margin-bottom: 10px;
+      }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+
+      label {
+        display: grid;
+        gap: 6px;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 11px 12px;
+        color: var(--ink);
+        background: #fff;
+        font: inherit;
+      }
+
+      textarea {
+        min-height: 94px;
+        resize: vertical;
+      }
+
+      .full {
+        grid-column: 1 / -1;
+      }
+
+      .actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 14px;
+      }
+
+      .primary,
+      .secondary {
+        border: 0;
+        border-radius: 8px;
+        padding: 11px 14px;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      .primary {
+        background: var(--green);
+        color: white;
+      }
+
+      .secondary {
+        background: #edf2f7;
+        color: var(--ink);
+      }
+
+      pre {
+        white-space: pre-wrap;
+        overflow: auto;
+        background: #111827;
+        color: #d1fae5;
+        border-radius: 8px;
+        padding: 16px;
+        min-height: 180px;
+      }
+
+      .notice {
+        border-left: 4px solid var(--amber);
+        background: #fff7e6;
+        padding: 12px 14px;
+        border-radius: 6px;
+        color: #5f3b00;
+        margin-bottom: 18px;
+      }
+
+      @media (max-width: 900px) {
+        .shell {
+          grid-template-columns: 1fr;
+        }
+
+        aside {
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+        }
+
+        nav {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .grid,
+        .form-grid {
+          grid-template-columns: 1fr;
+        }
+
+        main {
+          padding: 22px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <aside>
+        <div class="brand">한국어 비속어 필터 API</div>
+        <div class="sub">분리 배포할 FE 방향을 보여주는 아주 작은 정적 데모입니다.</div>
+        <nav aria-label="demo navigation">
+          <button class="active" type="button" data-view="home">홈</button>
+          <button type="button" data-view="issue">API Key 발급</button>
+          <button type="button" data-view="console">테스트 콘솔</button>
+          <button type="button" data-view="request">단어 제안</button>
+        </nav>
+      </aside>
+
+      <main>
+        <section id="home" class="view">
+          <h1>빠르고 가벼운 API 포털</h1>
+          <p class="lead">
+            기존 README와 정적 테스트 페이지를 제품형 FE로 분리한다는 가정의 데모입니다.
+            실제 구현은 Vite + React + TypeScript 기반으로 만들고, k3s에는 정적 파일 컨테이너로 배포하는 구성이 적절합니다.
+          </p>
+          <div class="grid">
+            <article class="card">
+              <div class="tag">Vite</div>
+              <h2>빠른 개발과 단순 배포</h2>
+              <p>개발 서버가 빠르고, 배포 결과물은 정적 파일이라 Nginx 컨테이너로 서빙하기 쉽습니다.</p>
+            </article>
+            <article class="card">
+              <div class="tag">React</div>
+              <h2>AI 친화적인 UI 구성</h2>
+              <p>폼, 콘솔, 응답 뷰어, 문의 화면을 컴포넌트로 나누기 좋고 AI 생성 예시가 많습니다.</p>
+            </article>
+            <article class="card">
+              <div class="tag">shadcn/ui</div>
+              <h2>예쁜 기본값과 수정 가능성</h2>
+              <p>컴포넌트 코드가 프로젝트에 들어오므로 원하는 디자인으로 직접 고치기 쉽습니다.</p>
+            </article>
+          </div>
+          <div class="notice">
+            이 HTML은 실제 Vite/React 앱이 아닙니다. 앞으로 만들 화면의 정보 구조를 보여주는 목업입니다.
+          </div>
+        </section>
+
+        <section id="issue" class="view" hidden>
+          <h1>API Key 발급</h1>
+          <p class="lead">사용자가 직접 이름, 이메일, 사용 목적을 입력하고 API key를 발급받는 흐름입니다.</p>
+          <div class="panel">
+            <div class="form-grid">
+              <label>이름 또는 서비스명<input value="dead-whale-demo" /></label>
+              <label>이메일<input value="hello@example.com" /></label>
+              <label class="full">사용 목적<textarea>포트폴리오 서비스 댓글 필터링 테스트</textarea></label>
+            </div>
+            <div class="actions">
+              <button class="primary" type="button" data-fill="issue">발급 요청 미리보기</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="console" class="view" hidden>
+          <h1>테스트 콘솔</h1>
+          <p class="lead">기존 `index.html`을 제품형 콘솔로 바꾸면 이런 형태가 됩니다.</p>
+          <div class="panel">
+            <div class="form-grid">
+              <label class="full">문장<input id="text" value="민트초코는 아주 개자식이야" /></label>
+              <label>모드<select id="mode"><option>FILTER</option><option>NORMAL</option><option>QUICK</option></select></label>
+              <label>API Key<input value="pf_live_xxx" /></label>
+              <label class="full">Callback URL<input placeholder="https://example.com/callback" /></label>
+            </div>
+            <div class="actions">
+              <button class="primary" type="button" data-fill="console">JSON 요청 미리보기</button>
+              <button class="secondary" type="button" data-fill="form">Form 요청 미리보기</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="request" class="view" hidden>
+          <h1>단어 제안</h1>
+          <p class="lead">신규 단어 추가, 오탐 제거, 기존 단어 수정 요청을 받는 화면입니다.</p>
+          <div class="panel">
+            <div class="form-grid">
+              <label>요청 유형<select><option>ADD</option><option>REMOVE</option><option>MODIFY</option></select></label>
+              <label>심각도<select><option>HIGH</option><option>MEDIUM</option><option>LOW</option></select></label>
+              <label class="full">단어<input value="예시단어" /></label>
+              <label class="full">사유<textarea>필터링 데이터 개선을 위해 제안합니다.</textarea></label>
+            </div>
+            <div class="actions">
+              <button class="primary" type="button" data-fill="request">제안 요청 미리보기</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" style="margin-top: 18px">
+          <h2>응답 미리보기</h2>
+          <pre id="output">왼쪽 메뉴에서 화면을 고르고 버튼을 눌러보세요.</pre>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      const output = document.querySelector("#output");
+      const views = [...document.querySelectorAll(".view")];
+      const navButtons = [...document.querySelectorAll("nav button")];
+
+      navButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          const target = button.dataset.view;
+          navButtons.forEach((item) => item.classList.toggle("active", item === button));
+          views.forEach((view) => {
+            view.hidden = view.id !== target;
+          });
+        });
+      });
+
+      const samples = {
+        issue: {
+          endpoint: "POST /api/v1/clients/register",
+          body: {
+            name: "dead-whale-demo",
+            email: "hello@example.com",
+            issuerInfo: "portfolio-comment-filter",
+            note: "포트폴리오 서비스 댓글 필터링 테스트",
+          },
+        },
+        console: {
+          endpoint: "POST /api/v1/filter",
+          contentType: "application/json",
+          body: {
+            text: "민트초코는 아주 개자식이야",
+            mode: "FILTER",
+            callbackUrl: "",
+          },
+          responseShape: {
+            trackingId: "018f-demo",
+            status: { code: 2000, message: "Ok" },
+            detected: [{ length: 3, filteredWord: "개자식" }],
+            filtered: "민트초코는 아주 ***이야",
+          },
+        },
+        form: {
+          endpoint: "POST /api/v1/filter",
+          contentType: "application/x-www-form-urlencoded",
+          body: "text=민트초코는 아주 개자식이야&mode=FILTER",
+        },
+        request: {
+          endpoint: "POST /api/v1/word/request",
+          body: {
+            type: "ADD",
+            severity: "HIGH",
+            word: "예시단어",
+            reason: "필터링 데이터 개선을 위해 제안합니다.",
+          },
+        },
+      };
+
+      document.querySelectorAll("[data-fill]").forEach((button) => {
+        button.addEventListener("click", () => {
+          output.textContent = JSON.stringify(samples[button.dataset.fill], null, 2);
+        });
+      });
+    </script>
+  </body>
+</html>
