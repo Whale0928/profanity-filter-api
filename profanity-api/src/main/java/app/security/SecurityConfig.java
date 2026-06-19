@@ -47,7 +47,6 @@ public class SecurityConfig {
                         authorizationManagerRequestMatcherRegistry
                                 -> authorizationManagerRequestMatcherRegistry
                                 .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
-                                .requestMatchers(HttpMethod.GET, "/system/actuator/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/", "/index.html").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/api/v1/clients/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/v1/health").permitAll()
