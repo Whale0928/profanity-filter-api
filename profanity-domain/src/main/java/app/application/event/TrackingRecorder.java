@@ -1,5 +1,6 @@
 package app.application.event;
 
+import app.core.util.ApiKeys;
 import app.domain.record.RecordRepository;
 import app.domain.record.Records;
 import java.util.stream.Collectors;
@@ -32,7 +33,14 @@ public class TrackingRecorder {
             .ip(event.ip())
             .build();
 
-    Records save = recordRepository.save(records);
-    log.info("record tracking : {}", save);
+    recordRepository.save(records);
+    log.info(
+        "[FILTER] 처리 결과 trackingId={} mode={} detected={} words=[{}] ip={} apiKey={}",
+        event.trackingId(),
+        event.mode(),
+        event.words().size(),
+        words,
+        event.ip(),
+        ApiKeys.mask(event.apiKey()));
   }
 }

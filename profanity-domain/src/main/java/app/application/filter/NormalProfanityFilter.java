@@ -50,7 +50,7 @@ public class NormalProfanityFilter implements ProfanityFilter, AhocorasickFilter
 
   @Override
   public List<?> getProfanityTrieList() {
-    log.info("[AhocorasickFilter] 비속어 자료 목록 조회 : {}", LocalDateTime.now());
+    log.debug("[AhocorasickFilter] 비속어 자료 목록 조회 : {}", LocalDateTime.now());
     return collect.stream().toList();
   }
 
@@ -61,7 +61,7 @@ public class NormalProfanityFilter implements ProfanityFilter, AhocorasickFilter
 
   @Override
   public FilterResponse allMatched(String text) {
-    log.info("[NormalProfanityFilter] 전체 비속어 필터링 시작 : {}", LocalDateTime.now());
+    log.debug("[NormalProfanityFilter] 전체 비속어 필터링 시작");
 
     if (text == null || text.isBlank())
       return FilterResponse.create(text, new HashSet<>(), Elapsed.end(ElapsedStartAt.now()));
@@ -83,13 +83,13 @@ public class NormalProfanityFilter implements ProfanityFilter, AhocorasickFilter
       currentPos = endPos;
     }
     Elapsed elapsed = Elapsed.end(start);
-    log.info("전체 비속어 필터링 : {} (지연 시간 : {}ms)", text, elapsed);
+    log.debug("[NormalProfanityFilter] 전체 비속어 필터링 완료 (지연 시간 : {})", elapsed);
     return FilterResponse.create(text, filterWords, elapsed);
   }
 
   @Override
   public FilterWord firstMatched(String text) {
-    log.info("[NormalProfanityFilter] 단일 비속어 필터링 시작 : {}", LocalDateTime.now());
+    log.debug("[NormalProfanityFilter] 단일 비속어 필터링 시작");
     if (text == null || text.isBlank()) {
       return FilterWord.empty();
     }
@@ -110,7 +110,7 @@ public class NormalProfanityFilter implements ProfanityFilter, AhocorasickFilter
     }
 
     Elapsed elapsed = Elapsed.end(start);
-    log.info("단일 비속어 필터링 : {} (지연 시간 : {}ms)", text, elapsed);
+    log.debug("[NormalProfanityFilter] 단일 비속어 필터링 완료 (지연 시간 : {})", elapsed);
     return FilterWord.create(text.substring(startPos, endPos), startPos, endPos);
   }
 }

@@ -49,7 +49,7 @@ public class HttpClient {
       ip = request.getRemoteAddr();
     }
 
-    log.info("실제 원격(클라이언트) IP 주소: {}", ip);
+    log.debug("실제 원격(클라이언트) IP 주소: {}", ip);
     return ip;
   }
 
@@ -59,7 +59,7 @@ public class HttpClient {
 
   public static String getReferrer(HttpServletRequest request) {
     String referrer = request.getHeader("Referer");
-    log.info("Referer : {}", referrer);
+    log.debug("Referer : {}", referrer);
     return referrer;
   }
 }

@@ -18,6 +18,6 @@ public class FilterEventHandler {
   @EventListener
   public void handle(FilterEvent event) {
     trackingRecorder.recordTracking(event);
-    log.info("[DOMAIN] 이벤트 발행 성공 : event={}", event);
+    log.debug("[DOMAIN] 이벤트 처리 완료 trackingId={}", event.trackingId());
   }
 }

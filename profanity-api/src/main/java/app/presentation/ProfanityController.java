@@ -5,6 +5,7 @@ import static app.application.HttpClient.getReferrer;
 
 import app.application.filter.ProfanityHandler;
 import app.core.data.response.FilterApiResponse;
+import app.core.util.ApiKeys;
 import app.dto.request.ApiRequest;
 import app.dto.request.FilterRequest;
 import app.security.annotation.VerifiedClientOnly;
@@ -42,9 +43,14 @@ public class ProfanityController {
     final String clientIp = getClientIP(httpRequest);
     final String referrer = getReferrer(httpRequest);
 
-    log.info("api key : {}", apiKey);
     log.info(
-        "[API-JSON] Client IP : {} / Referer : {} / Request : {}", clientIp, referrer, request);
+        "[FILTER] 요청 수신 host={} clientIp={} apiKey={} mode={} textLen={} async={}",
+        httpRequest.getServerName(),
+        clientIp,
+        ApiKeys.mask(apiKey),
+        request.mode(),
+        request.text() == null ? 0 : request.text().length(),
+        request.isAsync());
 
     final FilterRequest filterRequest =
         FilterRequest.create(request.text(), request.mode(), apiKey, clientIp, referrer);
@@ -69,10 +75,12 @@ public class ProfanityController {
     String referrer = getReferrer(httpRequest);
 
     log.info(
-        "[API-URLENCODED]  Client IP : {} / Referer : {} / Request : {}",
+        "[FILTER] 요청 수신(form) host={} clientIp={} apiKey={} mode={} textLen={}",
+        httpRequest.getServerName(),
         clientIp,
-        referrer,
-        request);
+        ApiKeys.mask(apiKey),
+        request.mode(),
+        request.text() == null ? 0 : request.text().length());
 
     final FilterRequest filterRequest =
         FilterRequest.create(request.text(), request.mode(), apiKey, clientIp, referrer);
@@ -85,7 +93,7 @@ public class ProfanityController {
   @PostMapping("/advanced")
   public ResponseEntity<?> advancedProfanity(
       @RequestHeader(value = "x-api-key") String apiKey, @RequestParam("word") String word) {
-    log.info("[API-Advanced] Request : {} , key :{}", word, apiKey);
+    log.info("[FILTER] 요청 수신(advanced) word={} apiKey={}", word, ApiKeys.mask(apiKey));
     Objects.requireNonNull(word, "단어는 필수 입니다.");
     return ResponseEntity.ok(profanityHandler.advancedFilter(word, null));
   }
