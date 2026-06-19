@@ -3,6 +3,7 @@ package app.web.response;
 import app.core.data.response.ApiResponse;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
@@ -22,18 +23,19 @@ public class ResponseCustomizingAdvice implements ResponseBodyAdvice<Object> {
 
   @Override
   public boolean supports(
-      MethodParameter returnType, Class<? extends HttpMessageConverter<?>> converterType) {
+      @NonNull MethodParameter returnType,
+      @NonNull Class<? extends HttpMessageConverter<?>> converterType) {
     return true;
   }
 
   @Override
   public Object beforeBodyWrite(
       Object body,
-      MethodParameter returnType,
-      MediaType selectedContentType,
-      Class<? extends HttpMessageConverter<?>> selectedConverterType,
-      ServerHttpRequest request,
-      ServerHttpResponse response) {
+      @NonNull MethodParameter returnType,
+      @NonNull MediaType selectedContentType,
+      @NonNull Class<? extends HttpMessageConverter<?>> selectedConverterType,
+      @NonNull ServerHttpRequest request,
+      @NonNull ServerHttpResponse response) {
     if (body instanceof ApiResponse<?> apiResponse && apiResponse.meta() != null) {
       RequestContext context = RequestContext.from(request);
       for (ResponseCustomizer customizer : customizers) {
