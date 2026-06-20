@@ -1,4 +1,4 @@
-# 4. 도메인 테스트 fixture 공유를 위한 test fixtures 구성
+# 4. 공통 테스트 지원을 위한 test support 모듈 구성
 
 ## Status
 제안 (2026.06.20)
@@ -9,24 +9,24 @@
 이 구조에는 다음 문제가 있다.
 
 - 도메인 fixture와 fake repository를 다른 모듈 테스트에서 재사용하기 어렵다.
-- 테스트 지원 코드의 소유 경계가 불명확해지면 API 모듈이 도메인 테스트 데이터를 중복 정의할 가능성이 높다.
-- 별도 테스트 지원 모듈을 바로 만들면 아직 작지 않은 구조 비용이 생긴다.
+- E2E 테스트에서 컨테이너, DB seed, 공통 테스트 유틸을 둘 위치가 명확하지 않다.
+- 테스트 지원 코드의 소유 경계가 불명확해지면 API 모듈이 도메인 테스트 데이터나 인프라 준비 코드를 중복 정의할 가능성이 높다.
 
 ## Decision
-우선 `profanity-domain`에 Gradle `java-test-fixtures`를 적용해 도메인 소유 테스트 fixture를 공유한다.
+공통 테스트 지원 경계로 `profanity-test-support` 모듈을 둔다.
 
-- 도메인 엔티티 fixture, fake repository, fixed key generator처럼 도메인 테스트 데이터와 직접 관련된 코드를 `profanity-domain` test fixtures로 이동한다.
-- 다른 모듈은 필요한 경우 `testImplementation(testFixtures(project(":profanity-domain")))` 형태로 도메인 fixture를 참조한다.
+- E2E 테스트에서 재사용할 컨테이너, DB seed, 테스트 유틸은 `profanity-test-support`에 둔다.
+- 다른 모듈은 필요한 경우 테스트 의존성으로 `profanity-test-support`를 참조한다.
+- 도메인 엔티티 fixture, fake repository, fixed key generator처럼 도메인 테스트 데이터와 직접 관련된 코드는 `profanity-test-support`로 이동할 수 있다.
 - API 전용 fixture와 security stub은 `profanity-api` 테스트 영역에 남긴다.
-- 별도 `profanity-test-support` 모듈은 공통 컨테이너, E2E 베이스 클래스, 여러 모듈이 공유하는 Spring 테스트 DSL이 충분히 커질 때 다시 결정한다.
 
 ## Consequences
-- 도메인 fixture의 소유권이 `profanity-domain`으로 정리되고, 중복 fixture 작성을 줄일 수 있다.
-- 멀티모듈 의존 방향을 유지하면서 테스트 코드만 필요한 범위로 공유할 수 있다.
-- 별도 테스트 지원 모듈을 만들지 않으므로 초기 변경 범위가 작다.
-- test fixtures API가 커지면 테스트 지원 코드도 공개 계약처럼 관리해야 하므로, fixture 이름과 패키지 구조를 도메인별로 유지해야 한다.
+- 공통 테스트 인프라와 fixture를 한 모듈에서 관리해 중복 작성을 줄일 수 있다.
+- 운영 코드 모듈에 테스트 인프라 의존성이 섞이는 것을 피할 수 있다.
+- 테스트 지원 모듈이 커지면 공개 테스트 API처럼 관리해야 하므로, fixture 이름과 패키지 구조를 도메인별로 유지해야 한다.
+- `profanity-test-support`는 테스트 전용 모듈이므로 운영 코드에서 참조하지 않는다.
 
 ## Alternatives
-- 별도 `profanity-test-support` 모듈: 공유 범위가 아직 작고 컨테이너 기반 RDB 통합 테스트도 이번 범위에서 제외되어 보류한다.
+- `profanity-domain`의 `java-test-fixtures`: 도메인 fixture만 공유하기에는 좋지만, 컨테이너와 DB seed 같은 E2E 지원 경계로는 좁아 제외한다.
 - 각 모듈별 fixture 유지: 현재 구조를 유지할 수 있지만 중복과 일관성 문제가 남아 제외한다.
 - API 모듈에 모든 fixture 집중: 도메인 테스트 지원 코드의 소유권이 API로 넘어가 의존 방향이 흐려지므로 제외한다.
