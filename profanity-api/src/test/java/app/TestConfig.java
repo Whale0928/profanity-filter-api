@@ -1,7 +1,7 @@
 package app;
 
 import app.application.filter.ProfanityHandler;
-import app.fixture.FakeProfanityHandler;
+import app.test.support.fake.FakeProfanityHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;

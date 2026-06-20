@@ -1,4 +1,6 @@
 dependencies {
+    api project(':profanity-domain')
+    api 'org.springframework.boot:spring-boot-test'
     api 'org.testcontainers:testcontainers-mysql'
 
     implementation 'org.flywaydb:flyway-core'

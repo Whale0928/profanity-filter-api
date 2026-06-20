@@ -7,17 +7,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import app.TestConfig;
 import app.application.client.APIKeyGenerator;
+import app.core.data.constant.Mode;
 import app.core.data.response.constant.StatusCode;
 import app.dto.request.ApiRequest;
-import app.fixture.ApiTestFixture;
-import app.fixture.FakeClientMetadataReader;
-import app.fixture.SecurityFakeStubConfig;
 import app.security.SecurityConfig;
 import app.security.authentication.AuthenticationService;
 import app.security.filter.CustomAuthenticationEntryPoint;
 import app.security.filter.CustomAuthenticationFilter;
+import app.test.support.config.SecurityFakeStubConfig;
+import app.test.support.fake.FakeClientMetadataReader;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,18 +43,11 @@ class SecurityAuthenticationTest {
 
   @Autowired private MockMvc mockMvc;
 
-  private ApiTestFixture fixture;
-
-  @BeforeEach
-  void setUp() {
-    fixture = new ApiTestFixture();
-    validApiKey = FakeClientMetadataReader.validKeys.get(0);
-  }
-
   @Test
   @DisplayName("유효한 API 키 요청시 200 OK와 함께 성공 응답을 반환한다")
   void test_200() throws Exception {
-    ApiRequest request = fixture.createQuickRequest("test text");
+    validApiKey = FakeClientMetadataReader.validKeys.get(0);
+    ApiRequest request = quickRequest("test text");
     mockMvc
         .perform(
             post(REQUEST_URL)
@@ -71,7 +63,7 @@ class SecurityAuthenticationTest {
   @Test
   @DisplayName("API 키가 비어있는 경우 4010 UNAUTHORIZED 응답을 반환한다")
   void test_4010() throws Exception {
-    ApiRequest request = fixture.createQuickRequest("test text");
+    ApiRequest request = quickRequest("test text");
     mockMvc
         .perform(
             post(REQUEST_URL)
@@ -86,7 +78,7 @@ class SecurityAuthenticationTest {
   @Test
   @DisplayName("잘못된 형식의 API 키 요청시 4031 INVALID_API_KEY 응답을 반환한다")
   void test_4031() throws Exception {
-    ApiRequest request = fixture.createQuickRequest("test text");
+    ApiRequest request = quickRequest("test text");
 
     mockMvc
         .perform(
@@ -102,7 +94,7 @@ class SecurityAuthenticationTest {
   @Test
   @DisplayName("존재하지 않는 API 키 요청시 4040 NOT_FOUND_CLIENT 응답을 반환한다")
   void test_4040() throws Exception {
-    ApiRequest request = fixture.createQuickRequest("test text");
+    ApiRequest request = quickRequest("test text");
     String key = FakeClientMetadataReader.validKeys.get(0);
     FakeClientMetadataReader.validKeys.remove(key);
 
@@ -117,5 +109,9 @@ class SecurityAuthenticationTest {
         .andExpect(jsonPath("$.status.message").value(StatusCode.NOT_FOUND_CLIENT.status()));
 
     FakeClientMetadataReader.validKeys.add(key);
+  }
+
+  private static ApiRequest quickRequest(String text) {
+    return new ApiRequest(text, Mode.QUICK, null);
   }
 }
