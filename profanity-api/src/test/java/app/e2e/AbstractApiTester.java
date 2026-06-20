@@ -1,14 +1,7 @@
 package app.e2e;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import app.ProfanityFilterApplication;
-import app.core.data.response.FilterApiResponse;
 import app.test.support.container.MySqlTestContainer;
-import app.test.support.fixture.IntegrationClient;
-import app.test.support.fixture.IntegrationWord;
 import app.test.support.probe.RecordProbe;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import javax.sql.DataSource;
@@ -44,7 +37,7 @@ abstract class AbstractApiTester {
 
   @Autowired private CacheManager cacheManager;
 
-  private RecordProbe recordProbe;
+  protected RecordProbe recordProbe;
 
   @DynamicPropertySource
   static void configureDatabase(DynamicPropertyRegistry registry) {
@@ -77,49 +70,5 @@ abstract class AbstractApiTester {
             });
 
     recordProbe = new RecordProbe(dataSource);
-  }
-
-  protected FilterResponseAssertion assertFilterResponse(FilterApiResponse response) {
-    return new FilterResponseAssertion(response);
-  }
-
-  protected RecordAssertion assertRecord(IntegrationClient client) {
-    return new RecordAssertion(recordProbe, client);
-  }
-
-  protected static final class FilterResponseAssertion {
-    private final FilterApiResponse response;
-
-    private FilterResponseAssertion(FilterApiResponse response) {
-      this.response = response;
-    }
-
-    FilterResponseAssertion hasDetected(IntegrationWord word) {
-      assertNotNull(response.trackingId());
-      assertEquals(2000, response.status().code());
-      assertTrue(
-          response.detected().stream()
-              .anyMatch(detected -> detected.filteredWord().equals(word.word())));
-      return this;
-    }
-
-    FilterResponseAssertion hasFilteredText(String filteredText) {
-      assertEquals(filteredText, response.filtered());
-      return this;
-    }
-  }
-
-  protected static final class RecordAssertion {
-    private final RecordProbe recordProbe;
-    private final IntegrationClient client;
-
-    private RecordAssertion(RecordProbe recordProbe, IntegrationClient client) {
-      this.recordProbe = recordProbe;
-      this.client = client;
-    }
-
-    void hasFilterRecord(String requestText, IntegrationWord word) {
-      recordProbe.assertFilterRecord(client, requestText, word);
-    }
   }
 }

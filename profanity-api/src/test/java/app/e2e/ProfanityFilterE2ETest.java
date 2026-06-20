@@ -37,9 +37,11 @@ class ProfanityFilterE2ETest extends AbstractApiTester {
         objectMapper.readValue(result.getResponse().getContentAsString(), FilterApiResponse.class);
 
     // then
-    assertFilterResponse(response)
-        .hasDetected(ACTIVE_PROFANITY_SAMPLE)
-        .hasFilteredText("문장 안에 ***** 이 포함된다");
-    assertRecord(READ_CLIENT).hasFilterRecord(requestText, ACTIVE_PROFANITY_SAMPLE);
+    assertThat(response.trackingId()).isNotNull();
+    assertThat(response.status().code()).isEqualTo(2000);
+    assertThat(response.detected())
+        .anyMatch(detected -> detected.filteredWord().equals(ACTIVE_PROFANITY_SAMPLE.word()));
+    assertThat(response.filtered()).isEqualTo("문장 안에 ***** 이 포함된다");
+    recordProbe.assertFilterRecord(READ_CLIENT, requestText, ACTIVE_PROFANITY_SAMPLE);
   }
 }
