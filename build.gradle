@@ -33,6 +33,8 @@ subprojects {
     apply plugin: 'com.diffplug.spotless'
     apply plugin: 'jacoco'
 
+    ext['testcontainers.version'] = libs.versions.testcontainers.get()
+
     spotless {
         java {
             googleJavaFormat()
@@ -54,7 +56,7 @@ subprojects {
         implementation 'org.springframework.boot:spring-boot-configuration-processor'
 
         // default  utilities
-        implementation 'org.apache.commons:commons-lang3:3.12.0'
+        implementation libs.commons.lang3
         implementation 'com.google.guava:guava:31.1-jre'
 
         // default lombok
