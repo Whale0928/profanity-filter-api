@@ -1,7 +1,7 @@
 package app.test.support.probe;
 
-import app.test.support.fixture.IntegrationClient;
-import app.test.support.fixture.IntegrationWord;
+import app.test.support.fixture.SeedClient;
+import app.test.support.fixture.SeedWord;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -15,8 +15,7 @@ public final class RecordProbe {
     this.dataSource = dataSource;
   }
 
-  public void assertFilterRecord(
-      IntegrationClient client, String requestText, IntegrationWord word) {
+  public void assertFilterRecord(SeedClient client, String requestText, SeedWord word) {
     int count = countFilterRecords(client, requestText, word);
 
     if (count != 1) {
@@ -25,8 +24,7 @@ public final class RecordProbe {
     }
   }
 
-  public int countFilterRecords(
-      IntegrationClient client, String requestText, IntegrationWord word) {
+  public int countFilterRecords(SeedClient client, String requestText, SeedWord word) {
     String sql =
         """
         SELECT COUNT(*)

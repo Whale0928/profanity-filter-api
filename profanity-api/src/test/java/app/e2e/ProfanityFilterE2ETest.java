@@ -1,7 +1,7 @@
 package app.e2e;
 
-import static app.test.support.fixture.IntegrationClients.READ_CLIENT;
-import static app.test.support.fixture.IntegrationWords.ACTIVE_PROFANITY_SAMPLE;
+import static app.test.support.fixture.SeedClients.READ_CLIENT;
+import static app.test.support.fixture.SeedWords.ACTIVE_PROFANITY_SAMPLE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import app.core.data.constant.Mode;
