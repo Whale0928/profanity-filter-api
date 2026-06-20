@@ -7,61 +7,64 @@ const DocsPage = lazy(() => import("./DocsPage"));
 const storyBlocks = [
   {
     id: "block-2-1",
-    label: "2-1",
-    intro: "2번 블럭",
-    title: "2번 블럭",
-    body: "2번 블럭",
-    visualLabel: "2-1",
-    visualTitle: "2번 블럭",
-    visualLines: ["2-1", "2-2", "2-3"],
+    label: "입력",
+    intro: "텍스트를 보냅니다",
+    title: "한국어 문장을 그대로 전달",
+    body: "댓글, 채팅, 게시글처럼 사용자가 입력한 문장을 API 요청 본문에 담아 보냅니다.",
+    visualLabel: "request",
+    visualTitle: "POST /api/v1/filter",
+    visualLines: ["text", "mode", "X-API-KEY"],
   },
   {
     id: "block-2-2",
-    label: "2-2",
-    intro: "2번 블럭",
-    title: "2번 블럭",
-    body: "2번 블럭",
-    visualLabel: "2-2",
-    visualTitle: "2번 블럭",
-    visualLines: ["2-1", "2-2", "2-3"],
+    label: "검출",
+    intro: "비속어를 찾습니다",
+    title: "Aho-Corasick 기반 빠른 매칭",
+    body: "등록된 비속어 사전을 기준으로 문장 안의 금칙어를 찾아 위치와 길이를 함께 계산합니다.",
+    visualLabel: "detect",
+    visualTitle: "욕설 → match",
+    visualLines: ["word", "startIndex", "endIndex"],
   },
   {
     id: "block-2-3",
-    label: "2-3",
-    intro: "2번 블럭",
-    title: "2번 블럭",
-    body: "2번 블럭",
-    visualLabel: "2-3",
-    visualTitle: "2번 블럭",
-    visualLines: ["2-1", "2-2", "2-3"],
+    label: "결과",
+    intro: "원하는 방식으로 받습니다",
+    title: "검출, 전체 목록, 마스킹",
+    body: "QUICK, NORMAL, FILTER 모드로 첫 검출 여부부터 마스킹된 문장까지 필요한 응답만 선택합니다.",
+    visualLabel: "response",
+    visualTitle: "FILTER",
+    visualLines: ["QUICK", "NORMAL", "FILTER"],
   },
   {
     id: "block-2-4",
-    label: "2-4",
-    intro: "2번 블럭",
-    title: "2번 블럭",
-    body: "2번 블럭",
-    visualLabel: "2-4",
-    visualTitle: "2번 블럭",
-    visualLines: ["2-1", "2-2", "2-3"],
+    label: "연동",
+    intro: "서비스 앞단에 붙입니다",
+    title: "입력 저장 전에 한 번 호출",
+    body: "게시글 저장, 댓글 등록, 채팅 전송 같은 사용자 입력 흐름 앞에 필터링 단계를 추가합니다.",
+    visualLabel: "service",
+    visualTitle: "before save",
+    visualLines: ["comment", "chat", "post"],
   },
 ];
 
-const startSteps = [
+const scenarioSteps = [
   {
-    id: "block-3-1",
-    title: "3번 블럭",
-    body: "3번 블럭",
+    id: "scenario-1",
+    label: "01",
+    title: "사용자가 댓글을 입력",
+    body: "서비스는 저장 전에 필터 API를 호출합니다.",
   },
   {
-    id: "block-3-2",
-    title: "3번 블럭",
-    body: "3번 블럭",
+    id: "scenario-2",
+    label: "02",
+    title: "FILTER 모드로 마스킹",
+    body: "비속어 위치를 찾고 노출 가능한 문장으로 바꿉니다.",
   },
   {
-    id: "block-3-3",
-    title: "3번 블럭",
-    body: "3번 블럭",
+    id: "scenario-3",
+    label: "03",
+    title: "정리된 문장을 저장",
+    body: "응답 결과를 댓글, 채팅, 게시글 흐름에 그대로 반영합니다.",
   },
 ];
 
@@ -227,7 +230,7 @@ function StoryBlocks() {
     <section className="story-section" id="story" aria-labelledby="story-title">
       <div className="story-copy">
         <p className="section-kicker">02</p>
-        <h2 id="story-title">2번 블럭</h2>
+        <h2 id="story-title">한국어 문장을 API로 필터링합니다</h2>
         <div className="story-markers" aria-label="흐름 단계">
           {storyBlocks.map((block, index) => (
             <span
@@ -276,19 +279,45 @@ function StoryBlocks() {
 
 function StartGuide() {
   return (
-    <section className="start-section" aria-labelledby="start-title">
+    <section className="start-section" id="scenario" aria-labelledby="start-title">
       <div className="section-heading">
         <p className="section-kicker">03</p>
-        <h2 id="start-title">3번 블럭</h2>
+        <h2 id="start-title">사용 시나리오</h2>
+        <p>
+          댓글, 채팅, 게시글 입력 전에 API를 호출해 비속어를 검출하거나 마스킹합니다.
+        </p>
       </div>
-      <div className="step-grid">
-        {startSteps.map((step, index) => (
-          <article className="step-card" key={step.id}>
-            <span>{String(index + 1).padStart(2, "0")}</span>
-            <h3>{step.title}</h3>
-            <p>{step.body}</p>
-          </article>
-        ))}
+      <div className="scenario-layout">
+        <div className="scenario-video" aria-label="필터링 처리 흐름">
+          <div className="scenario-screen">
+            <div className="comment-card">
+              <span>comment</span>
+              <p>이 댓글은 욕설을 포함합니다.</p>
+            </div>
+            <div className="api-card">
+              <span>POST /api/v1/filter</span>
+              <strong>FILTER</strong>
+            </div>
+            <div className="result-card">
+              <span>response</span>
+              <p>이 댓글은 **을 포함합니다.</p>
+            </div>
+          </div>
+          <div className="scenario-timeline" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+          </div>
+        </div>
+        <div className="scenario-steps">
+          {scenarioSteps.map((step) => (
+            <article className="step-card" key={step.id}>
+              <span>{step.label}</span>
+              <h3>{step.title}</h3>
+              <p>{step.body}</p>
+            </article>
+          ))}
+        </div>
       </div>
     </section>
   );

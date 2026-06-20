@@ -39,12 +39,18 @@ assert.doesNotMatch(mobileBlock, /\.api-docs-sidebar\s*{[^}]*position:\s*fixed/s
 assert.doesNotMatch(mobileBlock, /\.api-docs-sidebar\s*{[^}]*position:\s*sticky/s, "Mobile sidebar must not stick over content while dragging.");
 
 assert.match(guidelines, /첫 화면은 4개 블록으로 구성한다\./, "Guidelines must define the four-block landing structure.");
-assert.match(guidelines, /기능 설명이 확정되기 전까지 2번, 3번 블록 내부 텍스트는 블록 순서만 표시한다\./, "Guidelines must keep pending landing copy as block-order placeholders.");
-assert.match(app, /title:\s*"2번 블럭"/, "Second landing block must use placeholder copy only.");
-assert.match(app, /title:\s*"3번 블럭"/, "Third landing block must use placeholder copy only.");
+assert.match(guidelines, /2번 블록은 프로젝트 정체성을 짧게 설명한다\./, "Guidelines must define the second block as the project identity section.");
+assert.match(guidelines, /3번 블록은 사용 시나리오를 영상형 흐름으로 보여준다\./, "Guidelines must define the third block as the scenario reel section.");
+assert.match(app, /한국어 문장을 API로 필터링합니다/, "Second landing block must explain what the project does.");
+assert.match(app, /사용 시나리오/, "Third landing block must introduce a simple usage scenario.");
+assert.doesNotMatch(app, /시나리오 영상/, "Scenario panel must not label itself as a video.");
+assert.match(styles, /animation:\s*scenario-card-one\s+10s/, "Input card must use the shared 10s scenario loop.");
+assert.match(styles, /animation:\s*scenario-card-two\s+10s/, "API card must use the shared 10s scenario loop.");
+assert.match(styles, /animation:\s*scenario-card-three\s+10s/, "Result card must use the shared 10s scenario loop.");
+assert.doesNotMatch(styles, /animation-delay:\s*1\.4s|animation-delay:\s*2\.8s/, "Scenario card timing must not rely on per-card animation delays.");
 assert.match(app, /신청하기/, "Footer CTA must include an apply button.");
 assert.match(app, /문서 보기/, "Footer CTA must include a docs button.");
-assert.doesNotMatch(app, /댓글은 짧게|이름은 더 조심|긴 글도 기준은 단순하게|작게 시작합니다|구현 규칙은 문서에서 봅니다/, "Pending landing sections must not keep functional explanation copy.");
+assert.doesNotMatch(app, /title:\s*"2번 블럭"|title:\s*"3번 블럭"|body:\s*"2번 블럭"|body:\s*"3번 블럭"/, "Landing sections must not keep placeholder copy.");
 
 function extractRule(source, selector) {
   const start = source.indexOf(`${selector} {`);

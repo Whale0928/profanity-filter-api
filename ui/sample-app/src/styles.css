@@ -405,6 +405,140 @@ button {
   margin-bottom: 34px;
 }
 
+.section-heading p:not(.section-kicker) {
+  margin: 16px 0 0;
+  color: color-mix(in srgb, var(--pine) 76%, var(--ivory));
+  font-size: 18px;
+  line-height: 1.7;
+}
+
+.scenario-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.18fr) minmax(320px, 0.82fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.scenario-video {
+  display: grid;
+  gap: 18px;
+  border: 1px solid var(--pine);
+  border-radius: 8px;
+  background: var(--pine);
+  color: var(--ivory);
+  padding: 22px;
+}
+
+.scenario-screen {
+  position: relative;
+  min-height: 430px;
+  display: grid;
+  align-content: center;
+  gap: 16px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--ivory) 26%, transparent);
+  border-radius: 8px;
+  background-image: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--ivory) 9%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: 26px 26px;
+  padding: 24px;
+}
+
+.comment-card,
+.api-card,
+.result-card {
+  position: relative;
+  width: min(440px, 100%);
+  border: 1px solid color-mix(in srgb, var(--ivory) 38%, transparent);
+  border-radius: 8px;
+  background: var(--ivory);
+  color: var(--pine);
+  padding: 18px;
+  box-shadow: 0 16px 0 color-mix(in srgb, var(--sage) 24%, transparent);
+  opacity: 0;
+  transform: translateY(-18px);
+}
+
+.comment-card {
+  animation: scenario-card-one 10s infinite both;
+}
+
+.api-card {
+  justify-self: center;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  background: var(--sage);
+  animation: scenario-card-two 10s infinite both;
+}
+
+.result-card {
+  justify-self: end;
+  animation: scenario-card-three 10s infinite both;
+}
+
+.comment-card span,
+.api-card span,
+.result-card span {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.comment-card p,
+.result-card p {
+  margin: 0;
+  font-size: clamp(18px, 3vw, 28px);
+  font-weight: 850;
+  line-height: 1.35;
+}
+
+.api-card strong {
+  font-size: clamp(24px, 4vw, 42px);
+  letter-spacing: 0;
+}
+
+.scenario-timeline {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.scenario-timeline span {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ivory) 18%, transparent);
+}
+
+.scenario-timeline span::before {
+  content: "";
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform: translateX(-100%);
+  background: var(--sage);
+  animation: timeline-one 10s infinite;
+}
+
+.scenario-timeline span:nth-child(2)::before {
+  animation-name: timeline-two;
+}
+
+.scenario-timeline span:nth-child(3)::before {
+  animation-name: timeline-three;
+}
+
+.scenario-steps {
+  display: grid;
+  gap: 16px;
+}
+
 .step-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -424,6 +558,117 @@ button {
 
 .step-card:hover {
   background: var(--sage);
+}
+
+@keyframes timeline-one {
+  0%,
+  4% {
+    transform: translateX(-100%);
+  }
+
+  10%,
+  88% {
+    transform: translateX(0);
+  }
+
+  96%,
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes timeline-two {
+  0%,
+  14% {
+    transform: translateX(-100%);
+  }
+
+  20%,
+  88% {
+    transform: translateX(0);
+  }
+
+  96%,
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes timeline-three {
+  0%,
+  28% {
+    transform: translateX(-100%);
+  }
+
+  34%,
+  88% {
+    transform: translateX(0);
+  }
+
+  96%,
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes scenario-card-one {
+  0%,
+  4% {
+    opacity: 0;
+    transform: translateY(-18px);
+  }
+
+  10%,
+  88% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  96%,
+  100% {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+
+@keyframes scenario-card-two {
+  0%,
+  14% {
+    opacity: 0;
+    transform: translateY(-18px);
+  }
+
+  20%,
+  88% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  96%,
+  100% {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+
+@keyframes scenario-card-three {
+  0%,
+  28% {
+    opacity: 0;
+    transform: translateY(-18px);
+  }
+
+  34%,
+  88% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  96%,
+  100% {
+    opacity: 0;
+    transform: translateY(16px);
+  }
 }
 
 .api-docs-page {
@@ -805,7 +1050,8 @@ button {
   .hero-actions,
   .split-section,
   .story-section,
-  .story-panel {
+  .story-panel,
+  .scenario-layout {
     grid-template-columns: 1fr;
   }
 
@@ -840,6 +1086,10 @@ button {
 
   .story-visual {
     min-height: 260px;
+  }
+
+  .scenario-screen {
+    min-height: 360px;
   }
 
   .step-grid {
@@ -928,5 +1178,18 @@ button {
     opacity: 1;
     transform: none;
     transition: none;
+  }
+
+  .scenario-timeline span::before {
+    animation: none;
+    transform: translateX(0);
+  }
+
+  .comment-card,
+  .api-card,
+  .result-card {
+    opacity: 1;
+    transform: none;
+    animation: none;
   }
 }
