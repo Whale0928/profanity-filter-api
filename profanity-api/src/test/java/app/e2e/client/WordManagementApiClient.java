@@ -37,49 +37,32 @@ public final class WordManagementApiClient {
 
   public ApiCallResponse<ApiResponse<WordRequestResult>> requestNewWord(
       SeedClient client, WordRequest request) throws Exception {
-    return requestNewWord(client.apiKey(), request);
-  }
-
-  public ApiCallResponse<ApiResponse<WordRequestResult>> requestNewWord(
-      String apiKey, WordRequest request) throws Exception {
-    var requestBuilder =
+    var result =
         mockMvcTester
             .post()
             .uri(WORD_REQUEST_PATH)
+            .header(API_KEY_HEADER, client.apiKey())
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(request));
-
-    if (apiKey != null) {
-      requestBuilder.header(API_KEY_HEADER, apiKey);
-    }
+            .content(objectMapper.writeValueAsString(request))
+            .exchange();
 
     return ApiCallResponse.of(
-        requestBuilder.exchange(),
-        objectMapper,
-        new TypeReference<ApiResponse<WordRequestResult>>() {});
+        result, objectMapper, new TypeReference<ApiResponse<WordRequestResult>>() {});
   }
 
   public ApiCallResponse<ApiResponse<Boolean>> acceptWord(SeedClient client, Long requestId) {
-    return acceptWord(client.apiKey(), List.of(requestId));
+    return acceptWord(client, List.of(requestId));
   }
 
   public ApiCallResponse<ApiResponse<Boolean>> acceptWord(
       SeedClient client, List<Long> requestIds) {
-    return acceptWord(client.apiKey(), requestIds);
-  }
-
-  public ApiCallResponse<ApiResponse<Boolean>> acceptWord(String apiKey, List<Long> requestIds) {
     String requestPath =
         requestIds.stream()
             .map(String::valueOf)
             .collect(Collectors.joining(",", ACCEPT_WORD_PATH, ""));
-    var requestBuilder = mockMvcTester.post().uri(requestPath);
+    var result =
+        mockMvcTester.post().uri(requestPath).header(API_KEY_HEADER, client.apiKey()).exchange();
 
-    if (apiKey != null) {
-      requestBuilder.header(API_KEY_HEADER, apiKey);
-    }
-
-    return ApiCallResponse.of(
-        requestBuilder.exchange(), objectMapper, new TypeReference<ApiResponse<Boolean>>() {});
+    return ApiCallResponse.of(result, objectMapper, new TypeReference<ApiResponse<Boolean>>() {});
   }
 }
