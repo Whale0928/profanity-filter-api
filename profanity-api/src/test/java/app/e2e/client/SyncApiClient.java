@@ -34,34 +34,11 @@ public final class SyncApiClient {
   }
 
   public ApiCallResponse<ResultMessage> doSync(SeedClient client, String password) {
-    return doSync(client.apiKey(), password);
-  }
-
-  public ApiCallResponse<ResultMessage> doSync(String apiKey, String password) {
-    if (apiKey == null && password == null) {
-      return ApiCallResponse.of(
-          mockMvcTester.get().uri(SYNC_PATH).exchange(), objectMapper, ResultMessage.class);
-    }
-
-    if (apiKey == null) {
-      return ApiCallResponse.of(
-          mockMvcTester.get().uri(SYNC_PATH + "?password={password}", password).exchange(),
-          objectMapper,
-          ResultMessage.class);
-    }
-
-    if (password == null) {
-      return ApiCallResponse.of(
-          mockMvcTester.get().uri(SYNC_PATH).header(API_KEY_HEADER, apiKey).exchange(),
-          objectMapper,
-          ResultMessage.class);
-    }
-
     return ApiCallResponse.of(
         mockMvcTester
             .get()
             .uri(SYNC_PATH + "?password={password}", password)
-            .header(API_KEY_HEADER, apiKey)
+            .header(API_KEY_HEADER, client.apiKey())
             .exchange(),
         objectMapper,
         ResultMessage.class);

@@ -6,13 +6,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import app.application.client.APIKeyGenerator;
 import app.core.data.manage.response.ResultMessage;
+import app.core.data.response.ApiResponse;
 import app.core.data.response.constant.StatusCode;
 import app.e2e.client.ApiCallResponse;
 import app.e2e.client.SyncApiClient;
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
 class SyncE2ETest extends AbstractApiTester {
 
@@ -40,22 +43,24 @@ class SyncE2ETest extends AbstractApiTester {
   @DisplayName("API key가 없으면 인증 실패 응답을 반환한다")
   void doSync_whenApiKeyMissing_returnsUnauthorized() throws Exception {
     // when
-    ApiCallResponse<ResultMessage> response = syncApi.doSync((String) null, ADMIN.password());
+    MvcTestResult response = doSyncHttp(null, ADMIN.password());
+    ApiResponse<Void> body = readErrorBody(response);
 
     // then
-    assertThat(response.result()).hasStatusOk();
-    assertThat(response.errorBody().status().code()).isEqualTo(StatusCode.UNAUTHORIZED.code());
+    assertThat(response).hasStatusOk();
+    assertThat(body.status().code()).isEqualTo(StatusCode.UNAUTHORIZED.code());
   }
 
   @Test
   @DisplayName("API key 형식이 올바르지 않으면 인증 실패 응답을 반환한다")
   void doSync_whenApiKeyFormatInvalid_returnsInvalidApiKey() throws Exception {
     // when
-    ApiCallResponse<ResultMessage> response = syncApi.doSync("invalid-api-key", ADMIN.password());
+    MvcTestResult response = doSyncHttp("invalid-api-key", ADMIN.password());
+    ApiResponse<Void> body = readErrorBody(response);
 
     // then
-    assertThat(response.result()).hasStatusOk();
-    assertThat(response.errorBody().status().code()).isEqualTo(StatusCode.INVALID_API_KEY.code());
+    assertThat(response).hasStatusOk();
+    assertThat(body.status().code()).isEqualTo(StatusCode.INVALID_API_KEY.code());
   }
 
   @Test
@@ -65,22 +70,24 @@ class SyncE2ETest extends AbstractApiTester {
     String unknownApiKey = apiKeyGenerator.generateApiKey();
 
     // when
-    ApiCallResponse<ResultMessage> response = syncApi.doSync(unknownApiKey, ADMIN.password());
+    MvcTestResult response = doSyncHttp(unknownApiKey, ADMIN.password());
+    ApiResponse<Void> body = readErrorBody(response);
 
     // then
-    assertThat(response.result()).hasStatusOk();
-    assertThat(response.errorBody().status().code()).isEqualTo(StatusCode.NOT_FOUND_CLIENT.code());
+    assertThat(response).hasStatusOk();
+    assertThat(body.status().code()).isEqualTo(StatusCode.NOT_FOUND_CLIENT.code());
   }
 
   @Test
   @DisplayName("password 파라미터가 없으면 잘못된 요청 응답을 반환한다")
   void doSync_whenPasswordParameterMissing_returnsBadRequest() throws Exception {
     // when
-    ApiCallResponse<ResultMessage> response = syncApi.doSync(READ_CLIENT.apiKey(), null);
+    MvcTestResult response = doSyncHttp(READ_CLIENT.apiKey(), null);
+    ApiResponse<Void> body = readErrorBody(response);
 
     // then
-    assertThat(response.result()).hasStatusOk();
-    assertThat(response.errorBody().status().code()).isEqualTo(StatusCode.BAD_REQUEST.code());
+    assertThat(response).hasStatusOk();
+    assertThat(body.status().code()).isEqualTo(StatusCode.BAD_REQUEST.code());
   }
 
   @Test
@@ -105,5 +112,26 @@ class SyncE2ETest extends AbstractApiTester {
     assertThat(response.result()).hasStatusOk();
     assertThat(response.errorBody().status().code())
         .isEqualTo(StatusCode.INTERNAL_SERVER_ERROR.code());
+  }
+
+  private MvcTestResult doSyncHttp(String apiKey, String password) {
+    if (password == null) {
+      var request = mockMvcTester.get().uri("/api/v1/sync");
+      if (apiKey != null) {
+        request.header("x-api-key", apiKey);
+      }
+      return request.exchange();
+    }
+
+    var request = mockMvcTester.get().uri("/api/v1/sync?password={password}", password);
+    if (apiKey != null) {
+      request.header("x-api-key", apiKey);
+    }
+    return request.exchange();
+  }
+
+  private ApiResponse<Void> readErrorBody(MvcTestResult response) throws Exception {
+    return objectMapper.readValue(
+        response.getResponse().getContentAsString(), new TypeReference<>() {});
   }
 }

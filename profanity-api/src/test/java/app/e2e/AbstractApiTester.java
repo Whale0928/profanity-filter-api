@@ -15,7 +15,6 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.testcontainers.mysql.MySQLContainer;
 
-@SuppressWarnings("resource")
 @SpringBootTest(
     classes = ProfanityFilterApplication.class,
     properties = {
