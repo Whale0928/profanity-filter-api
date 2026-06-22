@@ -6,6 +6,7 @@ import app.core.data.response.constant.StatusCode;
 import app.core.exception.BusinessException;
 import app.domain.client.PermissionsType;
 import app.dto.request.WordRequest;
+import app.dto.response.MessageResponse;
 import app.security.SecurityContextUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -39,8 +41,9 @@ public class WordManagementController {
           severity는 LOW, MEDIUM, HIGH를 사용하고 type은 ADD, REMOVE, MODIFY를 사용합니다.
           """,
       security = @SecurityRequirement(name = "ApiKeyAuth"))
-  @PostMapping("/request")
-  public ResponseEntity<?> requestNewWord(@RequestBody @Valid WordRequest request) {
+  @PostMapping(value = "/request", produces = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<ApiResponse<MessageResponse>> requestNewWord(
+      @RequestBody @Valid WordRequest request) {
     // 신규 비속어 등록 요청 로직
     log.info("request: {}", request);
     String word = request.word();
