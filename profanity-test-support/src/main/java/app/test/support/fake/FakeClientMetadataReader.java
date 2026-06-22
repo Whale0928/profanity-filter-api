@@ -1,4 +1,4 @@
-package app.fixture;
+package app.test.support.fake;
 
 import app.application.client.KeyGenerator;
 import app.application.client.MetadataReader;
@@ -16,13 +16,13 @@ public class FakeClientMetadataReader implements MetadataReader {
 
   public FakeClientMetadataReader(KeyGenerator apiKeyGenerator) throws NoSuchAlgorithmException {
     this.apiKeyGenerator = apiKeyGenerator;
+    validKeys.clear();
     validKeys.add(apiKeyGenerator.generateApiKey());
     validKeys.add(apiKeyGenerator.generateApiKey());
   }
 
   @Override
   public ClientMetadata read(String apiKey) {
-
     if (Boolean.FALSE.equals(apiKeyGenerator.validateApiKey(apiKey))) {
       throw new IllegalArgumentException(StatusCode.INVALID_API_KEY.stringCode());
     }
@@ -37,9 +37,8 @@ public class FakeClientMetadataReader implements MetadataReader {
               PermissionsType.allPermissions().stream().map(PermissionsType::getValue).toList())
           .issuedAt("2025-09-01T00:00:00Z")
           .build();
-    } else {
-      throw new NoSuchElementException(StatusCode.NOT_FOUND_CLIENT.stringCode());
     }
+    throw new NoSuchElementException(StatusCode.NOT_FOUND_CLIENT.stringCode());
   }
 
   @Override

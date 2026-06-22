@@ -9,11 +9,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import app.TestConfig;
+import app.core.data.constant.Mode;
 import app.core.data.response.FilterApiResponse;
 import app.dto.request.ApiRequest;
-import app.fixture.ApiTestFixture;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -30,14 +29,8 @@ import org.springframework.test.web.servlet.MockMvc;
 @Import(TestConfig.class)
 class ProfanityControllerTest {
   private static final String REQUEST_URL = "/api/v1/filter";
-  private ApiTestFixture fixture;
   @Autowired private ObjectMapper mapper;
   @Autowired private MockMvc mockMvc;
-
-  @BeforeEach
-  void setUp() {
-    fixture = new ApiTestFixture();
-  }
 
   @Nested
   @DisplayName("Quick 타입의 요청을 할 수 있다.")
@@ -47,7 +40,7 @@ class ProfanityControllerTest {
     @DisplayName("Applicaion/json 형식으로 요청을 보낼 수 있다.")
     void test1() throws Exception {
       // given
-      ApiRequest quickRequest = fixture.createQuickRequest("안녕하세요. 비속어를 검증합니다.");
+      ApiRequest quickRequest = quickRequest("안녕하세요. 비속어를 검증합니다.");
 
       // when
       var response =
@@ -74,7 +67,7 @@ class ProfanityControllerTest {
     @DisplayName("Urlencoded 형식으로 요청을 보낼 수 있다.")
     void test2() throws Exception {
       // given
-      ApiRequest quickRequest = fixture.createQuickRequest("안녕하세요. 비속어를 검증합니다.");
+      ApiRequest quickRequest = quickRequest("안녕하세요. 비속어를 검증합니다.");
 
       // when
       var response =
@@ -102,7 +95,7 @@ class ProfanityControllerTest {
     @DisplayName("필터링된 단어가 없는 경우 빈 리스트를 반환한다.")
     void test3() throws Exception {
       // given
-      ApiRequest quickRequest = fixture.createQuickRequest("안녕하세요. 검증합니다.");
+      ApiRequest quickRequest = quickRequest("안녕하세요. 검증합니다.");
 
       // when
       var response =
@@ -151,7 +144,7 @@ class ProfanityControllerTest {
     @DisplayName("Applicaion/json 형식으로 요청을 보낼 수 있다.")
     void test1() throws Exception {
       // given
-      ApiRequest normalRequest = fixture.createNormalRequest("안녕하세요. 비속어를 검증합니다.");
+      ApiRequest normalRequest = normalRequest("안녕하세요. 비속어를 검증합니다.");
 
       // when
       var response =
@@ -178,7 +171,7 @@ class ProfanityControllerTest {
     @DisplayName("Urlencoded 형식으로 요청을 보낼 수 있다.")
     void test2() throws Exception {
       // given
-      ApiRequest normalRequest = fixture.createNormalRequest("안녕하세요. 비속어를 검증합니다.");
+      ApiRequest normalRequest = normalRequest("안녕하세요. 비속어를 검증합니다.");
 
       // when
       var response =
@@ -213,7 +206,7 @@ class ProfanityControllerTest {
       // given
       final String text = "안녕하세요. 비속어를 검증합니다.";
       final String filteredText = "안녕하세요. ***를 검증합니다.";
-      final ApiRequest sanitizeRequest = fixture.createSanitizeRequest(text);
+      final ApiRequest sanitizeRequest = sanitizeRequest(text);
 
       // when
       var response =
@@ -242,7 +235,7 @@ class ProfanityControllerTest {
       // given
       final String text = "안녕하세요. 비속어를 검증합니다.";
       final String filteredText = "안녕하세요. ***를 검증합니다.";
-      final ApiRequest sanitizeRequest = fixture.createSanitizeRequest(text);
+      final ApiRequest sanitizeRequest = sanitizeRequest(text);
 
       // when
       var response =
@@ -265,5 +258,17 @@ class ProfanityControllerTest {
               .anyMatch(d -> sanitizeRequest.text().contains(d.filteredWord())));
       assertEquals(filteredText, responseEntity.filtered());
     }
+  }
+
+  private static ApiRequest quickRequest(String text) {
+    return new ApiRequest(text, Mode.QUICK, null);
+  }
+
+  private static ApiRequest normalRequest(String text) {
+    return new ApiRequest(text, Mode.NORMAL, null);
+  }
+
+  private static ApiRequest sanitizeRequest(String text) {
+    return new ApiRequest(text, Mode.FILTER, null);
   }
 }

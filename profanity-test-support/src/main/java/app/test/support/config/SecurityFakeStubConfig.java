@@ -1,7 +1,8 @@
-package app.fixture;
+package app.test.support.config;
 
 import app.application.client.KeyGenerator;
 import app.application.client.MetadataReader;
+import app.test.support.fake.FakeClientMetadataReader;
 import java.security.NoSuchAlgorithmException;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;

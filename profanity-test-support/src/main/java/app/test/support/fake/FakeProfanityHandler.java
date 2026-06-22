@@ -1,4 +1,4 @@
-package app.fixture;
+package app.test.support.fake;
 
 import app.application.filter.ProfanityHandler;
 import app.core.data.constant.Mode;
@@ -14,12 +14,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 public class FakeProfanityHandler implements ProfanityHandler {
-  private static final List<String> profaityWordList = List.of("비속어", "욕설");
-  private static final Logger log = LogManager.getLogger(FakeProfanityHandler.class);
+  private static final List<String> PROFANITY_WORDS = List.of("비속어", "욕설");
 
   @Override
   public FilterApiResponse requestFacadeFilter(FilterRequest filterRequest, UUID trackingId) {
@@ -35,12 +32,10 @@ public class FakeProfanityHandler implements ProfanityHandler {
 
   @Override
   public FilterApiResponse quickFilter(String text, UUID trackingId) {
-    log.info("[domain] fake call : quickFilter");
-
     ElapsedStartAt startAt = ElapsedStartAt.now();
 
     Set<Detected> detectedSet =
-        profaityWordList.stream()
+        PROFANITY_WORDS.stream()
             .filter(text::contains)
             .findFirst()
             .map(m -> Collections.singleton(Detected.of(m.length(), m)))
@@ -59,10 +54,9 @@ public class FakeProfanityHandler implements ProfanityHandler {
 
   @Override
   public FilterApiResponse normalFilter(String text, UUID trackingId) {
-    log.info("[domain] fake call : normalFilter");
     ElapsedStartAt startAt = ElapsedStartAt.now();
-    Set<Detected> collect =
-        profaityWordList.stream()
+    Set<Detected> detected =
+        PROFANITY_WORDS.stream()
             .filter(text::contains)
             .map(m -> Detected.of(m.length(), m))
             .collect(Collectors.toSet());
@@ -71,7 +65,7 @@ public class FakeProfanityHandler implements ProfanityHandler {
     return FilterApiResponse.builder()
         .trackingId(UUID.randomUUID())
         .status(Status.of(StatusCode.OK))
-        .detected(collect)
+        .detected(detected)
         .filtered("")
         .elapsed(ended)
         .build();
@@ -79,25 +73,22 @@ public class FakeProfanityHandler implements ProfanityHandler {
 
   @Override
   public FilterApiResponse sanitizeProfanity(String text, UUID trackingId) {
-
-    log.info("[domain] fake call : sanitizeProfanity");
-
     ElapsedStartAt startAt = ElapsedStartAt.now();
-    Set<Detected> collect =
-        profaityWordList.stream()
+    Set<Detected> detected =
+        PROFANITY_WORDS.stream()
             .filter(text::contains)
             .map(m -> Detected.of(m.length(), m))
             .collect(Collectors.toSet());
     Elapsed ended = Elapsed.end(startAt);
 
-    for (String profaityWord : profaityWordList) {
-      text = text.replaceAll(profaityWord, "*".repeat(profaityWord.length()));
+    for (String profanityWord : PROFANITY_WORDS) {
+      text = text.replaceAll(profanityWord, "*".repeat(profanityWord.length()));
     }
 
     return FilterApiResponse.builder()
         .trackingId(UUID.randomUUID())
         .status(Status.of(StatusCode.OK))
-        .detected(collect)
+        .detected(detected)
         .filtered(text)
         .elapsed(ended)
         .build();
@@ -105,13 +96,11 @@ public class FakeProfanityHandler implements ProfanityHandler {
 
   @Override
   public FilterApiResponse advancedFilter(String text, UUID trackingId) {
-    log.info("[domain]  fake call : advancedFilter");
     return sanitizeProfanity(text, trackingId);
   }
 
   @Override
   public FilterApiResponse requestAsyncFilter(FilterRequest request, String callbackUrl) {
-    // todo : 비동기 처리
-    return null;
+    throw new UnsupportedOperationException("Async filter is not supported by fake handler");
   }
 }

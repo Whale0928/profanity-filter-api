@@ -1,0 +1,15 @@
+dependencies {
+    api project(':profanity-domain')
+    api 'org.springframework.boot:spring-boot-test'
+    api 'org.testcontainers:testcontainers-mysql'
+
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.springframework:spring-jdbc'
+    runtimeOnly 'org.flywaydb:flyway-mysql'
+    runtimeOnly 'com.mysql:mysql-connector-j'
+
+    testImplementation project(':profanity-storage:rdb')
+    testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
+}
+
+tasks.register("prepareKotlinBuildScriptModel") {}
