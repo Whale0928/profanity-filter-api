@@ -32,7 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/filter")
+@RequestMapping(value = "/api/v1/filter", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Profanity Filter", description = "비속어 검출 및 필터링 API")
 public class ProfanityController {
 
@@ -50,7 +50,7 @@ public class ProfanityController {
           """,
       security = @SecurityRequirement(name = "ApiKeyAuth"))
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-  public ResponseEntity<?> basicProfanity(
+  public ResponseEntity<FilterApiResponse> basicProfanity(
       HttpServletRequest httpRequest,
       @Parameter(description = "클라이언트 등록 후 발급받은 API Key", required = true)
           @RequestHeader(value = "x-api-key")
@@ -87,7 +87,7 @@ public class ProfanityController {
       description = "application/x-www-form-urlencoded 형식으로 비속어 검사를 요청합니다.",
       security = @SecurityRequirement(name = "ApiKeyAuth"))
   @PostMapping(consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-  public ResponseEntity<?> basicProfanityByUrlencodedValue(
+  public ResponseEntity<FilterApiResponse> basicProfanityByUrlencodedValue(
       HttpServletRequest httpRequest,
       @Parameter(description = "클라이언트 등록 후 발급받은 API Key", required = true)
           @RequestHeader(value = "x-api-key")
@@ -117,7 +117,7 @@ public class ProfanityController {
       description = "word 쿼리 파라미터로 전달한 단어를 고급 필터링합니다.",
       security = @SecurityRequirement(name = "ApiKeyAuth"))
   @PostMapping("/advanced")
-  public ResponseEntity<?> advancedProfanity(
+  public ResponseEntity<FilterApiResponse> advancedProfanity(
       @Parameter(description = "클라이언트 등록 후 발급받은 API Key", required = true)
           @RequestHeader(value = "x-api-key")
           String apiKey,

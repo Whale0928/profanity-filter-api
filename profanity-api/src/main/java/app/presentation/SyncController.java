@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,8 +29,8 @@ public class SyncController {
   private final SyncHandler syncHandler;
 
   @Operation(summary = "비속어 데이터 동기화", description = "관리 비밀번호로 비속어 데이터를 동기화합니다.")
-  @GetMapping
-  public ResponseEntity<?> doSync(
+  @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<ResultMessage> doSync(
       HttpServletRequest httpRequest,
       @Parameter(description = "동기화 관리 비밀번호", required = true) @RequestParam("password")
           String password) {

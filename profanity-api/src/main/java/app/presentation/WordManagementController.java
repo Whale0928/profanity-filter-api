@@ -63,8 +63,8 @@ public class WordManagementController {
       summary = "단어 변경 요청 승인",
       description = "WRITE 권한을 가진 클라이언트가 단어 변경 요청을 승인합니다.",
       security = @SecurityRequirement(name = "ApiKeyAuth"))
-  @PostMapping("/accept/{requestId}")
-  public ResponseEntity<?> acceptWord(
+  @PostMapping(value = "/accept/{requestId}", produces = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<ApiResponse<Boolean>> acceptWord(
       @Parameter(description = "승인할 요청 ID 목록", required = true) @PathVariable
           List<Long> requestId) {
     final String write = PermissionsType.WRITE.getValue();
