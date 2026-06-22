@@ -9,7 +9,7 @@ import lombok.Builder;
 @Builder
 @Schema(description = "신규 클라이언트 등록 요청")
 public record ClientRegistRequest(
-    @Schema(description = "이름 또는 조직명. 실제 정보 입력을 권장합니다.", example = "openerd")
+    @Schema(description = "이름 또는 조직명. 실제 정보 입력을 권장합니다.", example = "대학과제 프로젝트 X")
         @NotBlank(message = "이름(조직명)은 필수 입력값입니다")
         @Size(min = 2, max = 50, message = "이름은 2자 이상 50자 이하로 입력해주세요")
         String name,
