@@ -45,8 +45,34 @@ public final class ProfanityApiClient {
     return ApiCallResponse.of(result, objectMapper, FilterApiResponse.class);
   }
 
+  public ApiCallResponse<FilterApiResponse> basicProfanityByUrlencodedValue(
+      SeedClient client, String text, Mode mode) {
+    var result =
+        mockMvcTester
+            .post()
+            .uri(FILTER_PATH)
+            .header(API_KEY_HEADER, client.apiKey())
+            .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+            .param("text", text)
+            .param("mode", mode.name())
+            .exchange();
+
+    return ApiCallResponse.of(result, objectMapper, FilterApiResponse.class);
+  }
+
   public ApiCallResponse<FilterApiResponse> basicProfanity(
       SeedClient client, String text, Mode mode) throws Exception {
     return basicProfanity(client, ApiRequest.builder().text(text).mode(mode).build());
+  }
+
+  public ApiCallResponse<FilterApiResponse> advancedProfanity(SeedClient client, String word) {
+    var result =
+        mockMvcTester
+            .post()
+            .uri(FILTER_PATH + "/advanced?word={word}", word)
+            .header(API_KEY_HEADER, client.apiKey())
+            .exchange();
+
+    return ApiCallResponse.of(result, objectMapper, FilterApiResponse.class);
   }
 }

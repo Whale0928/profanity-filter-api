@@ -1,5 +1,6 @@
 package app.test.support.probe;
 
+import app.core.data.constant.Mode;
 import app.test.support.fixture.SeedClient;
 import app.test.support.fixture.SeedWord;
 import java.sql.Connection;
@@ -25,13 +26,17 @@ public final class RecordProbe {
   }
 
   public int countFilterRecords(SeedClient client, String requestText, SeedWord word) {
+    return countRecords(client, requestText, Mode.FILTER, word.word());
+  }
+
+  public int countRecords(SeedClient client, String requestText, Mode mode, String words) {
     String sql =
         """
         SELECT COUNT(*)
         FROM records
         WHERE api_key = ?
           AND request_text = ?
-          AND mode = 'FILTER'
+          AND mode = ?
           AND words = ?
         """;
 
@@ -39,7 +44,33 @@ public final class RecordProbe {
         PreparedStatement statement = connection.prepareStatement(sql)) {
       statement.setString(1, client.apiKey());
       statement.setString(2, requestText);
-      statement.setString(3, word.word());
+      statement.setString(3, mode.name());
+      statement.setString(4, words);
+
+      try (ResultSet resultSet = statement.executeQuery()) {
+        resultSet.next();
+        return resultSet.getInt(1);
+      }
+    } catch (Exception e) {
+      throw new IllegalStateException("Failed to inspect records table", e);
+    }
+  }
+
+  public int countRecords(SeedClient client, String requestText, Mode mode) {
+    String sql =
+        """
+        SELECT COUNT(*)
+        FROM records
+        WHERE api_key = ?
+          AND request_text = ?
+          AND mode = ?
+        """;
+
+    try (Connection connection = dataSource.getConnection();
+        PreparedStatement statement = connection.prepareStatement(sql)) {
+      statement.setString(1, client.apiKey());
+      statement.setString(2, requestText);
+      statement.setString(3, mode.name());
 
       try (ResultSet resultSet = statement.executeQuery()) {
         resultSet.next();
