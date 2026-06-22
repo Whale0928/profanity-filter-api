@@ -1,49 +1,48 @@
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 
 type PagePath = "/" | `/docs${string}`;
 
 const DocsPage = lazy(() => import("./DocsPage"));
 
-const storyBlocks = [
+const identityOptions = [
   {
-    id: "block-2-1",
-    label: "입력",
-    intro: "텍스트를 보냅니다",
-    title: "한국어 문장을 그대로 전달",
-    body: "댓글, 채팅, 게시글처럼 사용자가 입력한 문장을 API 요청 본문에 담아 보냅니다.",
-    visualLabel: "request",
-    visualTitle: "POST /api/v1/filter",
-    visualLines: ["text", "mode", "X-API-KEY"],
+    id: "free-practical",
+    tabLabel: "무료/실용",
+    label: "작은 서비스",
+    intro: "비용 때문에 입력 안전망을 미루지 않게",
+    title: "작은 서비스도 한국어 입력을 안전하게 다룰 수 있게",
+    body: "포트폴리오, 학습, 비영리 서비스가 댓글과 게시글 저장 전에 기본 비속어 필터링을 붙일 수 있도록 만든 무료 REST API입니다.",
+    points: ["무료로 시작", "키 발급 후 호출", "현실적인 첫 안전망"],
+    proofItems: ["키 발급 후 바로 호출", "문서 보고 붙이기", "상업용은 KISO 권장"],
+    visualLabel: "추천 대상",
+    visualTitle: "무료로 시작하는 입력 안전망",
+    visualLines: ["학습 서비스", "비영리 프로젝트", "사이드 프로젝트"],
   },
   {
-    id: "block-2-2",
-    label: "검출",
-    intro: "비속어를 찾습니다",
-    title: "Aho-Corasick 기반 빠른 매칭",
-    body: "등록된 비속어 사전을 기준으로 문장 안의 금칙어를 찾아 위치와 길이를 함께 계산합니다.",
-    visualLabel: "detect",
-    visualTitle: "욕설 → match",
-    visualLines: ["word", "startIndex", "endIndex"],
+    id: "korean-focused",
+    tabLabel: "한국어 중심",
+    label: "한국어 필터",
+    intro: "영어권 moderation이 놓치는 한국어 입력을 기준으로",
+    title: "한국어 비속어 사전을 빠르게 검색합니다",
+    body: "Aho-Corasick Trie로 등록된 비속어 목록을 한 번에 매칭하고, 초성/한글/영문이 섞인 사용자 입력에서도 검출 위치를 계산합니다.",
+    points: ["빠른 사전 검색", "검출부터 마스킹까지", "단어 목록 동기화"],
+    proofItems: ["첫 단어만 빠르게 확인", "전체 검출", "마스킹 문장 반환"],
+    visualLabel: "검출 기준",
+    visualTitle: "한국어 문장을 기준으로",
+    visualLines: ["초성 입력", "한글 문장", "영문 혼합"],
   },
   {
-    id: "block-2-3",
-    label: "결과",
-    intro: "원하는 방식으로 받습니다",
-    title: "검출, 전체 목록, 마스킹",
-    body: "QUICK, NORMAL, FILTER 모드로 첫 검출 여부부터 마스킹된 문장까지 필요한 응답만 선택합니다.",
-    visualLabel: "response",
-    visualTitle: "FILTER",
-    visualLines: ["QUICK", "NORMAL", "FILTER"],
-  },
-  {
-    id: "block-2-4",
-    label: "연동",
-    intro: "서비스 앞단에 붙입니다",
-    title: "입력 저장 전에 한 번 호출",
-    body: "게시글 저장, 댓글 등록, 채팅 전송 같은 사용자 입력 흐름 앞에 필터링 단계를 추가합니다.",
-    visualLabel: "service",
-    visualTitle: "before save",
-    visualLines: ["comment", "chat", "post"],
+    id: "developer-integration",
+    tabLabel: "개발자 연동",
+    label: "REST API",
+    intro: "서비스 흐름을 크게 바꾸지 않고",
+    title: "저장 전에 API 한 번으로 붙입니다",
+    body: "댓글, 채팅, 게시글 저장 직전에 필터 API를 호출하고, 검출 결과와 마스킹된 문장, 응답 코드를 확인하면 됩니다.",
+    points: ["문장 전달", "동기 또는 콜백 처리", "문서 기반 연동"],
+    proofItems: ["필터 API 호출", "문장 전달", "응답 코드 확인", "키로 인증"],
+    visualLabel: "연동 흐름",
+    visualTitle: "저장 전에 한 번 확인",
+    visualLines: ["입력 받기", "필터 호출", "결과 반영"],
   },
 ];
 
@@ -193,85 +192,67 @@ function Hero({ onNavigate }: { onNavigate: (path: PagePath) => void }) {
 }
 
 function StoryBlocks() {
-  const [activeStory, setActiveStory] = useState(storyBlocks[0].id);
-  const itemRefs = useRef<Array<HTMLElement | null>>([]);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visibleEntry = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-
-        if (visibleEntry instanceof IntersectionObserverEntry) {
-          const storyId = visibleEntry.target.getAttribute("data-story");
-          if (storyId) {
-            setActiveStory(storyId);
-          }
-        }
-      },
-      {
-        root: null,
-        rootMargin: "-22% 0px -22% 0px",
-        threshold: [0.35, 0.5, 0.7],
-      },
-    );
-
-    itemRefs.current.forEach((item) => {
-      if (item) {
-        observer.observe(item);
-      }
-    });
-
-    return () => observer.disconnect();
-  }, []);
+  const [activeIdentityId, setActiveIdentityId] = useState(identityOptions[0].id);
+  const activeIdentity =
+    identityOptions.find((option) => option.id === activeIdentityId) ?? identityOptions[0];
 
   return (
     <section className="story-section" id="story" aria-labelledby="story-title">
       <div className="story-copy">
         <p className="section-kicker">02</p>
         <h2 id="story-title">한국어 문장을 API로 필터링합니다</h2>
-        <div className="story-markers" aria-label="흐름 단계">
-          {storyBlocks.map((block, index) => (
-            <span
-              aria-current={block.id === activeStory ? "step" : undefined}
-              key={block.id}
+        <div className="identity-tabs" role="tablist" aria-label="2번 블록 메시지 타입">
+          {identityOptions.map((option) => (
+            <button
+              aria-controls="identity-panel"
+              aria-selected={option.id === activeIdentity.id}
+              id={`${option.id}-tab`}
+              key={option.id}
+              onClick={() => setActiveIdentityId(option.id)}
+              role="tab"
+              type="button"
             >
-              {String(index + 1).padStart(2, "0")} {block.label}
-            </span>
+              {option.tabLabel}
+            </button>
           ))}
         </div>
       </div>
       <div className="story-track">
-        {storyBlocks.map((block, index) => (
-          <article
-            className="story-block"
-            data-active={block.id === activeStory}
-            data-story={block.id}
-            key={block.id}
-            ref={(node) => {
-              itemRefs.current[index] = node;
-            }}
-          >
-            <p className="story-intro">{block.intro}</p>
-            <div className="story-panel">
-              <div>
-                <span>{block.label}</span>
-                <h3>{block.title}</h3>
-                <p>{block.body}</p>
-              </div>
-              <div className="story-visual" aria-hidden="true">
-                <span>{block.visualLabel}</span>
-                <strong>{block.visualTitle}</strong>
-                <div>
-                  {block.visualLines.map((line) => (
-                    <i key={line}>{line}</i>
-                  ))}
-                </div>
+        <article
+          aria-labelledby={`${activeIdentity.id}-tab`}
+          className="story-block"
+          data-active="true"
+          id="identity-panel"
+          role="tabpanel"
+        >
+          <p className="story-intro">{activeIdentity.intro}</p>
+          <div className="story-panel">
+            <div>
+              <span>{activeIdentity.label}</span>
+              <h3>{activeIdentity.title}</h3>
+              <p>{activeIdentity.body}</p>
+              <div className="identity-points">
+                {activeIdentity.points.map((point) => (
+                  <b key={point}>{point}</b>
+                ))}
               </div>
             </div>
-          </article>
-        ))}
+            <div className="story-visual" aria-hidden="true">
+              <span>{activeIdentity.visualLabel}</span>
+              <strong>{activeIdentity.visualTitle}</strong>
+              <div>
+                {activeIdentity.visualLines.map((line) => (
+                  <i key={line}>{line}</i>
+                ))}
+              </div>
+            </div>
+            <div className="identity-proof-row" aria-label="선택한 메시지 근거">
+              {activeIdentity.proofItems.map((item) => (
+                <code key={item}>{item}</code>
+              ))}
+            </div>
+          </div>
+        </article>
       </div>
     </section>
   );
