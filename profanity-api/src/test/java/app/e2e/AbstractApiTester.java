@@ -5,7 +5,6 @@ import app.test.support.container.MySqlTestContainer;
 import app.test.support.probe.RecordProbe;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import javax.sql.DataSource;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -49,11 +48,6 @@ abstract class AbstractApiTester {
     registry.add("spring.datasource.username", MYSQL::getUsername);
     registry.add("spring.datasource.password", MYSQL::getPassword);
     registry.add("spring.datasource.driver-class-name", MYSQL::getDriverClassName);
-  }
-
-  @AfterAll
-  static void stopContainer() {
-    MYSQL.stop();
   }
 
   @BeforeEach
