@@ -95,9 +95,7 @@ subprojects {
         outputs.upToDateWhen { false }
         testClassesDirs = sourceSets.test.output.classesDirs
         classpath = sourceSets.test.runtimeClasspath
-        useJUnitPlatform {
-            excludeTags 'restdocs'
-        }
+        useJUnitPlatform()
         exclude 'app/e2e/**'
         exclude 'app/test/support/container/**'
         testLogging {
@@ -133,7 +131,7 @@ tasks.register('staticCheck') {
 
 tasks.register('unitTest') {
     group = 'verification'
-    description = 'Docker와 RestDocs를 제외한 단위 및 슬라이스 테스트를 실행합니다.'
+    description = 'Docker를 제외한 단위 및 슬라이스 테스트를 실행합니다.'
     dependsOn subprojects.unitTest
 }
 

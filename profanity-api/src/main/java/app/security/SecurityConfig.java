@@ -56,6 +56,8 @@ public class SecurityConfig {
                     .permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/v1/ping")
                     .permitAll()
+                    .requestMatchers(HttpMethod.GET, "/openapi.json")
+                    .permitAll()
                     .requestMatchers("/api/v1/clients/send-email")
                     .permitAll()
                     .requestMatchers("/api/v1/auth/**")

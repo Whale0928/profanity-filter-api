@@ -7,8 +7,10 @@ junit-jupiter = "5.10.2"
 commons-lang3 = "3.18.0"
 testcontainers = "2.0.5"
 flyway = "11.20.3"
+springdoc = "2.8.17"
 
 [libraries]
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit-jupiter" }
 commons-lang3 = { module = "org.apache.commons:commons-lang3", version.ref = "commons-lang3" }
+springdoc-openapi-starter-webmvc-api = { module = "org.springdoc:springdoc-openapi-starter-webmvc-api", version.ref = "springdoc" }

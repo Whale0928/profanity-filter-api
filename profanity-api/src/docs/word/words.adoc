@@ -1,3 +1,0 @@
-== 단어 요청 ==
-
-include::api/request.adoc[]

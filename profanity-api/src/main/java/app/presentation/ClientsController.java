@@ -13,6 +13,10 @@ import app.dto.request.ClientUpdateRequest;
 import app.dto.request.MailPayloadRequest;
 import app.dto.response.ClientsRegistResponse;
 import app.security.SecurityContextUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -31,11 +35,16 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/clients")
+@Tag(name = "Clients", description = "API Key 발급 및 클라이언트 정보 관리 API")
 public class ClientsController {
   private final ClientsCommandService clientsCommandService;
   private final ClientMetadataReader clientReader;
   private final EmailService emailService;
 
+  @Operation(
+      summary = "클라이언트 정보 확인",
+      description = "발급된 API Key를 사용하여 가입 시 작성한 클라이언트 정보를 확인합니다.",
+      security = @SecurityRequirement(name = "ApiKeyAuth"))
   @GetMapping
   public ResponseEntity<?> get() {
     final String apikey = SecurityContextUtil.getCurrentApikey();
@@ -46,6 +55,10 @@ public class ClientsController {
     return ApiResponse.ok(read);
   }
 
+  @Operation(
+      summary = "클라이언트 폐기",
+      description = "발급된 API Key를 사용하여 클라이언트 정보를 폐기합니다.",
+      security = @SecurityRequirement(name = "ApiKeyAuth"))
   @DeleteMapping
   public ResponseEntity<?> discardClient() {
     final String apikey = SecurityContextUtil.getCurrentApikey();
@@ -53,6 +66,14 @@ public class ClientsController {
     return ApiResponse.ok(Boolean.TRUE);
   }
 
+  @Operation(
+      summary = "신규 클라이언트 등록",
+      description =
+          """
+          사용자 정보를 등록하고 API Key를 발급합니다.
+          생성 시 입력 정보는 최대한 실제 정보를 입력해야 하며, 비정상적인 발급 요청은 무통보 제거될 수 있습니다.
+          발급된 API Key는 반드시 안전하게 보관해야 합니다.
+          """)
   @PostMapping("/register")
   public ResponseEntity<?> registerClient(@RequestBody @Valid ClientRegistRequest request) {
     final ClientRegistCommand command = request.toCommand();
@@ -60,6 +81,10 @@ public class ClientsController {
     return ApiResponse.ok(response);
   }
 
+  @Operation(
+      summary = "클라이언트 정보 업데이트",
+      description = "발급된 API Key를 사용하여 클라이언트 발급자 정보와 메모를 업데이트합니다.",
+      security = @SecurityRequirement(name = "ApiKeyAuth"))
   @PostMapping("/update")
   public ResponseEntity<?> updateClient(@RequestBody @Valid ClientUpdateRequest request) {
     final String apikey = SecurityContextUtil.getCurrentApikey();
@@ -70,6 +95,10 @@ public class ClientsController {
     return ApiResponse.ok(response);
   }
 
+  @Operation(
+      summary = "API Key 재발급",
+      description = "발급된 API Key를 사용하여 새 API Key를 재발급합니다. 추후 이메일 인증 등 보안 강화 처리가 추가될 수 있습니다.",
+      security = @SecurityRequirement(name = "ApiKeyAuth"))
   @PostMapping("/reissue")
   public ResponseEntity<?> regenerateApiKey() {
     String currentApiKey = SecurityContextUtil.getCurrentApikey();
@@ -77,8 +106,11 @@ public class ClientsController {
     return ApiResponse.ok(Map.of("newApiKey", newApiKey));
   }
 
+  @Operation(summary = "이메일 인증 코드 발송", description = "발급한 이메일을 통해 인증 코드를 전송합니다.")
   @GetMapping("/send-email")
-  public ResponseEntity<?> sendEmail(@RequestParam("email") String email) {
+  public ResponseEntity<?> sendEmail(
+      @Parameter(description = "인증 코드를 받을 이메일", required = true) @RequestParam("email")
+          String email) {
     boolean verified = clientReader.verifyClientByEmail(email);
     if (Boolean.FALSE.equals(verified)) {
       return ApiResponse.error(Status.of(StatusCode.BAD_REQUEST, "해당 이메일로 가입된 사용자가 없습니다."));
@@ -87,6 +119,7 @@ public class ClientsController {
     return ApiResponse.ok("send email");
   }
 
+  @Operation(summary = "이메일 인증 코드 검증", description = "이메일과 인증 코드를 확인하고 인증된 API Key를 반환합니다.")
   @PutMapping("/send-email")
   public ResponseEntity<?> verifyEmail(@Valid @RequestBody MailPayloadRequest request) {
     boolean verified = emailService.verifyEmailCode(request.email(), request.code());

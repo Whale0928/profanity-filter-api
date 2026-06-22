@@ -13,6 +13,7 @@ public enum ExcludePath {
   EMAIL("send-email", "이메일 관련 API", List.of(HttpMethod.GET, HttpMethod.PUT)),
   HEALTH("health", "헬스 체크 API", List.of(HttpMethod.GET)),
   PING("ping", "헬스 체크 API", List.of(HttpMethod.GET)),
+  OPENAPI("openapi.json", "OpenAPI JSON 스펙", List.of(HttpMethod.GET)),
   ;
 
   private final String path;
