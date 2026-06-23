@@ -89,8 +89,9 @@ class OpenApiSpecE2ETest extends AbstractApiTester {
   }
 
   @Test
-  @DisplayName("필터 API는 JSON과 form 요청 계약을 모두 정확하게 반환한다")
-  void openapiJson_whenFilterSupportsJsonAndForm_returnsBothRequestContracts() throws Exception {
+  @DisplayName("필터 API는 문서 어노테이션의 요청과 응답 예제를 반환한다")
+  void openapiJson_whenFilterOpenApiAnnotationProvided_returnsRequestAndResponseExamples()
+      throws Exception {
     // when
     var response = mockMvcTester.get().uri("/openapi.json").exchange();
 
@@ -99,6 +100,8 @@ class OpenApiSpecE2ETest extends AbstractApiTester {
 
     JsonNode body = objectMapper.readTree(response.getResponse().getContentAsString());
     JsonNode operation = body.at("/paths/~1api~1v1~1filter/post");
+    assertThat(operation.path("summary").asText()).isEqualTo("비속어 필터링 요청");
+    assertThat(operation.at("/security/0/ApiKeyAuth").isArray()).isTrue();
     assertThat(operation.at("/requestBody/content/application~1json/schema/$ref").asText())
         .isEqualTo("#/components/schemas/ApiRequest");
     assertThat(
@@ -106,7 +109,37 @@ class OpenApiSpecE2ETest extends AbstractApiTester {
                 .at("/requestBody/content/application~1x-www-form-urlencoded/schema/$ref")
                 .asText())
         .isEqualTo("#/components/schemas/ApiRequest");
+    assertThat(
+            operation
+                .at("/requestBody/content/application~1json/examples/filter/value/mode")
+                .asText())
+        .isEqualTo("FILTER");
+    assertThat(
+            operation
+                .at("/requestBody/content/application~1json/examples/async/value/callbackUrl")
+                .asText())
+        .isEqualTo("https://example.com/filter/callback");
+    assertThat(
+            operation
+                .at("/responses/200/content/application~1json/examples/filter/value/status/code")
+                .asInt())
+        .isEqualTo(2000);
+    assertThat(
+            operation
+                .at(
+                    "/responses/200/content/application~1json/examples/asyncAccepted/value/status/code")
+                .asInt())
+        .isEqualTo(2020);
     assertThat(operation.path("parameters").findValuesAsText("name")).doesNotContain("request");
+
+    JsonNode advancedOperation = body.at("/paths/~1api~1v1~1filter~1advanced/post");
+    assertThat(advancedOperation.path("summary").asText()).isEqualTo("고급 비속어 필터링 요청");
+    assertThat(advancedOperation.at("/security/0/ApiKeyAuth").isArray()).isTrue();
+    assertThat(
+            advancedOperation
+                .at("/responses/200/content/application~1json/examples/filter/value/filtered")
+                .asText())
+        .isEqualTo("advanced *****");
   }
 
   @Test

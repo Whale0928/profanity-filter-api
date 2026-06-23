@@ -7,10 +7,8 @@ import app.core.exception.BusinessException;
 import app.domain.client.PermissionsType;
 import app.dto.request.WordRequest;
 import app.dto.response.MessageResponse;
+import app.openapi.WordManagementOpenApi;
 import app.security.SecurityContextUtil;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -33,14 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class WordManagementController {
   private final WordManagementService wordManagement;
 
-  @Operation(
-      summary = "단어 변경 요청",
-      description =
-          """
-          비속어 단어의 추가, 삭제, 수정을 요청합니다.
-          severity는 LOW, MEDIUM, HIGH를 사용하고 type은 ADD, REMOVE, MODIFY를 사용합니다.
-          """,
-      security = @SecurityRequirement(name = "ApiKeyAuth"))
+  @WordManagementOpenApi.RequestNewWord
   @PostMapping(value = "/request", produces = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<ApiResponse<MessageResponse>> requestNewWord(
       @RequestBody @Valid WordRequest request) {
@@ -59,14 +50,9 @@ public class WordManagementController {
     return ApiResponse.ok(response);
   }
 
-  @Operation(
-      summary = "단어 변경 요청 승인",
-      description = "WRITE 권한을 가진 클라이언트가 단어 변경 요청을 승인합니다.",
-      security = @SecurityRequirement(name = "ApiKeyAuth"))
+  @WordManagementOpenApi.AcceptWord
   @PostMapping(value = "/accept/{requestId}", produces = MediaType.APPLICATION_JSON_VALUE)
-  public ResponseEntity<ApiResponse<Boolean>> acceptWord(
-      @Parameter(description = "승인할 요청 ID 목록", required = true) @PathVariable
-          List<Long> requestId) {
+  public ResponseEntity<ApiResponse<Boolean>> acceptWord(@PathVariable List<Long> requestId) {
     final String write = PermissionsType.WRITE.getValue();
     List<String> currentUserPermissions = SecurityContextUtil.getCurrentUserPermissions();
     log.info("currentUserPermissions: {}", currentUserPermissions);

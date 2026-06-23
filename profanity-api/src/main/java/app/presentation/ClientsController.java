@@ -14,10 +14,8 @@ import app.dto.request.MailPayloadRequest;
 import app.dto.response.ApiKeyReissueResponse;
 import app.dto.response.ClientsRegistResponse;
 import app.dto.response.EmailVerificationResponse;
+import app.openapi.ClientsOpenApi;
 import app.security.SecurityContextUtil;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -43,10 +41,7 @@ public class ClientsController {
   private final ClientMetadataReader clientReader;
   private final EmailService emailService;
 
-  @Operation(
-      summary = "클라이언트 정보 확인",
-      description = "발급된 API Key를 사용하여 가입 시 작성한 클라이언트 정보를 확인합니다.",
-      security = @SecurityRequirement(name = "ApiKeyAuth"))
+  @ClientsOpenApi.GetClient
   @GetMapping
   public ResponseEntity<ApiResponse<ClientMetadata>> get() {
     final String apikey = SecurityContextUtil.getCurrentApikey();
@@ -57,10 +52,7 @@ public class ClientsController {
     return ApiResponse.ok(read);
   }
 
-  @Operation(
-      summary = "클라이언트 폐기",
-      description = "발급된 API Key를 사용하여 클라이언트 정보를 폐기합니다.",
-      security = @SecurityRequirement(name = "ApiKeyAuth"))
+  @ClientsOpenApi.DiscardClient
   @DeleteMapping
   public ResponseEntity<ApiResponse<Boolean>> discardClient() {
     final String apikey = SecurityContextUtil.getCurrentApikey();
@@ -68,14 +60,7 @@ public class ClientsController {
     return ApiResponse.ok(Boolean.TRUE);
   }
 
-  @Operation(
-      summary = "신규 클라이언트 등록",
-      description =
-          """
-          사용자 정보를 등록하고 API Key를 발급합니다.
-          생성 시 입력 정보는 최대한 실제 정보를 입력해야 하며, 비정상적인 발급 요청은 무통보 제거될 수 있습니다.
-          발급된 API Key는 반드시 안전하게 보관해야 합니다.
-          """)
+  @ClientsOpenApi.RegisterClient
   @PostMapping("/register")
   public ResponseEntity<ApiResponse<ClientsRegistResponse>> registerClient(
       @RequestBody @Valid ClientRegistRequest request) {
@@ -84,10 +69,7 @@ public class ClientsController {
     return ApiResponse.ok(response);
   }
 
-  @Operation(
-      summary = "클라이언트 정보 업데이트",
-      description = "발급된 API Key를 사용하여 클라이언트 발급자 정보와 메모를 업데이트합니다.",
-      security = @SecurityRequirement(name = "ApiKeyAuth"))
+  @ClientsOpenApi.UpdateClient
   @PostMapping("/update")
   public ResponseEntity<ApiResponse<ClientMetadata>> updateClient(
       @RequestBody @Valid ClientUpdateRequest request) {
@@ -99,10 +81,7 @@ public class ClientsController {
     return ApiResponse.ok(response);
   }
 
-  @Operation(
-      summary = "API Key 재발급",
-      description = "발급된 API Key를 사용하여 새 API Key를 재발급합니다. 추후 이메일 인증 등 보안 강화 처리가 추가될 수 있습니다.",
-      security = @SecurityRequirement(name = "ApiKeyAuth"))
+  @ClientsOpenApi.RegenerateApiKey
   @PostMapping("/reissue")
   public ResponseEntity<ApiResponse<ApiKeyReissueResponse>> regenerateApiKey() {
     String currentApiKey = SecurityContextUtil.getCurrentApikey();
@@ -110,11 +89,9 @@ public class ClientsController {
     return ApiResponse.ok(new ApiKeyReissueResponse(newApiKey));
   }
 
-  @Operation(summary = "이메일 인증 코드 발송", description = "발급한 이메일을 통해 인증 코드를 전송합니다.")
+  @ClientsOpenApi.SendEmail
   @GetMapping("/send-email")
-  public ResponseEntity<ApiResponse<String>> sendEmail(
-      @Parameter(description = "인증 코드를 받을 이메일", required = true) @RequestParam("email")
-          String email) {
+  public ResponseEntity<ApiResponse<String>> sendEmail(@RequestParam("email") String email) {
     boolean verified = clientReader.verifyClientByEmail(email);
     if (Boolean.FALSE.equals(verified)) {
       return ApiResponse.error(Status.of(StatusCode.BAD_REQUEST, "해당 이메일로 가입된 사용자가 없습니다."));
@@ -123,7 +100,7 @@ public class ClientsController {
     return ApiResponse.ok("send email");
   }
 
-  @Operation(summary = "이메일 인증 코드 검증", description = "이메일과 인증 코드를 확인하고 인증된 API Key를 반환합니다.")
+  @ClientsOpenApi.VerifyEmail
   @PutMapping("/send-email")
   public ResponseEntity<ApiResponse<EmailVerificationResponse>> verifyEmail(
       @Valid @RequestBody MailPayloadRequest request) {

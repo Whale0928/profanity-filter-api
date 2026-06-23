@@ -5,8 +5,7 @@ import static app.application.HttpClient.getReferrer;
 
 import app.application.manage.SyncHandler;
 import app.core.data.manage.response.ResultMessage;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
+import app.openapi.SyncOpenApi;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Objects;
@@ -28,12 +27,10 @@ public class SyncController {
 
   private final SyncHandler syncHandler;
 
-  @Operation(summary = "비속어 데이터 동기화", description = "관리 비밀번호로 비속어 데이터를 동기화합니다.")
+  @SyncOpenApi.DoSync
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<ResultMessage> doSync(
-      HttpServletRequest httpRequest,
-      @Parameter(description = "동기화 관리 비밀번호", required = true) @RequestParam("password")
-          String password) {
+      HttpServletRequest httpRequest, @RequestParam("password") String password) {
     final String clientIp = getClientIP(httpRequest);
     final String referrer = getReferrer(httpRequest);
 
