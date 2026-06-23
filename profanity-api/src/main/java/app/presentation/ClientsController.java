@@ -16,7 +16,6 @@ import app.dto.response.ClientsRegistResponse;
 import app.dto.response.EmailVerificationResponse;
 import app.openapi.ClientsOpenApi;
 import app.security.SecurityContextUtil;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(value = "/api/v1/clients", produces = MediaType.APPLICATION_JSON_VALUE)
-@Tag(name = "Clients", description = "API Key 발급 및 클라이언트 정보 관리 API")
+@ClientsOpenApi.ApiTag
 public class ClientsController {
   private final ClientsCommandService clientsCommandService;
   private final ClientMetadataReader clientReader;

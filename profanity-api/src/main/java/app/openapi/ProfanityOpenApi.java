@@ -2,14 +2,17 @@ package app.openapi;
 
 import app.core.data.response.FilterApiResponse;
 import app.dto.request.ApiRequest;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -18,6 +21,11 @@ import org.springframework.http.MediaType;
 
 public final class ProfanityOpenApi {
   private ProfanityOpenApi() {}
+
+  @Target(ElementType.TYPE)
+  @Retention(RetentionPolicy.RUNTIME)
+  @Tag(name = "Profanity Filter", description = "비속어 검출 및 필터링 API")
+  public @interface ApiTag {}
 
   @Target(ElementType.METHOD)
   @Retention(RetentionPolicy.RUNTIME)
@@ -168,6 +176,7 @@ public final class ProfanityOpenApi {
 
   @Target(ElementType.METHOD)
   @Retention(RetentionPolicy.RUNTIME)
+  @Hidden
   @Operation(
       summary = "비속어 필터링 요청 form",
       description = "application/x-www-form-urlencoded 형식으로 비속어 검사를 요청합니다.",
@@ -183,7 +192,12 @@ public final class ProfanityOpenApi {
           word 쿼리 파라미터로 전달한 문장을 FILTER 모드처럼 마스킹합니다.
           단순 쿼리 파라미터 기반 연동이 필요한 클라이언트를 위한 보조 엔드포인트입니다.
           """,
-      parameters = @Parameter(name = "word", description = "검사할 단어", required = true),
+      parameters =
+          @Parameter(
+              name = "word",
+              in = ParameterIn.QUERY,
+              description = "검사할 단어",
+              required = true),
       responses =
           @ApiResponse(
               responseCode = "200",

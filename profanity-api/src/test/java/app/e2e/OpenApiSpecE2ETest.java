@@ -3,6 +3,7 @@ package app.e2e;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.MissingNode;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -20,12 +21,69 @@ class OpenApiSpecE2ETest extends AbstractApiTester {
     JsonNode body = objectMapper.readTree(response.getResponse().getContentAsString());
     assertThat(body.at("/openapi").asText()).isNotBlank();
     assertThat(body.at("/info/title").asText()).isEqualTo("Profanity Filter API");
+    String description = body.at("/info/description").asText();
+    assertThat(description)
+        .as("OpenAPI 소개 Markdown은 classpath 리소스에서 읽혀야 한다")
+        .contains(
+            "한국어 비속어 필터링 API",
+            "## 시작하기",
+            "`x-api-key`",
+            "## 주요 기능",
+            "## 응답 읽기",
+            "# Error Model",
+            "# Authentication");
+    assertThat(description).doesNotContain("# Profanity Filter API");
+    assertThat(description.indexOf("한국어 비속어 필터링 API"))
+        .as("info.description은 overview, error-model, authentication 순서로 조합되어야 한다")
+        .isLessThan(description.indexOf("# Error Model"));
+    assertThat(description.indexOf("# Error Model"))
+        .as("error-model은 authentication보다 먼저 포함되어야 한다")
+        .isLessThan(description.indexOf("# Authentication"));
     assertThat(body.at("/components/securitySchemes/ApiKeyAuth/name").asText())
         .isEqualTo("x-api-key");
+    assertThat(body.at("/components/securitySchemes/ApiKeyAuth/description").asText())
+        .as("ApiKeyAuth 보안 스키마는 x-api-key 헤더 설명을 제공해야 한다")
+        .isEqualTo("클라이언트 등록 후 발급받은 API Key");
     assertThat(body.at("/paths/~1api~1v1~1filter/post").isMissingNode()).isFalse();
     assertThat(body.at("/paths/~1api~1v1~1clients~1register/post").isMissingNode()).isFalse();
     assertThat(body.at("/paths/~1api~1v1~1health/get").isMissingNode()).isFalse();
     assertThat(body.at("/paths/~1swagger-ui~1index.html/get").isMissingNode()).isTrue();
+  }
+
+  @Test
+  @DisplayName("LLM 문서 색인과 OpenAPI Markdown 문서를 인증 없이 반환한다")
+  void llmsAndOpenApiMarkdown_whenRequested_returnsPublicDocuments() throws Exception {
+    // when
+    var llmsResponse = mockMvcTester.get().uri("/llms.txt").exchange();
+    var llmAliasResponse = mockMvcTester.get().uri("/llm.txt").exchange();
+    var overviewResponse = mockMvcTester.get().uri("/openapi/overview.md").exchange();
+    var errorModelResponse = mockMvcTester.get().uri("/openapi/error-model.md").exchange();
+    var authenticationResponse = mockMvcTester.get().uri("/openapi/authentication.md").exchange();
+
+    // then
+    assertThat(llmsResponse).hasStatusOk();
+    assertThat(llmsResponse.getResponse().getContentAsString())
+        .contains(
+            "/openapi.json",
+            "/openapi/overview.md",
+            "/openapi/error-model.md",
+            "/openapi/authentication.md");
+    assertThat(llmAliasResponse).hasStatusOk();
+    assertThat(llmAliasResponse.getResponse().getContentAsString())
+        .as("/llm.txt alias는 /llms.txt와 같은 LLM 문서 색인을 반환해야 한다")
+        .isEqualTo(llmsResponse.getResponse().getContentAsString());
+
+    assertThat(overviewResponse).hasStatusOk();
+    assertThat(overviewResponse.getResponse().getContentAsString())
+        .contains("한국어 비속어 필터링 API", "## 시작하기", "## 주요 기능");
+
+    assertThat(errorModelResponse).hasStatusOk();
+    assertThat(errorModelResponse.getResponse().getContentAsString())
+        .contains("# Error Model", "`status`", "4010", "4032");
+
+    assertThat(authenticationResponse).hasStatusOk();
+    assertThat(authenticationResponse.getResponse().getContentAsString())
+        .contains("# Authentication", "x-api-key", "인증이 필요하지 않은 경로");
   }
 
   @Test
@@ -135,6 +193,17 @@ class OpenApiSpecE2ETest extends AbstractApiTester {
     JsonNode advancedOperation = body.at("/paths/~1api~1v1~1filter~1advanced/post");
     assertThat(advancedOperation.path("summary").asText()).isEqualTo("고급 비속어 필터링 요청");
     assertThat(advancedOperation.at("/security/0/ApiKeyAuth").isArray()).isTrue();
+    JsonNode advancedParameters = advancedOperation.path("parameters");
+    JsonNode wordParameter = findParameter(advancedParameters, "word", "query");
+    assertThat(wordParameter.isMissingNode())
+        .as("advanced API는 검사 대상 word query 파라미터를 문서화해야 한다")
+        .isFalse();
+    assertThat(wordParameter.path("name").asText())
+        .as("advanced API query 파라미터 이름은 word여야 한다")
+        .isEqualTo("word");
+    assertThat(wordParameter.path("in").asText())
+        .as("word는 query 파라미터로 렌더링되어야 한다")
+        .isEqualTo("query");
     assertThat(
             advancedOperation
                 .at("/responses/200/content/application~1json/examples/filter/value/filtered")
@@ -174,4 +243,17 @@ class OpenApiSpecE2ETest extends AbstractApiTester {
   }
 
   private record OperationPath(String pointer) {}
+
+  private static JsonNode findParameter(JsonNode parameters, String name, String in) {
+    if (!parameters.isArray()) {
+      return MissingNode.getInstance();
+    }
+    for (JsonNode parameter : parameters) {
+      if (name.equals(parameter.path("name").asText())
+          && in.equals(parameter.path("in").asText())) {
+        return parameter;
+      }
+    }
+    return MissingNode.getInstance();
+  }
 }

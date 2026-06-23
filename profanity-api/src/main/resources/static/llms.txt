@@ -1,0 +1,8 @@
+# Profanity Filter API
+
+AI agents and non-JavaScript clients can use these documents:
+
+- OpenAPI JSON: /openapi.json
+- Overview: /openapi/overview.md
+- Error model: /openapi/error-model.md
+- Authentication: /openapi/authentication.md

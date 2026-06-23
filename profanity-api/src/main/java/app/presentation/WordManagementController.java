@@ -9,7 +9,6 @@ import app.dto.request.WordRequest;
 import app.dto.response.MessageResponse;
 import app.openapi.WordManagementOpenApi;
 import app.security.SecurityContextUtil;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
@@ -27,7 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 @AllArgsConstructor
 @RequestMapping("/api/v1/word")
 @RestController
-@Tag(name = "Word Management", description = "비속어 단어 추가, 삭제, 수정 요청 API")
+@WordManagementOpenApi.ApiTag
 public class WordManagementController {
   private final WordManagementService wordManagement;
 

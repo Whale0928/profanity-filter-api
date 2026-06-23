@@ -6,7 +6,6 @@ import static app.application.HttpClient.getReferrer;
 import app.application.manage.SyncHandler;
 import app.core.data.manage.response.ResultMessage;
 import app.openapi.SyncOpenApi;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Objects;
 import lombok.AllArgsConstructor;
@@ -22,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 @AllArgsConstructor
 @RequestMapping("/api/v1/sync")
 @RestController
-@Tag(name = "Sync", description = "비속어 데이터 동기화 API")
+@SyncOpenApi.ApiTag
 public class SyncController {
 
   private final SyncHandler syncHandler;

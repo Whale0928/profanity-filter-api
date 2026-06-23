@@ -3,6 +3,7 @@ package app.openapi;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -10,6 +11,11 @@ import java.lang.annotation.Target;
 
 public final class ClientsOpenApi {
   private ClientsOpenApi() {}
+
+  @Target(ElementType.TYPE)
+  @Retention(RetentionPolicy.RUNTIME)
+  @Tag(name = "Clients", description = "API Key 발급 및 클라이언트 정보 관리 API")
+  public @interface ApiTag {}
 
   @Target(ElementType.METHOD)
   @Retention(RetentionPolicy.RUNTIME)

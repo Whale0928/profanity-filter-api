@@ -22,6 +22,7 @@ dependencies {
     // documentation
     implementation libs.springdoc.openapi.starter.webmvc.api
     testImplementation project(':profanity-test-support')
+    testImplementation libs.archunit.junit5
 
     //Mail
     implementation 'org.springframework.boot:spring-boot-starter-mail'
