@@ -21,24 +21,12 @@ class OpenApiSpecE2ETest extends AbstractApiTester {
     JsonNode body = objectMapper.readTree(response.getResponse().getContentAsString());
     assertThat(body.at("/openapi").asText()).isNotBlank();
     assertThat(body.at("/info/title").asText()).isEqualTo("Profanity Filter API");
+    assertThat(body.at("/info/description").asText())
+        .as("OpenAPI JSON은 API 계약 설명만 담고 overview 본문은 /overview.md로 분리한다")
+        .isEqualTo("한국어와 영어 비속어를 검출하고 필터링하는 API입니다.");
     String description = body.at("/info/description").asText();
-    assertThat(description)
-        .as("OpenAPI 소개 Markdown은 classpath 리소스에서 읽혀야 한다")
-        .contains(
-            "한국어 비속어 필터링 API",
-            "## 시작하기",
-            "`x-api-key`",
-            "## 주요 기능",
-            "## 응답 읽기",
-            "# Error Model",
-            "# Authentication");
     assertThat(description).doesNotContain("# Profanity Filter API");
-    assertThat(description.indexOf("한국어 비속어 필터링 API"))
-        .as("info.description은 overview, error-model, authentication 순서로 조합되어야 한다")
-        .isLessThan(description.indexOf("# Error Model"));
-    assertThat(description.indexOf("# Error Model"))
-        .as("error-model은 authentication보다 먼저 포함되어야 한다")
-        .isLessThan(description.indexOf("# Authentication"));
+    assertThat(description).doesNotContain("# Error Model", "# Authentication");
     assertThat(body.at("/components/securitySchemes/ApiKeyAuth/name").asText())
         .isEqualTo("x-api-key");
     assertThat(body.at("/components/securitySchemes/ApiKeyAuth/description").asText())
@@ -47,6 +35,8 @@ class OpenApiSpecE2ETest extends AbstractApiTester {
     assertThat(body.at("/paths/~1api~1v1~1filter/post").isMissingNode()).isFalse();
     assertThat(body.at("/paths/~1api~1v1~1clients~1register/post").isMissingNode()).isFalse();
     assertThat(body.at("/paths/~1api~1v1~1health/get").isMissingNode()).isFalse();
+    assertThat(body.at("/paths/~1overview.md/get").isMissingNode()).isTrue();
+    assertThat(body.at("/paths/~1llms.txt/get").isMissingNode()).isTrue();
     assertThat(body.at("/paths/~1swagger-ui~1index.html/get").isMissingNode()).isTrue();
   }
 
@@ -56,34 +46,37 @@ class OpenApiSpecE2ETest extends AbstractApiTester {
     // when
     var llmsResponse = mockMvcTester.get().uri("/llms.txt").exchange();
     var llmAliasResponse = mockMvcTester.get().uri("/llm.txt").exchange();
-    var overviewResponse = mockMvcTester.get().uri("/openapi/overview.md").exchange();
-    var errorModelResponse = mockMvcTester.get().uri("/openapi/error-model.md").exchange();
-    var authenticationResponse = mockMvcTester.get().uri("/openapi/authentication.md").exchange();
+    var overviewResponse = mockMvcTester.get().uri("/overview.md").exchange();
 
     // then
     assertThat(llmsResponse).hasStatusOk();
     assertThat(llmsResponse.getResponse().getContentAsString())
-        .contains(
-            "/openapi.json",
-            "/openapi/overview.md",
-            "/openapi/error-model.md",
-            "/openapi/authentication.md");
+        .contains("/openapi.json", "/overview.md");
     assertThat(llmAliasResponse).hasStatusOk();
     assertThat(llmAliasResponse.getResponse().getContentAsString())
         .as("/llm.txt alias는 /llms.txt와 같은 LLM 문서 색인을 반환해야 한다")
         .isEqualTo(llmsResponse.getResponse().getContentAsString());
 
     assertThat(overviewResponse).hasStatusOk();
-    assertThat(overviewResponse.getResponse().getContentAsString())
-        .contains("한국어 비속어 필터링 API", "## 시작하기", "## 주요 기능");
-
-    assertThat(errorModelResponse).hasStatusOk();
-    assertThat(errorModelResponse.getResponse().getContentAsString())
-        .contains("# Error Model", "`status`", "4010", "4032");
-
-    assertThat(authenticationResponse).hasStatusOk();
-    assertThat(authenticationResponse.getResponse().getContentAsString())
-        .contains("# Authentication", "x-api-key", "인증이 필요하지 않은 경로");
+    String overview = overviewResponse.getResponse().getContentAsString();
+    assertThat(overview)
+        .contains(
+            "한국어 비속어 필터링 API",
+            "## 시작하기",
+            "## 주요 기능",
+            "# Error Model",
+            "`status`",
+            "4010",
+            "4032",
+            "# Authentication",
+            "x-api-key",
+            "인증이 필요하지 않은 경로");
+    assertThat(overview.indexOf("한국어 비속어 필터링 API"))
+        .as("/overview.md는 overview, error-model, authentication 순서로 조합되어야 한다")
+        .isLessThan(overview.indexOf("# Error Model"));
+    assertThat(overview.indexOf("# Error Model"))
+        .as("error-model은 authentication보다 먼저 포함되어야 한다")
+        .isLessThan(overview.indexOf("# Authentication"));
   }
 
   @Test

@@ -26,6 +26,8 @@ spring:
 springdoc:
   api-docs:
     path: /openapi.json
+  paths-to-match:
+    - /api/**
   swagger-ui:
     enabled: false
 

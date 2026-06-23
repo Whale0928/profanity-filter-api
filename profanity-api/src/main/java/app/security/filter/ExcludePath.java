@@ -12,7 +12,7 @@ public enum ExcludePath {
   HEALTH("health", "헬스 체크 API", List.of(HttpMethod.GET)),
   PING("ping", "헬스 체크 API", List.of(HttpMethod.GET)),
   OPENAPI("openapi.json", "OpenAPI JSON 스펙", List.of(HttpMethod.GET)),
-  OPENAPI_MARKDOWN("openapi/", "OpenAPI Markdown 문서", List.of(HttpMethod.GET)),
+  OVERVIEW("overview.md", "API Overview Markdown 문서", List.of(HttpMethod.GET)),
   LLMS(List.of("llms.txt", "llm.txt"), "LLM 문서 색인", List.of(HttpMethod.GET)),
   ;
 

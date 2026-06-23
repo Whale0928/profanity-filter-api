@@ -79,6 +79,8 @@ class OpenApiArchitectureTest {
           PutMapping.class.getName(),
           RequestMapping.class.getName());
 
+  private static final Set<String> DOCUMENT_CONTROLLER_NAMES = Set.of("DocumentController");
+
   private static final Set<String> DISALLOWED_PRESENTATION_SWAGGER_ANNOTATIONS =
       Set.of(
           Operation.class.getName(),
@@ -165,6 +167,7 @@ class OpenApiArchitectureTest {
   private static boolean isControllerEndpoint(JavaMethod method) {
     return method.getOwner().getPackageName().startsWith("app.presentation")
         && method.getOwner().getSimpleName().endsWith("Controller")
+        && !DOCUMENT_CONTROLLER_NAMES.contains(method.getOwner().getSimpleName())
         && hasAnyAnnotation(method, ENDPOINT_MAPPING_ANNOTATIONS);
   }
 

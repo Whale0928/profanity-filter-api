@@ -58,7 +58,7 @@ public class SecurityConfig {
                     .permitAll()
                     .requestMatchers(HttpMethod.GET, "/openapi.json")
                     .permitAll()
-                    .requestMatchers(HttpMethod.GET, "/openapi/*.md")
+                    .requestMatchers(HttpMethod.GET, "/overview.md")
                     .permitAll()
                     .requestMatchers(HttpMethod.GET, "/llms.txt", "/llm.txt")
                     .permitAll()

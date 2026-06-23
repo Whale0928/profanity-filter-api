@@ -38,7 +38,7 @@ x-api-key: YOUR_SECRET_TOKEN
 - `GET /api/v1/health`
 - `GET /api/v1/ping`
 - `GET /openapi.json`
-- `GET /openapi/*.md`
+- `GET /overview.md`
 - `GET /llms.txt`
 - `GET /llm.txt`
 
