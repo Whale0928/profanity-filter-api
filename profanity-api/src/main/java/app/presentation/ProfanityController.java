@@ -8,6 +8,7 @@ import app.core.data.response.FilterApiResponse;
 import app.core.util.ApiKeys;
 import app.dto.request.ApiRequest;
 import app.dto.request.FilterRequest;
+import app.openapi.ProfanityOpenApi;
 import app.security.annotation.VerifiedClientOnly;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -28,15 +29,17 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/filter")
+@RequestMapping(value = "/api/v1/filter", produces = MediaType.APPLICATION_JSON_VALUE)
+@ProfanityOpenApi.ApiTag
 public class ProfanityController {
 
   private final ProfanityHandler profanityHandler;
 
   @VerifiedClientOnly
   @Cacheable(value = "request_filter", key = "#request.text + '_' + #request.mode")
+  @ProfanityOpenApi.BasicProfanity
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-  public ResponseEntity<?> basicProfanity(
+  public ResponseEntity<FilterApiResponse> basicProfanity(
       HttpServletRequest httpRequest,
       @RequestHeader(value = "x-api-key") String apiKey,
       @RequestBody @Valid ApiRequest request) {
@@ -66,8 +69,9 @@ public class ProfanityController {
 
   @VerifiedClientOnly
   @Cacheable(value = "request_filter", key = "#request.text + '_' + #request.mode")
+  @ProfanityOpenApi.BasicProfanityForm
   @PostMapping(consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-  public ResponseEntity<?> basicProfanityByUrlencodedValue(
+  public ResponseEntity<FilterApiResponse> basicProfanityByUrlencodedValue(
       HttpServletRequest httpRequest,
       @RequestHeader(value = "x-api-key") String apiKey,
       @ModelAttribute @Valid ApiRequest request) {
@@ -90,8 +94,9 @@ public class ProfanityController {
 
   @VerifiedClientOnly
   @Cacheable(value = "request_filter", key = "{#word}")
+  @ProfanityOpenApi.AdvancedProfanity
   @PostMapping("/advanced")
-  public ResponseEntity<?> advancedProfanity(
+  public ResponseEntity<FilterApiResponse> advancedProfanity(
       @RequestHeader(value = "x-api-key") String apiKey, @RequestParam("word") String word) {
     log.info("[FILTER] 요청 수신(advanced) word={} apiKey={}", word, ApiKeys.mask(apiKey));
     Objects.requireNonNull(word, "단어는 필수 입니다.");

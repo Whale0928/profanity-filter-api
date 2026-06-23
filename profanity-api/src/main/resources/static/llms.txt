@@ -1,0 +1,6 @@
+# Profanity Filter API
+
+AI agents and non-JavaScript clients can use these documents:
+
+- OpenAPI JSON: /openapi.json
+- Overview Markdown: /overview.md

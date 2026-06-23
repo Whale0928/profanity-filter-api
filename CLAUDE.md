@@ -113,7 +113,7 @@ profanity-shared (Common)
 # 로컬 실행
 ./gradlew :profanity-api:bootRun
 
-# 테스트 (restdocs 태그 제외, 루트 test가 전 모듈 test에 의존)
+# 테스트 (루트 test가 전 모듈 test에 의존)
 ./gradlew test
 
 # 커버리지: 모듈별 리포트는 test 후 자동 생성(build/reports/jacoco/test/html)
@@ -123,13 +123,13 @@ profanity-shared (Common)
 # 코드 포맷 (google-java-format)
 ./gradlew spotlessApply   # 적용 / spotlessCheck 검사
 
-# RestDocs 생성 (restdocs → asciidoctor → copyRestDocs)
-./gradlew :profanity-api:generateRestDocs
+# OpenAPI JSON 확인
+# 애플리케이션 기동 후 GET /openapi.json
 ```
 
 ## 테스트 컨벤션
 
-- JUnit 5(Platform), 한글 `@DisplayName` + `@Nested` BDD 스타일. RestDocs 테스트는 `@Tag("restdocs")`로 분리되어 기본 `test`에서 제외
+- JUnit 5(Platform), 한글 `@DisplayName` + `@Nested` BDD 스타일. API 스펙은 Springdoc 기반 `/openapi.json` 응답으로 검증
 - 도메인 계층은 Mock보다 **테스트 더블 우선** — `Inmemory*Repository`, `Fake*` 등 실제 구현 사용. Mockito는 외부 의존 격리가 필요한 일부에만 제한적 사용
 - (세부 작성 규칙은 별도 스킬로 관리)
 
@@ -154,7 +154,7 @@ profanity-shared (Common)
 - **Redis(운영)**: `redis:7-alpine` 단일 Deployment, 영속성 없음(`--save ""`), `allkeys-lru` 캐시 전용
 - **인프라 정의**: `module.platform` 서브모듈(ArgoCD, cert-manager, Envoy Gateway, external-secrets, image-updater, Zot). SOPS 암호화 시크릿 포함 — **값 열람·수정 금지**
 - `script/`의 blue-green / docker-compose 스크립트는 레거시(현재 GitOps로 대체됨)
-- CI: `.github/workflows/test.yml`(PR·main push 시 `./gradlew test`, job 이름 `test`), `github-pages.yml`(RestDocs→Pages, job `build`, release 브랜치 전용). `release.yaml`은 빌드/배포 단계가 플레이스홀더 상태
+- CI: `.github/workflows/ci.yml`에서 정적 검사, 단위 테스트, 테스트 지원 모듈, API E2E 테스트를 계층적으로 실행. `release.yaml`은 빌드/배포 단계가 플레이스홀더 상태
 
 ## 코드 품질 및 주의사항
 

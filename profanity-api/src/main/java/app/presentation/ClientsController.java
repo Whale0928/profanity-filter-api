@@ -11,12 +11,15 @@ import app.dto.request.ClientRegistCommand;
 import app.dto.request.ClientRegistRequest;
 import app.dto.request.ClientUpdateRequest;
 import app.dto.request.MailPayloadRequest;
+import app.dto.response.ApiKeyReissueResponse;
 import app.dto.response.ClientsRegistResponse;
+import app.dto.response.EmailVerificationResponse;
+import app.openapi.ClientsOpenApi;
 import app.security.SecurityContextUtil;
 import jakarta.validation.Valid;
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,14 +33,16 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/clients")
+@RequestMapping(value = "/api/v1/clients", produces = MediaType.APPLICATION_JSON_VALUE)
+@ClientsOpenApi.ApiTag
 public class ClientsController {
   private final ClientsCommandService clientsCommandService;
   private final ClientMetadataReader clientReader;
   private final EmailService emailService;
 
+  @ClientsOpenApi.GetClient
   @GetMapping
-  public ResponseEntity<?> get() {
+  public ResponseEntity<ApiResponse<ClientMetadata>> get() {
     final String apikey = SecurityContextUtil.getCurrentApikey();
     if (apikey == null || apikey.isBlank()) {
       return ApiResponse.error(Status.of(StatusCode.UNAUTHORIZED));
@@ -46,22 +51,27 @@ public class ClientsController {
     return ApiResponse.ok(read);
   }
 
+  @ClientsOpenApi.DiscardClient
   @DeleteMapping
-  public ResponseEntity<?> discardClient() {
+  public ResponseEntity<ApiResponse<Boolean>> discardClient() {
     final String apikey = SecurityContextUtil.getCurrentApikey();
     clientsCommandService.discardClient(apikey);
     return ApiResponse.ok(Boolean.TRUE);
   }
 
+  @ClientsOpenApi.RegisterClient
   @PostMapping("/register")
-  public ResponseEntity<?> registerClient(@RequestBody @Valid ClientRegistRequest request) {
+  public ResponseEntity<ApiResponse<ClientsRegistResponse>> registerClient(
+      @RequestBody @Valid ClientRegistRequest request) {
     final ClientRegistCommand command = request.toCommand();
     ClientsRegistResponse response = clientsCommandService.registerNewClient(command);
     return ApiResponse.ok(response);
   }
 
+  @ClientsOpenApi.UpdateClient
   @PostMapping("/update")
-  public ResponseEntity<?> updateClient(@RequestBody @Valid ClientUpdateRequest request) {
+  public ResponseEntity<ApiResponse<ClientMetadata>> updateClient(
+      @RequestBody @Valid ClientUpdateRequest request) {
     final String apikey = SecurityContextUtil.getCurrentApikey();
     final String issuerInfo = request.issuerInfo();
     final String note = request.note();
@@ -70,15 +80,17 @@ public class ClientsController {
     return ApiResponse.ok(response);
   }
 
+  @ClientsOpenApi.RegenerateApiKey
   @PostMapping("/reissue")
-  public ResponseEntity<?> regenerateApiKey() {
+  public ResponseEntity<ApiResponse<ApiKeyReissueResponse>> regenerateApiKey() {
     String currentApiKey = SecurityContextUtil.getCurrentApikey();
     String newApiKey = clientsCommandService.regenerateApiKey(currentApiKey);
-    return ApiResponse.ok(Map.of("newApiKey", newApiKey));
+    return ApiResponse.ok(new ApiKeyReissueResponse(newApiKey));
   }
 
+  @ClientsOpenApi.SendEmail
   @GetMapping("/send-email")
-  public ResponseEntity<?> sendEmail(@RequestParam("email") String email) {
+  public ResponseEntity<ApiResponse<String>> sendEmail(@RequestParam("email") String email) {
     boolean verified = clientReader.verifyClientByEmail(email);
     if (Boolean.FALSE.equals(verified)) {
       return ApiResponse.error(Status.of(StatusCode.BAD_REQUEST, "해당 이메일로 가입된 사용자가 없습니다."));
@@ -87,13 +99,14 @@ public class ClientsController {
     return ApiResponse.ok("send email");
   }
 
+  @ClientsOpenApi.VerifyEmail
   @PutMapping("/send-email")
-  public ResponseEntity<?> verifyEmail(@Valid @RequestBody MailPayloadRequest request) {
+  public ResponseEntity<ApiResponse<EmailVerificationResponse>> verifyEmail(
+      @Valid @RequestBody MailPayloadRequest request) {
     boolean verified = emailService.verifyEmailCode(request.email(), request.code());
     if (Boolean.TRUE.equals(verified)) {
       String apikey = clientReader.getApiKeyByEmail(request.email());
-      Map<String, String> response = Map.of("apikey", apikey);
-      return ApiResponse.ok(response);
+      return ApiResponse.ok(new EmailVerificationResponse(apikey));
     } else {
       return ApiResponse.error(Status.of(StatusCode.BAD_REQUEST, "이메일 인증 코드가 올바르지 않습니다."));
     }

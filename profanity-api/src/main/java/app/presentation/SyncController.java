@@ -5,10 +5,12 @@ import static app.application.HttpClient.getReferrer;
 
 import app.application.manage.SyncHandler;
 import app.core.data.manage.response.ResultMessage;
+import app.openapi.SyncOpenApi;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,12 +21,14 @@ import org.springframework.web.bind.annotation.RestController;
 @AllArgsConstructor
 @RequestMapping("/api/v1/sync")
 @RestController
+@SyncOpenApi.ApiTag
 public class SyncController {
 
   private final SyncHandler syncHandler;
 
-  @GetMapping
-  public ResponseEntity<?> doSync(
+  @SyncOpenApi.DoSync
+  @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<ResultMessage> doSync(
       HttpServletRequest httpRequest, @RequestParam("password") String password) {
     final String clientIp = getClientIP(httpRequest);
     final String referrer = getReferrer(httpRequest);
