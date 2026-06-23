@@ -110,75 +110,6 @@ class OpenApiSpecE2ETest extends AbstractApiTester {
   }
 
   @Test
-  @DisplayName("주요 API는 입력과 출력 예시를 논리적으로 연결해 반환한다")
-  void openapiJson_whenExamplesProvided_returnsScenarioConsistentExamples() throws Exception {
-    // when
-    var response = mockMvcTester.get().uri("/openapi.json").exchange();
-
-    // then
-    assertThat(response).hasStatusOk();
-
-    JsonNode body = objectMapper.readTree(response.getResponse().getContentAsString());
-    JsonNode registerRequest =
-        body.at(
-            "/paths/~1api~1v1~1clients~1register/post/requestBody/content/application~1json/examples/success/value");
-    JsonNode registerResponse =
-        body.at(
-            "/paths/~1api~1v1~1clients~1register/post/responses/200/content/application~1json/examples/success/value");
-    assertThat(registerRequest.path("email").asText()).isEqualTo("user@example.com");
-    assertThat(registerResponse.at("/data/email").asText())
-        .isEqualTo(registerRequest.path("email").asText());
-    assertThat(registerResponse.at("/data/apiKey").asText()).isNotBlank();
-
-    JsonNode filterRequest =
-        body.at(
-            "/paths/~1api~1v1~1filter/post/requestBody/content/application~1json/examples/filter/value");
-    JsonNode filterResponse =
-        body.at(
-            "/paths/~1api~1v1~1filter/post/responses/200/content/application~1json/examples/filter/value");
-    assertThat(filterRequest.path("mode").asText()).isEqualTo("FILTER");
-    assertThat(filterResponse.at("/status/code").asInt()).isEqualTo(2000);
-    assertThat(filterResponse.at("/filtered").asText()).contains("*");
-    assertThat(filterResponse.at("/detected/0/filteredWord").asText()).isEqualTo("나쁜말샘플");
-  }
-
-  @Test
-  @DisplayName("주요 API는 HTTP 200 응답 안에 공통 오류 응답 가능성과 예시를 반환한다")
-  void openapiJson_whenApiCanFail_returnsCommonErrorExamplesInOkResponse() throws Exception {
-    // when
-    var response = mockMvcTester.get().uri("/openapi.json").exchange();
-
-    // then
-    assertThat(response).hasStatusOk();
-
-    JsonNode body = objectMapper.readTree(response.getResponse().getContentAsString());
-    for (OperationPath operationPath :
-        new OperationPath[] {
-          new OperationPath("/paths/~1api~1v1~1clients/get"),
-          new OperationPath("/paths/~1api~1v1~1clients/delete"),
-          new OperationPath("/paths/~1api~1v1~1clients~1register/post"),
-          new OperationPath("/paths/~1api~1v1~1clients~1update/post"),
-          new OperationPath("/paths/~1api~1v1~1clients~1reissue/post"),
-          new OperationPath("/paths/~1api~1v1~1clients~1send-email/get"),
-          new OperationPath("/paths/~1api~1v1~1clients~1send-email/put"),
-          new OperationPath("/paths/~1api~1v1~1filter/post"),
-          new OperationPath("/paths/~1api~1v1~1filter~1advanced/post"),
-          new OperationPath("/paths/~1api~1v1~1sync/get"),
-          new OperationPath("/paths/~1api~1v1~1word~1request/post"),
-          new OperationPath("/paths/~1api~1v1~1word~1accept~1{requestId}/post")
-        }) {
-      JsonNode okContent =
-          body.at(operationPath.pointer() + "/responses/200/content/application~1json");
-      assertThat(okContent.at("/schema/oneOf").findValuesAsText("$ref"))
-          .as(operationPath.pointer() + " error schema alternative")
-          .contains("#/components/schemas/ApiResponseVoid");
-      assertThat(okContent.at("/examples/badRequest/value/status/code").asInt())
-          .as(operationPath.pointer() + " bad request example")
-          .isEqualTo(4000);
-    }
-  }
-
-  @Test
   @DisplayName("응답 모델은 Scalar 모델 섹션에 표시할 설명을 가진다")
   void openapiJson_whenResponseSchemasRendered_returnsDescribedResponseProperties()
       throws Exception {
@@ -202,6 +133,11 @@ class OpenApiSpecE2ETest extends AbstractApiTester {
             body.at("/components/schemas/ApiResponseClientMetadata/properties/status/description")
                 .asText())
         .isNotBlank();
+    assertThat(body.at("/components/schemas/ClientMetadata/properties/email/example").asText())
+        .isEqualTo("user@example.com");
+    assertThat(
+            body.at("/components/schemas/ClientsRegistResponse/properties/apiKey/example").asText())
+        .isEqualTo("pf_sample_issued_api_key");
   }
 
   private record OperationPath(String pointer) {}

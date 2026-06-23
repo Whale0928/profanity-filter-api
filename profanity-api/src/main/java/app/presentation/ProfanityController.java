@@ -9,8 +9,11 @@ import app.core.util.ApiKeys;
 import app.dto.request.ApiRequest;
 import app.dto.request.FilterRequest;
 import app.security.annotation.VerifiedClientOnly;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -48,6 +51,18 @@ public class ProfanityController {
           QUICK은 원색적인 표현을 간략히 검증하고, NORMAL은 데이터베이스의 모든 비속어를 검증하며,
           FILTER는 검출된 단어를 마스킹해 반환합니다.
           """,
+      requestBody =
+          @io.swagger.v3.oas.annotations.parameters.RequestBody(
+              required = true,
+              description = "비속어 필터링 요청 본문입니다. JSON과 form 요청은 같은 필드 계약을 사용합니다.",
+              content = {
+                @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = ApiRequest.class)),
+                @Content(
+                    mediaType = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+                    schema = @Schema(implementation = ApiRequest.class))
+              }),
       security = @SecurityRequirement(name = "ApiKeyAuth"))
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<FilterApiResponse> basicProfanity(
@@ -82,6 +97,7 @@ public class ProfanityController {
 
   @VerifiedClientOnly
   @Cacheable(value = "request_filter", key = "#request.text + '_' + #request.mode")
+  @Hidden
   @Operation(
       summary = "비속어 필터링 요청 form",
       description = "application/x-www-form-urlencoded 형식으로 비속어 검사를 요청합니다.",
