@@ -1,42 +1,57 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { parse } from "yaml";
-
-const root = resolve(import.meta.dirname, "..", "..");
 const appRoot = resolve(import.meta.dirname, "..");
 
-const openapi = parse(readFileSync(resolve(root, "openapi.yaml"), "utf8"));
+const openapi = JSON.parse(readFileSync(resolve(appRoot, "public", "openapi.json"), "utf8"));
 const app = readFileSync(resolve(appRoot, "src", "App.tsx"), "utf8");
 const docsPage = readFileSync(resolve(appRoot, "src", "DocsPage.tsx"), "utf8");
 const guidelines = readFileSync(resolve(appRoot, "DESIGN_GUIDELINES.md"), "utf8");
 const styles = readFileSync(resolve(appRoot, "src", "styles.css"), "utf8");
+const overview = readFileSync(resolve(appRoot, "public", "overview.md"), "utf8");
 
-assert.deepEqual(
-  openapi["x-tagGroups"]?.map((group) => group.name),
-  ["시작하기", "문서/예제", "운영"],
-  "OpenAPI root must define Toss-like x-tagGroups.",
-);
+assert.match(openapi.openapi, /^3\./, "OpenAPI root must define a 3.x document.");
+assert.ok(Object.keys(openapi.paths ?? {}).length > 0, "OpenAPI root must define API paths.");
+assert.match(overview, /시작하기/, "Overview markdown must include a getting-started section.");
 
 assert.match(docsPage, /ApiReferenceReact/, "DocsPage must render the OpenAPI body with Scalar.");
-assert.match(docsPage, /showSidebar:\s*false/, "Scalar sidebar must be hidden in favor of the shell sidebar.");
+assert.match(docsPage, /OPENAPI_DOCUMENT_PATH = "\/openapi\.json"/, "Scalar must read the local OpenAPI JSON file.");
+assert.match(docsPage, /OVERVIEW_MARKDOWN_PATH = "\/overview\.md"/, "Docs overview must read the local markdown file.");
+assert.match(docsPage, /api-docs-sidebar/, "Docs page must keep the existing fixed sidebar shell.");
+assert.match(docsPage, /showSidebar:\s*false/, "Scalar native sidebar must stay hidden inside the fixed docs shell.");
+assert.match(docsPage, /buildSections/, "Docs sidebar must be built from OpenAPI tag sections.");
+assert.match(docsPage, /parseMarkdownHeadings/, "Docs sidebar must include overview heading children from markdown.");
+assert.match(docsPage, /getSectionForHash/, "Docs body must choose overview or an API tag from the docs hash.");
+assert.match(docsPage, /content:\s*referenceDocument/, "Docs body must render the selected OpenAPI tag while keeping the docs route.");
+assert.match(docsPage, /createTagDocument/, "Docs body must render endpoint DOM for the selected API tag.");
+assert.match(docsPage, /section\.operations\.length > 0/, "API groups must expose their endpoint children in the same sidebar.");
 assert.match(docsPage, /hideTestRequestButton:\s*true/, "Interactive request execution must stay hidden.");
 assert.match(docsPage, /hideClientButton:\s*true/, "Scalar client button must stay hidden.");
 assert.match(docsPage, /documentDownloadType:\s*"none"/, "Scalar document download UI must stay hidden.");
+assert.doesNotMatch(docsPage, /<strong>문서<\/strong>/, "Docs sidebar must not show a meaningless document group label.");
+assert.doesNotMatch(docsPage, />API 레퍼런스</, "Docs sidebar must show OpenAPI groups directly, not a generic API reference item.");
+assert.match(docsPage, /href=\{`\/docs#\$\{encodeURIComponent\(createTagAnchor\(section\)\)\}`\}/, "API group links must stay on the docs page and scroll by hash.");
+assert.match(docsPage, /encodeURIComponent\(createOperationAnchor\(operation\)\)/, "Expanded endpoints must link to Scalar's encoded operation ids.");
+assert.doesNotMatch(docsPage, /<p>OpenAPI<\/p>/, "Selected API group body must not add a custom OpenAPI label above Scalar.");
+assert.doesNotMatch(docsPage, /<h1>\{selectedSection\.name\}<\/h1>/, "Selected API group body must let Scalar render the tag heading.");
+assert.doesNotMatch(docsPage, /DocsSubnav/, "Docs page must not add a separate top sub-navigation.");
+assert.match(docsPage, /id="overview"/, "Overview and OpenAPI must share one docs page with a hash target for overview.");
+assert.match(styles, /\.api-docs-sidebar\b/, "Docs CSS must style the existing fixed sidebar shell.");
+assert.match(styles, /\.api-docs-sidebar-children\b/, "Docs CSS must style expanded endpoint children.");
+assert.match(styles, /--scalar-custom-header-height:\s*0px/, "Scalar must render inside the content area without its own sticky header offset.");
+assert.match(styles, /--scalar-sidebar-width:\s*0px/, "Scalar internal sidebar must stay hidden inside the fixed docs shell.");
 
-const sidebarBlock = extractRule(styles, ".api-docs-sidebar");
-assert.match(sidebarBlock, /position:\s*sticky/, "Docs sidebar must remain sticky, not fixed overlay.");
-assert.match(sidebarBlock, /top:\s*var\(--docs-header-height\)/, "Docs sidebar must respect header height.");
-assert.match(sidebarBlock, /max-height:\s*calc\(100dvh - var\(--docs-header-height\)\)/, "Docs sidebar must be capped to viewport height.");
-assert.match(sidebarBlock, /overflow-y:\s*auto/, "Docs sidebar must scroll internally.");
-assert.match(sidebarBlock, /overscroll-behavior:\s*contain/, "Docs sidebar must not hijack page drag at scroll edges.");
+const docsPageBlock = extractRule(styles, ".api-docs-page");
+assert.match(docsPageBlock, /grid-template-columns:\s*280px minmax\(0, 1fr\)/, "Docs page must keep the fixed sidebar column.");
+
+const copyActionsBlock = extractRule(styles, ".api-docs-copy-actions");
+assert.match(copyActionsBlock, /position:\s*sticky/, "Docs copy actions must stay in the content flow.");
+
+assert.match(styles, /\.api-docs-overview/, "Docs CSS must style the markdown overview body inside the fixed shell.");
 
 const mobileBlock = extractMedia(styles, "@media (max-width: 767px)");
-assert.match(mobileBlock, /\.api-docs-page\s*{[^}]*grid-template-columns:\s*minmax\(0, 1fr\)/s, "Mobile docs layout must use one column.");
-assert.match(mobileBlock, /\.api-docs-sidebar\s*{[^}]*position:\s*static/s, "Mobile sidebar must remain in normal document flow.");
-assert.match(mobileBlock, /\.api-docs-sidebar\s*{[^}]*max-height:\s*42dvh/s, "Mobile sidebar must not cover the viewport.");
+assert.match(mobileBlock, /\.api-docs-content\s*{[^}]*padding:/s, "Mobile docs layout must keep readable content padding.");
 assert.doesNotMatch(mobileBlock, /\.api-docs-sidebar\s*{[^}]*position:\s*fixed/s, "Mobile sidebar must not become a fixed overlay.");
-assert.doesNotMatch(mobileBlock, /\.api-docs-sidebar\s*{[^}]*position:\s*sticky/s, "Mobile sidebar must not stick over content while dragging.");
 
 assert.match(guidelines, /첫 화면은 4개 블록으로 구성한다\./, "Guidelines must define the four-block landing structure.");
 assert.match(guidelines, /2번 블록은 프로젝트 정체성을 짧게 설명한다\./, "Guidelines must define the second block as the project identity section.");
