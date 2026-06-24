@@ -4,10 +4,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.MissingNode;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.core.io.ClassPathResource;
 
 class OpenApiSpecE2ETest extends AbstractApiTester {
+
+  private static final List<ClassPathResource> OVERVIEW_RESOURCES =
+      List.of(
+          new ClassPathResource("openapi/overview.md"),
+          new ClassPathResource("openapi/error-model.md"),
+          new ClassPathResource("openapi/authentication.md"));
 
   @Test
   @DisplayName("OpenAPI JSON 스펙을 반환한다")
@@ -59,21 +68,10 @@ class OpenApiSpecE2ETest extends AbstractApiTester {
 
     assertThat(overviewResponse).hasStatusOk();
     String overview = overviewResponse.getResponse().getContentAsString();
-    assertThat(overview)
-        .contains(
-            "한국어 비속어 필터링 API",
-            "## 시작하기",
-            "## 주요 기능",
-            "# Error Model",
-            "`status`",
-            "4010",
-            "4032",
-            "# Authentication",
-            "x-api-key",
-            "인증이 필요하지 않은 경로");
-    assertThat(overview.indexOf("한국어 비속어 필터링 API"))
+    assertThat(overview).isEqualTo(readMarkdownInOrder(OVERVIEW_RESOURCES));
+    assertThat(overview.indexOf("# Error Model"))
         .as("/overview.md는 overview, error-model, authentication 순서로 조합되어야 한다")
-        .isLessThan(overview.indexOf("# Error Model"));
+        .isPositive();
     assertThat(overview.indexOf("# Error Model"))
         .as("error-model은 authentication보다 먼저 포함되어야 한다")
         .isLessThan(overview.indexOf("# Authentication"));
@@ -248,5 +246,20 @@ class OpenApiSpecE2ETest extends AbstractApiTester {
       }
     }
     return MissingNode.getInstance();
+  }
+
+  private static String readMarkdownInOrder(List<ClassPathResource> resources) {
+    return resources.stream()
+        .map(OpenApiSpecE2ETest::readResource)
+        .reduce((left, right) -> left + "\n\n" + right)
+        .orElse("");
+  }
+
+  private static String readResource(ClassPathResource resource) {
+    try (var inputStream = resource.getInputStream()) {
+      return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+    } catch (Exception exception) {
+      throw new IllegalStateException("테스트 문서 리소스를 읽을 수 없습니다: " + resource, exception);
+    }
   }
 }
