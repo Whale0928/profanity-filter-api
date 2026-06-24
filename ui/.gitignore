@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+coverage/
+
+# Tool caches
+.cache/
+.turbo/
+.vite/
+.vite-temp/
+.next/
+.nuxt/
+.svelte-kit/
+
+# TypeScript/Vite generated files
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts
+
+# Local environment files
+.env
+.env.*
+!.env.example
+!.env.sample
