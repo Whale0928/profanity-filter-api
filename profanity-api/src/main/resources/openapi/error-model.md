@@ -1,61 +1,35 @@
 # Error Model
 
-이 API는 HTTP 상태 코드보다 응답 본문의 `status` 객체를 기준으로 처리 결과를 전달합니다.
-대부분의 실패 응답은 HTTP `200`으로 반환되고, 인증 필터에서 차단된 요청은 HTTP `401`이 함께 설정될 수 있습니다.
+### 응답 정책
 
-## 공통 오류 응답
+OpenAPI의 `responses`는 HTTP 상태 코드를 기준으로 표시합니다.
+이 API는 대부분의 실패를 HTTP `200`과 본문 `status.code`로 반환하므로, 각 operation에 HTTP `400`이나 `404`가 따로 표시되지 않을 수 있습니다.
+API Key 누락처럼 보안 필터에서 차단되는 요청은 HTTP `401`과 `status.code = 4010`이 함께 반환될 수 있습니다.
 
-필터 API를 제외한 대부분의 엔드포인트는 `ApiResponse<T>` 형식을 사용합니다.
-오류 응답에서는 `data`가 `null`이며, 상세 원인은 `status.DetailDescription`에서 확인합니다.
+### 오류 응답 형식
 
-```json
-{
-  "status": {
-    "code": 4000,
-    "message": "Bad_request",
-    "description": "처리에 실패하였습니다. 요청이 잘못 되었거나 필수 파라미터가 누락된 경우 발생 합니다. Description에서 보다 상세한 오류 메세지를 확인할 수 있습니다.",
-    "DetailDescription": "text: 필터링 대상 문자열은 필수입니다."
-  },
-  "data": null
-}
-```
+| API | 오류 형식 |
+| --- | --- |
+| 일반 API | `ApiResponse<T>`에서 `data = null` |
+| 필터 API | `FilterApiResponse`에서 `detected = []`, `filtered = ""` |
 
-## 필터 API 오류 응답
+상세 원인은 `status.DetailDescription`에서 확인합니다.
 
-`/api/v1/filter`와 `/api/v1/filter/advanced`는 `FilterApiResponse` 형식을 사용합니다.
-실패하더라도 요청 추적을 위해 `trackingId`가 포함될 수 있고, `detected`는 빈 배열, `filtered`는 빈 문자열로 반환됩니다.
+### 상태 코드
 
-```json
-{
-  "trackingId": "018f4fd8-9f6f-7d1a-9b80-3f1f8dd7c002",
-  "status": {
-    "code": 4001,
-    "message": "Invalid_callback_url",
-    "description": "콜백 URL 형식이 올바르지 않습니다. 콜백 URL을 확인해 주세요.",
-    "DetailDescription": ""
-  },
-  "detected": [],
-  "filtered": "",
-  "elapsed": "0.00000000 s / 0.00000 ms / 0.000 µs"
-}
-```
-
-## 주요 상태 코드
-
-| Code | Message | 의미 |
+| Code | Message | 설명 |
 | --- | --- | --- |
-| `2000` | `Ok` | 요청이 정상 처리되었습니다. |
-| `2020` | `Accepted` | 비동기 요청이 접수되었습니다. 결과는 callback URL로 전달됩니다. |
-| `4000` | `Bad_request` | 필수 파라미터 누락, 유효성 검증 실패, JSON 파싱 실패 등 요청 형식 오류입니다. |
-| `4001` | `Invalid_callback_url` | callback URL 형식이 올바르지 않습니다. |
-| `4010` | `Unauthorized` | API Key가 누락되었습니다. |
-| `4030` | `Forbidden` | 클라이언트 권한이 부적절하거나 차단·폐기된 클라이언트입니다. |
-| `4031` | `Not_found_client` | API Key에 매칭되는 클라이언트 정보를 찾을 수 없습니다. |
-| `4032` | `Invalid_api_key` | API Key가 유효하지 않습니다. |
-| `4290` | `Too_many_requests` | 요청 횟수 제한을 초과했습니다. |
-| `5000` | `Internal_server_error` | 서버 내부 오류입니다. |
-
-## 상세 오류 메시지
-
-`status.DetailDescription`은 요청별 상세 원인을 담습니다.
-Bean Validation 오류는 필드별 메시지를 이어 붙여 반환하고, JSON 파싱 오류나 타입 불일치 오류는 요청 데이터 형식 문제를 설명합니다.
+| `2000` | `Ok` | 정상 처리 |
+| `2020` | `Accepted` | 비동기 요청 접수 |
+| `2021` | `Processing` | 처리 진행 중 |
+| `4000` | `Bad_request` | 요청 형식 오류, 필수 값 누락, 검증 실패 |
+| `4001` | `Invalid_callback_url` | callback URL 형식 오류 |
+| `4002` | `Invalid_tracking_id` | 유효하지 않은 tracking ID |
+| `4003` | `Not_fount_tracking_id` | tracking ID를 찾을 수 없음 |
+| `4010` | `Unauthorized` | API Key 누락 |
+| `4030` | `Forbidden` | 권한 부족 또는 차단된 클라이언트 |
+| `4031` | `Not_found_client` | 클라이언트 정보 없음 |
+| `4032` | `Invalid_api_key` | 유효하지 않은 API Key |
+| `4290` | `Too_many_requests` | 요청 제한 초과 |
+| `5000` | `Internal_server_error` | 서버 내부 오류 |
+| `5030` | `Service_unavailable` | 서비스 점검 또는 일시 사용 불가 |

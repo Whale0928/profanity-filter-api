@@ -4,13 +4,17 @@
 
 > API 인증 키 발급 후 사용 가능합니다. 문서 링크를 참조해 주세요
 >
->  [API DOCS](https://whale0928.github.io/profanity-filter-api/)
+>  [OpenAPI JSON](https://api.kr-filter.com/openapi.json)
 >
->  [테스트 페이지](https://api.profanity.kr-filter.com/)
+>  [Overview](https://api.kr-filter.com/overview.md)
+>
+>  [테스트 페이지](https://api.kr-filter.com/)
+>
+>  ~~레거시 API 주소: https://api.profanity.kr-filter.com~~ (지원 종료 예정)
 >
 > 헬스 체크
-> - https://api.profanity.kr-filter.com/api/v1/ping
-> - https://api.profanity.kr-filter.com/api/v1/health
+> - https://api.kr-filter.com/api/v1/ping
+> - https://api.kr-filter.com/api/v1/health
 
 - key 발급 등 편의성을 위해 GUI 환경 별도 구축 예정입니다.
 
@@ -41,7 +45,7 @@
 
 ## API Guide
 
-- 요청 URL: `POST https://api.profanity.kr-filter.com/api/v1/filter/`
+- 요청 URL: `POST https://api.kr-filter.com/api/v1/filter`
 - headers
     - `Content-Type: application/json` or `application/x-www-form-urlencoded`
     - `accept: application/json`
@@ -58,20 +62,26 @@
 
 ### Response Code
 
-- 요청에 대항 Http Status Code는 항상 200으로 응답됩니다.
+- 요청에 대한 HTTP Status Code는 대부분 200으로 응답됩니다.
 - 응답 객체에서는 요청에 따라 변동적인 `status.code`에 응답 코드가 포함되어 있습니다.
 - `Status Code`는 KISO 이용자 보호 시스템 API 서비스의 응답 코드를 참조하여 작성되었습니다.
-- 몇몇 상태 코드의 경우 실제로 구현이 되지 않은 상태 코드가 있습니다. 이는 추후에 구현될 예정입니다.(안될수도)
 
 | Status Code | Description           | Description                                                  |
 |-------------|-----------------------|--------------------------------------------------------------|
 | 2000        | OK                    | 요청이 정상적으로 처리된 상태를 의미합니다.                                     |
 | 2020        | Accepted              | 비동기 요청이 정상적으로 접수된 상태를 의미합니다.                                 |
+| 2021        | Processing            | 요청 처리가 진행 중인 상태를 의미합니다.                                      |
 | 4000        | Bad Request           | 요청이 비정상적인 경우 입니다. 파라미터 누락,타입 오류등이 있습니다, 상세 내용을 참고하세요.        |
+| 4001        | Invalid Callback URL  | 콜백 URL 형식이 올바르지 않은 경우 발생합니다.                                 |
+| 4002        | Invalid Tracking ID   | Tracking ID가 유효하지 않은 경우 발생합니다.                                |
+| 4003        | Not Fount Tracking ID | Tracking ID를 찾을 수 없는 경우 발생합니다.                                 |
 | 4010        | Unauthorized          | 요청을 인증할 API 키 값이 없는 경우 발생하는 오류 입니다.                          |
 | 4030        | Forbidden             | 서버에서 요청에 API 키값을 인식하였으나 해당 키가 적절한 권한을 가지지 않았다고 판정한 경우 발생합니다. |
+| 4031        | Not Found Client      | API Key에 해당하는 클라이언트 정보를 찾을 수 없는 경우 발생합니다.                    |
+| 4032        | Invalid API Key       | API Key가 유효하지 않은 경우 발생합니다.                                    |
 | 4290        | Too Many Requests     | 특정 클라이언트가 너무 많은 요청을 단위 시간 안에 보낸 경우에 이 응답이 리턴됩니다.             |
 | 5000        | Internal Server Error | 서버 측의 문제로 요청에 대한 처리가 불가능한 경우 오류가 발생하였음을 알리기 위해 본 코드를 사용합니다.  |
+| 5030        | Service Unavailable   | 서비스 점검 또는 일시 사용 불가 상태를 의미합니다.                                |
 
 ### Usage Guide
 
