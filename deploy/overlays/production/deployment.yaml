@@ -37,20 +37,20 @@ spec:
           env:
             - name: SERVER_PORT
               value: "8080"
-            - name: ACTUATOR_PATH
-              value: "/health"
             - name: SPRING_PROFILES_ACTIVE
               value: "prod"
+            - name: JAVA_TOOL_OPTIONS
+              value: "-XX:MaxRAMPercentage=75.0"
           envFrom:
             - secretRef:
                 name: profanity-secrets
           resources:
             requests:
-              memory: "512Mi"
-              cpu: "250m"
+              memory: "1Gi"
+              cpu: "500m"
             limits:
-              memory: "512Mi"
-              cpu: "250m"
+              memory: "4Gi"
+              cpu: "4"
           livenessProbe:
             httpGet:
               path: /api/v1/health

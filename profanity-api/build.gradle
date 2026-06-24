@@ -1,17 +1,7 @@
-plugins {
-    id "org.asciidoctor.jvm.convert" version "3.3.2"
-}
-
-
 bootJar.enabled = true
 jar.enabled = false
 
-ext {
-    snippetsDir = file('build/generated-snippets') as File
-}
-
 configurations {
-    asciidoctorExt
     compileOnly {
         extendsFrom annotationProcessor
     }
@@ -29,52 +19,21 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.springframework.boot:spring-boot-starter-aop'
 
-    // monitoring
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
-    implementation 'io.micrometer:micrometer-registry-prometheus'
-
     // documentation
-    asciidoctorExt 'org.springframework.restdocs:spring-restdocs-asciidoctor'
-    testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
+    implementation libs.springdoc.openapi.starter.webmvc.api
+    testImplementation project(':profanity-test-support')
+    testImplementation libs.archunit.junit5
 
     //Mail
     implementation 'org.springframework.boot:spring-boot-starter-mail'
     //thymeleaf(for email service)
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect'
+
 }
 
 tasks.register("prepareKotlinBuildScriptModel") {}
 
 test {
-    useJUnitPlatform() {
-        excludeTags 'restdocs'
-    }
-}
-
-tasks.register('restdocs', Test) {
-    outputs.dir snippetsDir
-    useJUnitPlatform {
-        includeTags 'restdocs'
-    }
-}
-
-tasks.register('copyRestDocs', Copy) {
-    dependsOn asciidoctor
-    from file("build/docs/asciidoc/index.html")
-    into '../docs'
-}
-
-tasks.register('generateRestDocs') {
-    dependsOn restdocs, asciidoctor, copyRestDocs
-}
-asciidoctor {
-    inputs.dir snippetsDir
-    configurations 'asciidoctorExt'
-    dependsOn restdocs
-    sourceDir file('src/docs')
-    sources {
-        include("index.adoc")
-    }
-    baseDirFollowsSourceFile()
+    useJUnitPlatform()
 }

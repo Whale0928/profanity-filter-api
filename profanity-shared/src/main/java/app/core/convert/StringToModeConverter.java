@@ -6,12 +6,12 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class StringToModeConverter implements Converter<String, Mode> {
-    @Override
-    public Mode convert(String source) {
-        try {
-            return Mode.valueOf(source.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Mode 값이 잘못되었습니다.");
-        }
+  @Override
+  public Mode convert(String source) {
+    try {
+      return Mode.valueOf(source.toUpperCase());
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException("Mode 값이 잘못되었습니다.");
     }
+  }
 }

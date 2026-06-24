@@ -13,9 +13,9 @@ repos:
         args: [feat, fix, docs, style, refactor, test, chore, remove]
   - repo: local
     hooks:
-      - id: gradle spotlessApply
-        name: gradle spotlessApply
-        entry: sh -c './gradlew spotlessApply && git add -A'
+      - id: gradle spotlessCheck
+        name: gradle spotlessCheck
+        entry: ./gradlew spotlessCheck
         language: system
         types: [java]
         pass_filenames: false

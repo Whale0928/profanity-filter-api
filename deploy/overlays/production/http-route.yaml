@@ -12,6 +12,7 @@ spec:
     namespace: envoy-gateway-system
   hostnames:
   - api.profanity.kr-filter.com
+  - api.kr-filter.com
   rules:
   - backendRefs:
     - name: profanity-api

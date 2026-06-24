@@ -3,9 +3,9 @@ package app.application.client;
 import app.domain.client.ClientMetadata;
 
 public interface MetadataReader {
-    ClientMetadata read(String apiKey);
+  ClientMetadata read(String apiKey);
 
-    String getApiKeyByEmail(String email);
+  String getApiKeyByEmail(String email);
 
-    boolean verifyClientByEmail(String email);
+  boolean verifyClientByEmail(String email);
 }

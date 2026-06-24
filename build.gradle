@@ -2,6 +2,8 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.4.0'
     id 'io.spring.dependency-management' version '1.1.6'
+    id 'com.diffplug.spotless' version '6.25.0' apply false
+    id 'jacoco'
 }
 
 configurations {
@@ -28,16 +30,35 @@ subprojects {
     apply plugin: 'java-library'
     apply plugin: 'org.springframework.boot'
     apply plugin: 'io.spring.dependency-management'
+    apply plugin: 'com.diffplug.spotless'
+    apply plugin: 'jacoco'
+
+    ext['testcontainers.version'] = libs.versions.testcontainers.get()
+    ext['flyway.version'] = libs.versions.flyway.get()
+
+    spotless {
+        java {
+            googleJavaFormat()
+            removeUnusedImports()
+            trimTrailingWhitespace()
+            endWithNewline()
+        }
+    }
+
+    jacoco {
+        toolVersion = '0.8.12'
+    }
 
     dependencies {
         // default spring boot dependencies
         implementation 'org.springframework.boot:spring-boot-starter'
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
         annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
         implementation 'org.springframework.boot:spring-boot-configuration-processor'
 
         // default  utilities
-        implementation 'org.apache.commons:commons-lang3:3.12.0'
+        implementation libs.commons.lang3
         implementation 'com.google.guava:guava:31.1-jre'
 
         // default lombok
@@ -65,11 +86,103 @@ subprojects {
             showCauses = true
             showStackTraces = true
         }
+        finalizedBy jacocoTestReport
+    }
+
+    tasks.register('unitTest', Test) {
+        group = 'verification'
+        description = 'Docker와 문서 생성을 사용하지 않는 테스트를 실행합니다.'
+        outputs.upToDateWhen { false }
+        testClassesDirs = sourceSets.test.output.classesDirs
+        classpath = sourceSets.test.runtimeClasspath
+        useJUnitPlatform()
+        exclude 'app/e2e/**'
+        exclude 'app/test/support/container/**'
+        testLogging {
+            events "passed", "skipped", "failed"
+            showStandardStreams = true
+            exceptionFormat = 'full'
+            showExceptions = true
+            showCauses = true
+            showStackTraces = true
+        }
+    }
+
+    // 모듈별 커버리지 리포트 (build/reports/jacoco/test)
+    jacocoTestReport {
+        dependsOn test
+        reports {
+            xml.required = true
+            html.required = true
+        }
     }
 }
 
 // Root 프로젝트의 test task를 수정
 test.dependsOn subprojects.test
+
+tasks.register('staticCheck') {
+    group = 'verification'
+    description = '테스트 실행 없이 포맷과 컴파일을 검증합니다.'
+    dependsOn subprojects.spotlessCheck
+    dependsOn subprojects.compileJava
+    dependsOn subprojects.compileTestJava
+}
+
+tasks.register('unitTest') {
+    group = 'verification'
+    description = 'Docker를 제외한 단위 및 슬라이스 테스트를 실행합니다.'
+    dependsOn subprojects.unitTest
+}
+
+tasks.register('supportTest') {
+    group = 'verification'
+    description = '공유 테스트 지원 모듈을 검증합니다.'
+    dependsOn ':profanity-test-support:test'
+}
+
+tasks.register('apiE2eTest') {
+    group = 'verification'
+    description = 'API E2E 시나리오를 실행합니다.'
+    dependsOn ':profanity-api:e2eTest'
+}
+
+project(':profanity-api') {
+    tasks.register('e2eTest', Test) {
+        group = 'verification'
+        description = 'API E2E 시나리오를 실행합니다.'
+        outputs.upToDateWhen { false }
+        testClassesDirs = sourceSets.test.output.classesDirs
+        classpath = sourceSets.test.runtimeClasspath
+        useJUnitPlatform()
+        include 'app/e2e/**'
+        testLogging {
+            events "passed", "skipped", "failed"
+            showStandardStreams = true
+            exceptionFormat = 'full'
+            showExceptions = true
+            showCauses = true
+            showStackTraces = true
+        }
+    }
+}
+
+// 전 모듈 통합 커버리지 리포트 (build/reports/jacoco/aggregate)
+tasks.register('jacocoRootReport', JacocoReport) {
+    dependsOn subprojects.test
+    dependsOn subprojects.jacocoTestReport
+
+    sourceDirectories.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
+    classDirectories.setFrom files(subprojects.sourceSets.main.output)
+    executionData.setFrom files(subprojects.jacocoTestReport.executionData)
+
+    reports {
+        xml.required = true
+        html.required = true
+        xml.outputLocation = layout.buildDirectory.file('reports/jacoco/aggregate/jacocoRootReport.xml')
+        html.outputLocation = layout.buildDirectory.dir('reports/jacoco/aggregate')
+    }
+}
 
 bootJar.enabled = false
 jar.enabled = true

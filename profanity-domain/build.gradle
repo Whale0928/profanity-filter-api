@@ -1,7 +1,15 @@
+configurations {
+    testCompileOnly {
+        extendsFrom compileOnly
+    }
+}
+
 dependencies {
     api project(':profanity-shared')
 
     implementation 'org.springframework:spring-tx'
+    // OpenAPI 스키마 설명 어노테이션
+    implementation libs.swagger.annotations
 
     compileOnly 'org.hibernate:hibernate-core:6.6.4.Final'
     compileOnly 'jakarta.persistence:jakarta.persistence-api:3.1.0'

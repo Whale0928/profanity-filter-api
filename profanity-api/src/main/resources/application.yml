@@ -4,9 +4,6 @@ server:
   servlet:
     encoding:
       charset: UTF-8
-  #tomcat:
-  #  mbeanregistry:
-  #    enabled: true
 
 spring:
   profiles:
@@ -26,9 +23,15 @@ spring:
       mail.starttls.enable: true
       mail.smtp.auth: true
 
-#management:
-#  endpoints:
-#    web:
-#      exposure:
-#        include: [ "health", "prometheus" ]
-#      base-path: ${ACTUATOR_PATH:/health}
+springdoc:
+  api-docs:
+    path: /openapi.json
+  paths-to-match:
+    - /api/**
+  swagger-ui:
+    enabled: false
+
+app:
+  response:
+    # 이 호스트로 들어온 요청에만 응답 meta 커스텀을 적용한다. 비우면 비활성화.
+    proxied-host: ${RESPONSE_PROXIED_HOST:api.kr-filter.com}

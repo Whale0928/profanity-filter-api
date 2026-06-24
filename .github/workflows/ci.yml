@@ -1,0 +1,80 @@
+name: ci
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    branches:
+      - '**'
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: ci
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v6
+
+      - name: setup java
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: setup gradle
+        uses: gradle/actions/setup-gradle@v5
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
+
+      - name: run static check
+        run: ./gradlew --no-daemon staticCheck
+
+      - name: run unit tests
+        id: unitTests
+        run: ./gradlew --no-daemon unitTest
+
+      - name: upload unit test reports
+        uses: actions/upload-artifact@v6
+        if: always() && steps.unitTests.conclusion != 'skipped'
+        with:
+          name: unit test reports
+          if-no-files-found: ignore
+          path: |
+            **/build/reports/tests/unitTest/
+            **/build/test-results/unitTest/
+
+      - name: run support tests
+        id: supportTests
+        run: ./gradlew --no-daemon supportTest
+
+      - name: upload support test reports
+        uses: actions/upload-artifact@v6
+        if: always() && steps.supportTests.conclusion != 'skipped'
+        with:
+          name: support test reports
+          if-no-files-found: ignore
+          path: |
+            profanity-test-support/build/reports/tests/test/
+            profanity-test-support/build/test-results/test/
+
+      - name: run api e2e tests
+        id: apiE2eTests
+        run: ./gradlew --no-daemon apiE2eTest
+
+      - name: upload api e2e test reports
+        uses: actions/upload-artifact@v6
+        if: always() && steps.apiE2eTests.conclusion != 'skipped'
+        with:
+          name: api e2e test reports
+          if-no-files-found: ignore
+          path: |
+            profanity-api/build/reports/tests/e2eTest/
+            profanity-api/build/test-results/e2eTest/

@@ -4,11 +4,11 @@ import java.util.List;
 import java.util.Optional;
 
 public interface WordManagementRepository {
-    Optional<WordManagementRequest> findById(Long id);
+  Optional<WordManagementRequest> findById(Long id);
 
-    WordManagementRequest save(WordManagementRequest request);
+  WordManagementRequest save(WordManagementRequest request);
 
-    List<WordManagementRequest> findAll();
+  List<WordManagementRequest> findAll();
 
-    Boolean activateWord(Long id);
+  Boolean activateWord(Long id);
 }
