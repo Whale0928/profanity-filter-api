@@ -892,56 +892,60 @@ button {
 
 .api-docs-overview {
   width: min(var(--docs-article-width), 100%);
+  min-width: 0;
+  max-width: 100%;
   display: grid;
   gap: 18px;
   scroll-margin-top: calc(var(--docs-header-height) + 24px);
 }
 
-.markdown-article {
-  max-width: 760px;
+.docs-markdown-article {
+  width: min(760px, 100%);
+  min-width: 0;
+  max-width: 100%;
   color: var(--pine);
   word-break: keep-all;
   overflow-wrap: break-word;
 }
 
-.markdown-article h1,
-.markdown-article h2,
-.markdown-article h3,
-.markdown-article h4 {
+.docs-markdown-article h1,
+.docs-markdown-article h2,
+.docs-markdown-article h3,
+.docs-markdown-article h4 {
   margin: 0;
   letter-spacing: 0;
   text-wrap: balance;
 }
 
-.markdown-article [id],
+.docs-markdown-article [id],
 .api-docs-reference [id] {
   scroll-margin-top: calc(var(--docs-header-height) + 24px);
 }
 
-.markdown-article h1 {
+.docs-markdown-article h1 {
   font-size: clamp(36px, 5vw, 58px);
   line-height: 1.04;
 }
 
-.markdown-article h2 {
+.docs-markdown-article h2 {
   margin-top: 42px;
   font-size: clamp(24px, 2.6vw, 34px);
   line-height: 1.18;
 }
 
-.markdown-article h3 {
+.docs-markdown-article h3 {
   margin-top: 30px;
   font-size: 20px;
   line-height: 1.3;
 }
 
-.markdown-article h4 {
+.docs-markdown-article h4 {
   margin-top: 22px;
   font-size: 16px;
 }
 
-.markdown-article p,
-.markdown-article li,
+.docs-markdown-article p,
+.docs-markdown-article li,
 .docs-pending-panel p {
   color: color-mix(in srgb, var(--pine) 78%, var(--ivory));
   font-size: 16px;
@@ -949,19 +953,19 @@ button {
   text-wrap: pretty;
 }
 
-.markdown-article p {
+.docs-markdown-article p {
   margin: 16px 0 0;
 }
 
-.markdown-article ul,
-.markdown-article ol {
+.docs-markdown-article ul,
+.docs-markdown-article ol {
   display: grid;
   gap: 8px;
   margin: 16px 0 0;
   padding-left: 24px;
 }
 
-.markdown-article code {
+.docs-markdown-article code {
   border: 1px solid color-mix(in srgb, var(--pine) 18%, transparent);
   border-radius: 6px;
   background: color-mix(in srgb, var(--sage) 18%, var(--ivory));
@@ -971,7 +975,8 @@ button {
   font-size: 0.92em;
 }
 
-.markdown-article pre {
+.docs-markdown-article pre {
+  max-width: 100%;
   overflow-x: auto;
   margin: 18px 0 0;
   border-radius: 8px;
@@ -980,7 +985,7 @@ button {
   color: var(--ivory);
 }
 
-.markdown-article pre code {
+.docs-markdown-article pre code {
   border: 0;
   background: transparent;
   padding: 0;
@@ -990,25 +995,27 @@ button {
 }
 
 .markdown-table-wrap {
+  max-width: 100%;
   overflow-x: auto;
   margin-top: 18px;
 }
 
-.markdown-article table {
+.docs-markdown-article table {
   width: 100%;
+  min-width: min(640px, 100%);
   border-collapse: collapse;
   font-size: 14px;
 }
 
-.markdown-article th,
-.markdown-article td {
+.docs-markdown-article th,
+.docs-markdown-article td {
   border-bottom: 1px solid color-mix(in srgb, var(--pine) 16%, transparent);
   padding: 10px;
   text-align: left;
   vertical-align: top;
 }
 
-.markdown-article th {
+.docs-markdown-article th {
   color: var(--pine);
   font-weight: 900;
 }
@@ -1040,6 +1047,7 @@ button {
 .api-docs-content {
   position: relative;
   min-width: 0;
+  max-width: 100%;
   padding: 64px 48px 112px;
 }
 
@@ -1086,6 +1094,7 @@ button {
 .api-docs-main {
   width: min(var(--docs-main-rail-width), 100%);
   min-width: 0;
+  max-width: 100%;
 }
 
 .api-docs-reference code {
@@ -1262,7 +1271,7 @@ button {
     grid-template-columns: 1fr;
   }
 
-  .markdown-article {
+  .docs-markdown-article {
     max-width: none;
   }
 
@@ -1291,7 +1300,7 @@ button {
 
 @media (max-width: 767px) {
   .api-docs-content {
-    padding: 0;
+    padding: 24px var(--landing-letterbox) 72px;
   }
 
   .api-docs-copy-actions {

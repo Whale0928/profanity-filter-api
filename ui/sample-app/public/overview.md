@@ -103,7 +103,7 @@ Bean Validation 오류는 필드별 메시지를 이어 붙여 반환하고, JSO
 ## API Key 헤더
 
 ```http
-x-api-key: YOUR_SECRET_TOKEN
+x-api-key: this_is_test_key_example
 ```
 
 서버 구현은 대소문자를 구분하지 않는 HTTP 헤더 특성에 따라 `X-API-KEY` 값을 읽고, OpenAPI 문서에는 `x-api-key` 이름으로 노출합니다.

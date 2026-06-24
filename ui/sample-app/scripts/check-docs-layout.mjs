@@ -1,21 +1,26 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 const appRoot = resolve(import.meta.dirname, "..");
 
-const openapi = JSON.parse(readFileSync(resolve(appRoot, "public", "openapi.json"), "utf8"));
 const app = readFileSync(resolve(appRoot, "src", "App.tsx"), "utf8");
 const docsPage = readFileSync(resolve(appRoot, "src", "DocsPage.tsx"), "utf8");
 const guidelines = readFileSync(resolve(appRoot, "DESIGN_GUIDELINES.md"), "utf8");
 const styles = readFileSync(resolve(appRoot, "src", "styles.css"), "utf8");
 const overview = readFileSync(resolve(appRoot, "public", "overview.md"), "utf8");
 
-assert.match(openapi.openapi, /^3\./, "OpenAPI root must define a 3.x document.");
-assert.ok(Object.keys(openapi.paths ?? {}).length > 0, "OpenAPI root must define API paths.");
 assert.match(overview, /시작하기/, "Overview markdown must include a getting-started section.");
 
 assert.match(docsPage, /ApiReferenceReact/, "DocsPage must render the OpenAPI body with Scalar.");
-assert.match(docsPage, /OPENAPI_DOCUMENT_PATH = "\/openapi\.json"/, "Scalar must read the local OpenAPI JSON file.");
+assert.match(
+  docsPage,
+  /OPENAPI_DOCUMENT_URL = "https:\/\/api\.kr-filter\.com\/openapi\.json"/,
+  "Scalar must read the OpenAPI JSON document from the API server.",
+);
+assert.ok(
+  !existsSync(resolve(appRoot, "public", "openapi.json")),
+  "The UI bundle must not ship a stale local OpenAPI JSON copy.",
+);
 assert.match(docsPage, /OVERVIEW_MARKDOWN_PATH = "\/overview\.md"/, "Docs overview must read the local markdown file.");
 assert.match(docsPage, /api-docs-sidebar/, "Docs page must keep the existing fixed sidebar shell.");
 assert.match(docsPage, /showSidebar:\s*false/, "Scalar native sidebar must stay hidden inside the fixed docs shell.");
@@ -48,9 +53,17 @@ const copyActionsBlock = extractRule(styles, ".api-docs-copy-actions");
 assert.match(copyActionsBlock, /position:\s*sticky/, "Docs copy actions must stay in the content flow.");
 
 assert.match(styles, /\.api-docs-overview/, "Docs CSS must style the markdown overview body inside the fixed shell.");
+assert.match(styles, /\.docs-markdown-article/, "Docs markdown CSS must avoid Scalar's markdown-article class name.");
+assert.doesNotMatch(styles, /\.markdown-article\b/, "Docs markdown CSS must not collide with Scalar's markdown-article class.");
+assert.match(extractRule(styles, ".api-docs-content"), /max-width:\s*100%/, "Docs content must not exceed the available width.");
+assert.match(extractRule(styles, ".api-docs-main"), /max-width:\s*100%/, "Docs main rail must not exceed the available width.");
+assert.match(extractRule(styles, ".api-docs-overview"), /min-width:\s*0/, "Docs overview must be allowed to shrink.");
+assert.match(extractRule(styles, ".docs-markdown-article"), /max-width:\s*100%/, "Docs markdown must not exceed the content width.");
+assert.match(extractRule(styles, ".markdown-table-wrap"), /overflow-x:\s*auto/, "Wide markdown tables must scroll inside their own container.");
 
 const mobileBlock = extractMedia(styles, "@media (max-width: 767px)");
 assert.match(mobileBlock, /\.api-docs-content\s*{[^}]*padding:/s, "Mobile docs layout must keep readable content padding.");
+assert.doesNotMatch(mobileBlock, /\.api-docs-content\s*{[^}]*padding:\s*0\s*;/s, "Mobile docs content must keep horizontal padding instead of touching viewport edges.");
 assert.doesNotMatch(mobileBlock, /\.api-docs-sidebar\s*{[^}]*position:\s*fixed/s, "Mobile sidebar must not become a fixed overlay.");
 
 assert.match(guidelines, /첫 화면은 4개 블록으로 구성한다\./, "Guidelines must define the four-block landing structure.");

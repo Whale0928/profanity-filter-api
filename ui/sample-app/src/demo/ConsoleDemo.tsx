@@ -27,7 +27,7 @@ const fakeApi = {
     data: {
       name: request.serviceName,
       email: request.email,
-      apiKey: "pf_demo_018f5caa4e9b",
+      apiKey: "this_is_test_key_example",
       note: request.purpose,
     },
   }),
@@ -57,7 +57,7 @@ export function ConsoleDemo() {
   const [serviceName, setServiceName] = useState("dead-whale-console");
   const [email, setEmail] = useState("hello@example.com");
   const [purpose, setPurpose] = useState("포트폴리오 댓글 필터링 테스트");
-  const [apiKey, setApiKey] = useState("pf_demo_018f5caa4e9b");
+  const [apiKey, setApiKey] = useState("this_is_test_key_example");
   const [text, setText] = useState("민트초코는 아주 개자식이야");
   const [mode, setMode] = useState<FilterMode>("FILTER");
   const [inquiryTitle, setInquiryTitle] = useState("API 사용 문의");

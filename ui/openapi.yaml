@@ -38,8 +38,8 @@ info:
     - `GET /api/v1/sync`는 `ResultMessage` enum을 직접 반환하므로 공통 `ApiResponse` envelope을 사용하지 않습니다.
     - `GET /api/v1/health`, `GET /api/v1/ping`은 plain text를 반환합니다.
 servers:
-  - url: https://api.profanity.kr-filter.com
-    description: README에 명시된 운영 API 서버
+  - url: https://api.kr-filter.com
+    description: 권장 운영 API 서버
   - url: http://localhost:8080
     description: 로컬 개발 서버
 security:
@@ -355,7 +355,7 @@ paths:
                     data:
                       name: 팀 보틀노트
                       email: bottlenote@email.com
-                      apiKey: pf_live_1234567890abcdef
+                      apiKey: this_is_test_key_example
                       note: 팀 프로젝트에서 피드 작성 시 비속어 검증을 위해 사용합니다.
                 duplicateEmail:
                   summary: 이메일 중복
@@ -451,7 +451,7 @@ paths:
                   description: 정상적으로 처리 되었습니다.
                   DetailDescription: ""
                 data:
-                  newApiKey: pf_live_new_1234567890abcdef
+                  newApiKey: this_is_test_key_reissued_example
   /api/v1/clients/send-email:
     get:
       tags:
@@ -546,7 +546,7 @@ paths:
                       description: 정상적으로 처리 되었습니다.
                       DetailDescription: ""
                     data:
-                      apikey: pf_live_1234567890abcdef
+                      apikey: this_is_test_key_example
                 invalidCode:
                   summary: 인증 코드 불일치
                   value:
@@ -772,7 +772,7 @@ components:
       schema:
         type: string
         minLength: 1
-      example: pf_live_1234567890abcdef
+      example: this_is_test_key_example
   responses:
     UnauthorizedTransport:
       description: |
@@ -1035,7 +1035,7 @@ components:
         apiKey:
           type: string
           description: 새로 발급된 API Key입니다. 이후 보호 API의 `X-API-KEY` 헤더에 사용합니다.
-          example: pf_live_1234567890abcdef
+          example: this_is_test_key_example
         note:
           type:
             - string
@@ -1113,7 +1113,7 @@ components:
         newApiKey:
           type: string
           description: 재발급된 API Key입니다.
-          example: pf_live_new_1234567890abcdef
+          example: this_is_test_key_reissued_example
     MailPayloadRequest:
       type: object
       required:
@@ -1139,7 +1139,7 @@ components:
         apikey:
           type: string
           description: 인증된 이메일로 발급된 API Key입니다. 필드명은 현재 코드의 `apikey`를 따릅니다.
-          example: pf_live_1234567890abcdef
+          example: this_is_test_key_example
     WordRequest:
       type: object
       required:

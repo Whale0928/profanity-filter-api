@@ -2,8 +2,7 @@ import { ApiReferenceReact, type AnyApiReferenceConfiguration } from "@scalar/ap
 import "@scalar/api-reference-react/style.css";
 import { Fragment, type ReactNode, useEffect, useMemo, useState } from "react";
 
-const OPENAPI_DOCUMENT_PATH = "/openapi.json";
-const OPENAPI_DOCUMENT_URL = `${OPENAPI_DOCUMENT_PATH}?v=local-docs`;
+const OPENAPI_DOCUMENT_URL = "https://api.kr-filter.com/openapi.json";
 const OVERVIEW_MARKDOWN_PATH = "/overview.md";
 const HTTP_METHODS = ["get", "post", "put", "patch", "delete", "options", "head", "trace"] as const;
 
@@ -104,7 +103,7 @@ export default function DocsPage({ currentPath: _currentPath }: DocsPageProps) {
   useEffect(() => {
     const controller = new AbortController();
 
-    fetch(OPENAPI_DOCUMENT_URL, { signal: controller.signal })
+    fetch(`${OPENAPI_DOCUMENT_URL}?v=api-docs`, { signal: controller.signal })
       .then((response) => {
         if (!response.ok) {
           throw new Error(`OpenAPI 문서를 불러오지 못했습니다. status=${response.status}`);
@@ -190,7 +189,7 @@ export default function DocsPage({ currentPath: _currentPath }: DocsPageProps) {
     if (!navigator.clipboard) {
       return;
     }
-    await navigator.clipboard.writeText(OPENAPI_DOCUMENT_PATH);
+    await navigator.clipboard.writeText(OPENAPI_DOCUMENT_URL);
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1400);
   };
@@ -477,7 +476,7 @@ function createScalarOperationSlug(operation: {
 }
 
 function MarkdownArticle({ content }: { content: string }) {
-  return <article className="markdown-article">{parseMarkdown(content)}</article>;
+  return <article className="docs-markdown-article">{parseMarkdown(content)}</article>;
 }
 
 function parseMarkdown(content: string): ReactNode[] {
