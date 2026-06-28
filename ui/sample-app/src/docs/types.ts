@@ -6,6 +6,11 @@ export type MarkdownState = {
   url: string;
 };
 
+export type OpenApiDocumentState = {
+  document: OpenApiDocument | null;
+  error: string;
+};
+
 export type OpenApiDocument = {
   openapi?: string;
   info?: {

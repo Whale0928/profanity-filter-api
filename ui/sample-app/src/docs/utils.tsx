@@ -57,42 +57,17 @@ export function buildSections(document: OpenApiDocument): SectionView[] {
     }));
 }
 
-export function createTagDocument(document: OpenApiDocument, tagName: string): OpenApiDocument {
-  const filteredPaths = Object.fromEntries(
-    Object.entries(document.paths ?? {})
-      .map(([path, methods]) => {
-        const filteredMethods = Object.fromEntries(
-          Object.entries(methods).filter(([, operation]) =>
-            isOperationObject(operation) ? operation.tags?.includes(tagName) : false,
-          ),
-        );
-        return [path, filteredMethods];
-      })
-      .filter(([, methods]) => Object.keys(methods).length > 0),
-  );
-
-  return {
-    openapi: document.openapi,
-    info: document.info,
-    servers: document.servers,
-    security: document.security,
-    tags: document.tags?.filter((tag) => tag.name === tagName),
-    paths: filteredPaths,
-    components: document.components,
-  };
-}
-
 export function buildHashNavigation(content: string): OverviewLink[] {
-  return parseMarkdownHeadings(content);
+  return parseMarkdownRootHeadings(content);
 }
 
-export function parseMarkdownHeadings(content: string): OverviewLink[] {
+export function parseMarkdownRootHeadings(content: string): OverviewLink[] {
   const seen = new Map<string, number>();
 
   return content
     .replace(/\r\n/g, "\n")
     .split("\n")
-    .map((line) => /^(#{2,3})\s+(.+)$/.exec(line))
+    .map((line) => /^(#)\s+(.+)$/.exec(line))
     .filter((match): match is RegExpExecArray => Boolean(match))
     .map((match) => {
       const title = stripInlineMarkdown(match[2]);
@@ -159,6 +134,12 @@ export function parseMarkdown(content: string): ReactNode[] {
     const line = lines[index];
 
     if (!line.trim()) {
+      index += 1;
+      continue;
+    }
+
+    if (isMarkdownHorizontalRule(line)) {
+      nodes.push(<hr key={`hr-${index}`} />);
       index += 1;
       continue;
     }
@@ -244,6 +225,7 @@ export function parseMarkdown(content: string): ReactNode[] {
       lines[index].trim() &&
       !/^(#{1,4})\s+/.test(lines[index]) &&
       !/^[-*]\s+/.test(lines[index]) &&
+      !isMarkdownHorizontalRule(lines[index]) &&
       !/^\d+\.\s+/.test(lines[index]) &&
       !lines[index].startsWith("```") &&
       !lines[index].startsWith("|")
@@ -255,6 +237,10 @@ export function parseMarkdown(content: string): ReactNode[] {
   }
 
   return nodes;
+}
+
+export function isMarkdownHorizontalRule(line: string) {
+  return /^\s{0,3}(?:-{3,}|\*{3,}|_{3,})\s*$/.test(line);
 }
 
 function renderTable(lines: string[], key: string) {

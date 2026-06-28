@@ -3,18 +3,16 @@ import "@scalar/api-reference-react/style.css";
 import { useEffect, useMemo, useState } from "react";
 
 import { OPENAPI_DOCUMENT_URL, OVERVIEW_MARKDOWN_PATH, FALLBACK_OVERVIEW_MARKDOWN } from "./docs/constants";
-import type { OpenApiDocument } from "./docs/types";
 import {
   buildSections,
   buildHashNavigation,
-  createTagDocument,
   createOperationAnchor,
   createScalarOperationSlug,
   createTagAnchor,
   getSectionForHash,
   parseMarkdown,
 } from "./docs/utils";
-import { useMarkdownDocument } from "./docs/hooks";
+import { useMarkdownDocument, useOpenApiDocument } from "./docs/hooks";
 
 function getDecodedHash() {
   const rawHash = window.location.hash.replace(/^#/, "");
@@ -29,10 +27,10 @@ function getDecodedHash() {
 }
 
 export default function DocsPage() {
-  const [document, setDocument] = useState<OpenApiDocument | null>(null);
-  const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
   const [activeHash, setActiveHash] = useState(getDecodedHash);
+  const [openSectionSlugs, setOpenSectionSlugs] = useState<Set<string>>(() => new Set());
+  const { document, error } = useOpenApiDocument(OPENAPI_DOCUMENT_URL);
   const overview = useMarkdownDocument(OVERVIEW_MARKDOWN_PATH, FALLBACK_OVERVIEW_MARKDOWN);
 
   useEffect(() => {
@@ -45,51 +43,24 @@ export default function DocsPage() {
     };
   }, []);
 
-  useEffect(() => {
-    const controller = new AbortController();
-
-    fetch(`${OPENAPI_DOCUMENT_URL}?v=api-docs`, { signal: controller.signal })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`OpenAPI 문서를 불러오지 못했습니다. status=${response.status}`);
-        }
-        return response.json() as Promise<OpenApiDocument>;
-      })
-      .then((openApiDocument) => {
-        setDocument(openApiDocument);
-        setError("");
-      })
-      .catch((loadError: unknown) => {
-        if (!controller.signal.aborted) {
-          setError(loadError instanceof Error ? loadError.message : "OpenAPI 문서 로딩 실패");
-        }
-      });
-
-    return () => controller.abort();
-  }, []);
-
   const sections = useMemo(() => (document ? buildSections(document) : []), [document]);
   const overviewLinks = useMemo(() => buildHashNavigation(overview.content), [overview.content]);
   const selectedSection = useMemo(() => getSectionForHash(activeHash, sections), [activeHash, sections]);
-  const referenceDocument = useMemo(() => {
-    if (!document || !selectedSection) {
-      return null;
-    }
-    return createTagDocument(document, selectedSection.name);
-  }, [document, selectedSection]);
 
   const scalarConfiguration = useMemo<AnyApiReferenceConfiguration | null>(() => {
-    if (!referenceDocument) {
+    if (!document) {
       return null;
     }
 
     return {
-      content: referenceDocument,
-      title: referenceDocument.info?.title ?? "API 문서",
+      content: document,
+      title: document.info?.title ?? "API 문서",
       slug: "docs",
       theme: "none",
       layout: "modern",
       forceDarkModeState: "light",
+      defaultOpenAllTags: true,
+      defaultOpenFirstTag: false,
       hideDarkModeToggle: true,
       documentDownloadType: "none",
       hideTestRequestButton: true,
@@ -106,7 +77,21 @@ export default function DocsPage() {
       generateOperationSlug: ({ method, path, operationId, summary }) =>
         createScalarOperationSlug({ method, path, operationId, summary }),
     };
-  }, [referenceDocument]);
+  }, [document]);
+
+  useEffect(() => {
+    if (!selectedSection) {
+      return;
+    }
+    setOpenSectionSlugs((current) => {
+      if (current.has(selectedSection.slug)) {
+        return current;
+      }
+      const next = new Set(current);
+      next.add(selectedSection.slug);
+      return next;
+    });
+  }, [selectedSection]);
 
   useEffect(() => {
     const targetHash = activeHash || "overview";
@@ -119,7 +104,7 @@ export default function DocsPage() {
         target.scrollIntoView({ block: "start" });
         return;
       }
-      if (attempts < 10) {
+      if (attempts < 30) {
         attempts += 1;
         timers.push(window.setTimeout(scrollWhenReady, 120));
       }
@@ -149,25 +134,36 @@ export default function DocsPage() {
   if (!document) {
     return (
       <section className="api-docs-page" aria-label="API 문서" role="status">
-        <div className="api-docs-loading">문서 로딩 중</div>
+        <DocsLoadingFrame />
       </section>
     );
   }
 
-  const isOverview = !selectedSection;
+  const isOverview = !activeHash.startsWith("docs/tag/");
+  const getLinkClassName = (anchor: string, extraClassName?: string) =>
+    [activeHash === anchor ? "active" : "", extraClassName].filter(Boolean).join(" ") || undefined;
+  const toggleOpenApiSection = (sectionSlug: string) => {
+    setOpenSectionSlugs((current) => {
+      const next = new Set(current);
+      if (next.has(sectionSlug)) {
+        next.delete(sectionSlug);
+      } else {
+        next.add(sectionSlug);
+      }
+      return next;
+    });
+  };
 
   return (
     <section className="api-docs-page" aria-label="API 문서">
       <aside className="api-docs-sidebar" aria-label="API 문서 메뉴">
         <nav className="api-docs-sidebar-nav">
-          <div className="api-docs-nav-item">
-            <a href="/docs#overview">
-              <span>Overview</span>
-            </a>
+          <div className="api-docs-root-group">
+            <p className="api-docs-root-label">Overview</p>
             <div className="api-docs-sidebar-children" aria-label="Overview 섹션">
               {overviewLinks.map((link) => (
                 <a
-                  className={link.level > 2 ? "nested" : undefined}
+                  className={getLinkClassName(link.anchor, link.level > 1 ? "nested" : undefined)}
                   href={`/docs#${encodeURIComponent(link.anchor)}`}
                   key={link.anchor}
                 >
@@ -177,25 +173,39 @@ export default function DocsPage() {
             </div>
           </div>
 
-          {sections.map((section) => (
-            <div className="api-docs-nav-item" key={section.slug}>
-              <a href={`/docs#${encodeURIComponent(createTagAnchor(section))}`}>
-                <span>{section.name}</span>
-              </a>
-              {section.operations.length > 0 ? (
-                <div className="api-docs-sidebar-children" aria-label={`${section.name} 엔드포인트`}>
-                  {section.operations.map((operation) => (
-                    <a
-                      href={`/docs#${encodeURIComponent(createOperationAnchor(operation))}`}
-                      key={`${operation.method}-${operation.path}`}
-                    >
-                      <span>{operation.summary}</span>
-                    </a>
-                  ))}
-                </div>
-              ) : null}
-            </div>
-          ))}
+          <div className="api-docs-root-group">
+            <p className="api-docs-root-label">OpenAPI</p>
+            {sections.map((section) => (
+              <div className="api-docs-nav-item" key={section.slug}>
+                <button
+                  aria-controls={`openapi-section-${section.slug}`}
+                  aria-expanded={openSectionSlugs.has(section.slug)}
+                  className={getLinkClassName(createTagAnchor(section), "api-docs-section-toggle")}
+                  onClick={() => toggleOpenApiSection(section.slug)}
+                  type="button"
+                >
+                  <span>{section.name}</span>
+                </button>
+                {openSectionSlugs.has(section.slug) && section.operations.length > 0 ? (
+                  <div
+                    className="api-docs-sidebar-children"
+                    id={`openapi-section-${section.slug}`}
+                    aria-label={`${section.name} 엔드포인트`}
+                  >
+                    {section.operations.map((operation) => (
+                      <a
+                        className={getLinkClassName(createOperationAnchor(operation))}
+                        href={`/docs#${encodeURIComponent(createOperationAnchor(operation))}`}
+                        key={`${operation.method}-${operation.path}`}
+                      >
+                        <span>{operation.summary}</span>
+                      </a>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            ))}
+          </div>
         </nav>
       </aside>
 
@@ -224,6 +234,22 @@ export default function DocsPage() {
         </main>
       </div>
     </section>
+  );
+}
+
+function DocsLoadingFrame() {
+  return (
+    <div className="docs-loading-overlay" aria-label="문서 로딩" role="status">
+      <DocsLoadingBar />
+    </div>
+  );
+}
+
+function DocsLoadingBar() {
+  return (
+    <div className="docs-loading-bar">
+      <span />
+    </div>
   );
 }
 
