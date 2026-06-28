@@ -1251,6 +1251,196 @@ button {
   }
 }
 
+.register-page {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: calc(var(--landing-nav-height) + 40px) var(--landing-letterbox) 64px;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--pine) 5%, transparent) 1px, transparent 1px),
+    linear-gradient(180deg, color-mix(in srgb, var(--pine) 5%, transparent) 1px, transparent 1px),
+    var(--ivory);
+  background-size: 42px 42px;
+  color: var(--pine);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.register-panel {
+  width: min(920px, 100%);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.78fr);
+  gap: 0;
+  align-items: stretch;
+  border: 1px solid var(--pine);
+  border-radius: 8px;
+  background: var(--ivory);
+  box-shadow: 18px 18px 0 color-mix(in srgb, var(--sage) 46%, transparent);
+}
+
+.register-form,
+.register-result {
+  min-width: 0;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.register-form {
+  display: grid;
+  gap: 18px;
+  padding: clamp(22px, 3vw, 36px);
+}
+
+.register-verification {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+  border-bottom: 1px solid color-mix(in srgb, var(--pine) 18%, transparent);
+  padding-bottom: 18px;
+}
+
+.register-form label {
+  display: grid;
+  gap: 8px;
+  color: var(--pine);
+  font-size: 14px;
+  font-weight: 850;
+}
+
+.register-form input,
+.register-form textarea {
+  width: 100%;
+  border: 1px solid color-mix(in srgb, var(--pine) 34%, transparent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--ivory) 86%, white);
+  padding: 13px 14px;
+  color: var(--pine);
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.register-form textarea {
+  min-height: 112px;
+  resize: vertical;
+}
+
+.register-verification button {
+  min-height: 47px;
+  border: 1px solid var(--pine);
+  border-radius: 8px;
+  background: var(--ivory);
+  padding: 0 14px;
+  color: var(--pine);
+  font-size: 14px;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.register-verification button:hover,
+.register-verification button:focus-visible {
+  background: var(--sage);
+  outline: 0;
+}
+
+.register-verification button:disabled {
+  cursor: not-allowed;
+  opacity: 0.46;
+}
+
+.register-form input:focus,
+.register-form textarea:focus {
+  border-color: var(--pine);
+  outline: 3px solid color-mix(in srgb, var(--sage) 38%, transparent);
+}
+
+.register-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 8px;
+}
+
+.register-actions .primary-link {
+  background: var(--pine);
+  color: var(--ivory);
+}
+
+.register-actions .secondary-link {
+  border-color: var(--pine);
+  background: var(--ivory);
+  color: var(--pine);
+}
+
+.register-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.46;
+}
+
+.register-result {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 18px;
+  border-left: 1px solid var(--pine);
+  background: var(--pine);
+  padding: clamp(22px, 3vw, 36px);
+  color: var(--ivory);
+}
+
+.register-result span {
+  width: max-content;
+  border: 1px solid color-mix(in srgb, var(--ivory) 34%, transparent);
+  border-radius: 999px;
+  padding: 7px 10px;
+  color: color-mix(in srgb, var(--ivory) 78%, transparent);
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.register-result output {
+  display: block;
+  margin: auto 0;
+  color: var(--sage);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: clamp(21px, 2.4vw, 30px);
+  font-weight: 850;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.register-result button {
+  min-height: 46px;
+  border: 1px solid color-mix(in srgb, var(--ivory) 46%, transparent);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ivory);
+  font-weight: 850;
+}
+
+.register-result button:hover,
+.register-result button:focus-visible {
+  background: var(--sage);
+  color: var(--pine);
+  outline: 0;
+}
+
+.register-result[data-issued="false"] {
+  justify-content: center;
+  align-items: center;
+}
+
+.register-result[data-issued="false"] span {
+  border-color: color-mix(in srgb, var(--ivory) 28%, transparent);
+}
+
 .footer-cta {
   display: grid;
   justify-items: center;
@@ -1356,6 +1546,20 @@ button {
 
   .docs-markdown-article {
     max-width: none;
+  }
+
+  .register-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .register-result {
+    min-height: 240px;
+    border-top: 1px solid var(--pine);
+    border-left: 0;
+  }
+
+  .register-verification {
+    grid-template-columns: 1fr;
   }
 
   .api-docs-page {

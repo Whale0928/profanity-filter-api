@@ -25,8 +25,15 @@ function Hero({ onNavigate }: HomePageProps) {
       <h1>말조심하세욧</h1>
       <p className="hero-description">한국어 비속어 필터 API.</p>
       <div className="hero-actions">
-        <a className="primary-link" href="#story">
-          흐름 보기
+        <a
+          className="primary-link"
+          href="/register"
+          onClick={(event) => {
+            event.preventDefault();
+            onNavigate("/register");
+          }}
+        >
+          시작하기
         </a>
         <a
           className="secondary-link"
@@ -160,7 +167,7 @@ function FooterCta({ onNavigate }: HomePageProps) {
   return (
     <section className="footer-cta">
       <div className="footer-actions">
-        <button className="primary-link" type="button">
+        <button className="primary-link" onClick={() => onNavigate("/register")} type="button">
           신청하기
         </button>
         <button

@@ -30,6 +30,16 @@ export function Navigation({ onNavigate, pagePath }: NavigationProps) {
           홈
         </a>
         <a
+          aria-current={pagePath === "/register" ? "page" : undefined}
+          href="/register"
+          onClick={(event) => {
+            event.preventDefault();
+            onNavigate("/register");
+          }}
+        >
+          시작
+        </a>
+        <a
           aria-current={pagePath.startsWith("/docs") ? "page" : undefined}
           href="/docs"
           onClick={(event) => {

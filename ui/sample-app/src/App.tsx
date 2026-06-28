@@ -4,6 +4,7 @@ import { getCurrentPagePath, type PagePath } from "./constants/pagePath";
 import { OPENAPI_DOCUMENT_URL, OVERVIEW_MARKDOWN_PATH, FALLBACK_OVERVIEW_MARKDOWN } from "./docs/constants";
 import { preloadDocsDocuments } from "./docs/hooks";
 import { HomePage } from "./features/home/HomePage";
+import { RegisterPage } from "./features/register/RegisterPage";
 import { Navigation } from "./components/Navigation";
 
 function loadDocsPage() {
@@ -54,6 +55,8 @@ export default function App() {
         <Suspense fallback={<DocsFallback />}>
           <DocsPage />
         </Suspense>
+      ) : pagePath === "/register" ? (
+        <RegisterPage onNavigate={navigate} />
       ) : (
         <HomePage onNavigate={navigate} />
       )}
