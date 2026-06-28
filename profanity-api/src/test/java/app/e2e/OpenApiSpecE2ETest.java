@@ -15,7 +15,9 @@ class OpenApiSpecE2ETest extends AbstractApiTester {
   private static final List<ClassPathResource> OVERVIEW_RESOURCES =
       List.of(
           new ClassPathResource("openapi/overview.md"),
+          new ClassPathResource("openapi/line.md"),
           new ClassPathResource("openapi/error-model.md"),
+          new ClassPathResource("openapi/line.md"),
           new ClassPathResource("openapi/authentication.md"));
 
   @Test
@@ -69,6 +71,7 @@ class OpenApiSpecE2ETest extends AbstractApiTester {
     assertThat(overviewResponse).hasStatusOk();
     String overview = overviewResponse.getResponse().getContentAsString();
     assertThat(overview).isEqualTo(readMarkdownInOrder(OVERVIEW_RESOURCES));
+    assertThat(overview).as("문서 조각 사이에는 Markdown 구분선이 포함되어야 한다").contains("----------");
     assertThat(overview.indexOf("# Error Model"))
         .as("/overview.md는 overview, error-model, authentication 순서로 조합되어야 한다")
         .isPositive();

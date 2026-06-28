@@ -20,7 +20,9 @@ public class DocumentController {
   private static final List<ClassPathResource> OVERVIEW_RESOURCES =
       List.of(
           new ClassPathResource("openapi/overview.md"),
+          new ClassPathResource("openapi/line.md"),
           new ClassPathResource("openapi/error-model.md"),
+          new ClassPathResource("openapi/line.md"),
           new ClassPathResource("openapi/authentication.md"));
   private static final ClassPathResource LLMS_RESOURCE = new ClassPathResource("static/llms.txt");
 
