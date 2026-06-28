@@ -57,3 +57,4 @@ application-prod.yml
 /http/http-client.env.json
 .omc/
 /.env
+.DS_Store

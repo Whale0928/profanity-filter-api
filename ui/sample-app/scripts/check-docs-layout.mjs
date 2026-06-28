@@ -5,15 +5,21 @@ const appRoot = resolve(import.meta.dirname, "..");
 
 const app = readFileSync(resolve(appRoot, "src", "App.tsx"), "utf8");
 const docsPage = readFileSync(resolve(appRoot, "src", "DocsPage.tsx"), "utf8");
+const docsConstants = readFileSync(resolve(appRoot, "src", "docs", "constants.ts"), "utf8");
+const docsUtils = readFileSync(resolve(appRoot, "src", "docs", "utils.tsx"), "utf8");
+const homePage = readFileSync(resolve(appRoot, "src", "features", "home", "HomePage.tsx"), "utf8");
+const landingContent = readFileSync(resolve(appRoot, "src", "constants", "landingContent.ts"), "utf8");
 const guidelines = readFileSync(resolve(appRoot, "DESIGN_GUIDELINES.md"), "utf8");
 const styles = readFileSync(resolve(appRoot, "src", "styles.css"), "utf8");
 const overview = readFileSync(resolve(appRoot, "public", "overview.md"), "utf8");
+const appSources = [app, homePage, landingContent].join("\n");
+const docsSources = [docsPage, docsConstants, docsUtils].join("\n");
 
 assert.match(overview, /시작하기/, "Overview markdown must include a getting-started section.");
 
 assert.match(docsPage, /ApiReferenceReact/, "DocsPage must render the OpenAPI body with Scalar.");
 assert.match(
-  docsPage,
+  docsConstants,
   /OPENAPI_DOCUMENT_URL = "https:\/\/api\.kr-filter\.com\/openapi\.json"/,
   "Scalar must read the OpenAPI JSON document from the API server.",
 );
@@ -21,14 +27,14 @@ assert.ok(
   !existsSync(resolve(appRoot, "public", "openapi.json")),
   "The UI bundle must not ship a stale local OpenAPI JSON copy.",
 );
-assert.match(docsPage, /OVERVIEW_MARKDOWN_PATH = "\/overview\.md"/, "Docs overview must read the local markdown file.");
+assert.match(docsConstants, /OVERVIEW_MARKDOWN_PATH = "https:\/\/api\.kr-filter\.com\/overview\.md"/, "Docs overview must read the API server markdown file.");
 assert.match(docsPage, /api-docs-sidebar/, "Docs page must keep the existing fixed sidebar shell.");
 assert.match(docsPage, /showSidebar:\s*false/, "Scalar native sidebar must stay hidden inside the fixed docs shell.");
-assert.match(docsPage, /buildSections/, "Docs sidebar must be built from OpenAPI tag sections.");
-assert.match(docsPage, /parseMarkdownHeadings/, "Docs sidebar must include overview heading children from markdown.");
-assert.match(docsPage, /getSectionForHash/, "Docs body must choose overview or an API tag from the docs hash.");
+assert.match(docsSources, /buildSections/, "Docs sidebar must be built from OpenAPI tag sections.");
+assert.match(docsSources, /parseMarkdownHeadings/, "Docs sidebar must include overview heading children from markdown.");
+assert.match(docsSources, /getSectionForHash/, "Docs body must choose overview or an API tag from the docs hash.");
 assert.match(docsPage, /content:\s*referenceDocument/, "Docs body must render the selected OpenAPI tag while keeping the docs route.");
-assert.match(docsPage, /createTagDocument/, "Docs body must render endpoint DOM for the selected API tag.");
+assert.match(docsSources, /createTagDocument/, "Docs body must render endpoint DOM for the selected API tag.");
 assert.match(docsPage, /section\.operations\.length > 0/, "API groups must expose their endpoint children in the same sidebar.");
 assert.match(docsPage, /hideTestRequestButton:\s*true/, "Interactive request execution must stay hidden.");
 assert.match(docsPage, /hideClientButton:\s*true/, "Scalar client button must stay hidden.");
@@ -79,29 +85,29 @@ assert.match(styles, /\.start-section\s*{[^}]*min-height:\s*var\(--landing-secti
 assert.match(styles, /\.story-section,[\s\S]*?\.start-section,[\s\S]*?\.footer-cta\s*{[^}]*scroll-margin-top:\s*var\(--landing-nav-height\)/s, "Landing sections must account for the fixed nav when anchored.");
 assert.doesNotMatch(styles, /scroll-snap-type:\s*y/, "Landing pages must not force scroll snapping between sections.");
 assert.doesNotMatch(styles, /\.story-block\s*{[^}]*680px/s, "Story block must not rely on a fixed pixel minimum height.");
-assert.match(app, /한국어 문장을 API로 필터링합니다/, "Second landing block must explain what the project does.");
-assert.match(app, /role="tablist"/, "Second landing block must expose type options as tabs.");
-assert.match(app, /무료\/실용/, "Second landing block must include the free practical positioning tab.");
-assert.match(app, /한국어 중심/, "Second landing block must include the Korean-focused positioning tab.");
-assert.match(app, /개발자 연동/, "Second landing block must include the developer integration positioning tab.");
-assert.doesNotMatch(app, /운영 신뢰/, "Second landing block must not include the operational trust positioning tab.");
+assert.match(appSources, /한국어 문장을 API로 필터링합니다/, "Second landing block must explain what the project does.");
+assert.match(appSources, /role="tablist"/, "Second landing block must expose type options as tabs.");
+assert.match(appSources, /무료\/실용/, "Second landing block must include the free practical positioning tab.");
+assert.match(appSources, /한국어 중심/, "Second landing block must include the Korean-focused positioning tab.");
+assert.match(appSources, /개발자 연동/, "Second landing block must include the developer integration positioning tab.");
+assert.doesNotMatch(appSources, /운영 신뢰/, "Second landing block must not include the operational trust positioning tab.");
 assert.match(styles, /\.identity-tabs/, "Second landing block must style the identity tab control.");
-assert.match(app, /proofItems/, "Second landing block must define proof row items for each positioning tab.");
-assert.match(app, /필터 API 호출/, "Second landing block must phrase endpoint proof as natural Korean.");
-assert.match(app, /응답 코드 확인/, "Second landing block must phrase response proof as natural Korean.");
-assert.doesNotMatch(app, /visualLabel:\s*"position"|visualLabel:\s*"engine"|visualLabel:\s*"request"|visualLabel:\s*"response"/, "Second landing block visual labels must not expose raw English keys.");
-assert.doesNotMatch(app, /visualTitle:\s*"free API"|visualTitle:\s*"Korean trie"|visualTitle:\s*"before save"|visualTitle:\s*"tracked"/, "Second landing block visual titles must be natural Korean sentences.");
-assert.doesNotMatch(app, /proofItems:\s*\[[^\]]*"text"|"mode"|"X-API-KEY"|"status\.code"|"trackingId"|"records"/s, "Second landing block proof rows must avoid raw API field names.");
+assert.match(appSources, /proofItems/, "Second landing block must define proof row items for each positioning tab.");
+assert.match(appSources, /필터 API 호출/, "Second landing block must phrase endpoint proof as natural Korean.");
+assert.match(appSources, /응답 코드 확인/, "Second landing block must phrase response proof as natural Korean.");
+assert.doesNotMatch(appSources, /visualLabel:\s*"position"|visualLabel:\s*"engine"|visualLabel:\s*"request"|visualLabel:\s*"response"/, "Second landing block visual labels must not expose raw English keys.");
+assert.doesNotMatch(appSources, /visualTitle:\s*"free API"|visualTitle:\s*"Korean trie"|visualTitle:\s*"before save"|visualTitle:\s*"tracked"/, "Second landing block visual titles must be natural Korean sentences.");
+assert.doesNotMatch(appSources, /proofItems:\s*\[[^\]]*"text"|"mode"|"X-API-KEY"|"status\.code"|"trackingId"|"records"/s, "Second landing block proof rows must avoid raw API field names.");
 assert.match(styles, /\.identity-proof-row/, "Second landing block must style the proof row.");
-assert.match(app, /사용 시나리오/, "Third landing block must introduce a simple usage scenario.");
-assert.doesNotMatch(app, /시나리오 영상/, "Scenario panel must not label itself as a video.");
+assert.match(appSources, /사용 시나리오/, "Third landing block must introduce a simple usage scenario.");
+assert.doesNotMatch(appSources, /시나리오 영상/, "Scenario panel must not label itself as a video.");
 assert.match(styles, /animation:\s*scenario-card-one\s+10s/, "Input card must use the shared 10s scenario loop.");
 assert.match(styles, /animation:\s*scenario-card-two\s+10s/, "API card must use the shared 10s scenario loop.");
 assert.match(styles, /animation:\s*scenario-card-three\s+10s/, "Result card must use the shared 10s scenario loop.");
 assert.doesNotMatch(styles, /animation-delay:\s*1\.4s|animation-delay:\s*2\.8s/, "Scenario card timing must not rely on per-card animation delays.");
-assert.match(app, /신청하기/, "Footer CTA must include an apply button.");
-assert.match(app, /문서 보기/, "Footer CTA must include a docs button.");
-assert.doesNotMatch(app, /title:\s*"2번 블럭"|title:\s*"3번 블럭"|body:\s*"2번 블럭"|body:\s*"3번 블럭"/, "Landing sections must not keep placeholder copy.");
+assert.match(appSources, /신청하기/, "Footer CTA must include an apply button.");
+assert.match(appSources, /문서 보기/, "Footer CTA must include a docs button.");
+assert.doesNotMatch(appSources, /title:\s*"2번 블럭"|title:\s*"3번 블럭"|body:\s*"2번 블럭"|body:\s*"3번 블럭"/, "Landing sections must not keep placeholder copy.");
 
 function extractRule(source, selector) {
   const start = source.indexOf(`${selector} {`);
