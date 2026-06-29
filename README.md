@@ -16,7 +16,8 @@
 > - https://api.kr-filter.com/api/v1/ping
 > - https://api.kr-filter.com/api/v1/health
 
-- key 발급 등 편의성을 위해 GUI 환경 별도 구축 예정입니다.
+- 기존 `x-api-key` 신규 발급은 중단 예정이며, 이미 발급된 키는 호환성 유지를 위해 유지합니다.
+- 신규 사용자는 Google/GitHub SSO 기반 대시보드에서 API 클라이언트를 발급하고, OAuth2 Client Credentials 기반 Bearer 인증으로 전환할 예정입니다.
 
 ## Overview
 
@@ -45,20 +46,31 @@
 
 ## API Guide
 
+### 인증 전환 방향
+
+현재 API 호출은 `x-api-key` 헤더를 사용합니다. 신규 인증 모델은 SSO 로그인으로 API 클라이언트를 발급한 뒤 `client_id`와 `client_secret`으로 `/oauth2/token`에서 access token을 발급받아 `Authorization: Bearer {access_token}`으로 호출하는 방식입니다.
+
+전환 기간에는 기존 `x-api-key`와 신규 Bearer token을 모두 지원합니다. 대시보드 접근은 Google/GitHub SSO 세션만 허용하고, 외부 API 호출 인증과 분리합니다.
+
+- [ADR 0005. SSO 기반 사용자 계정 모델 도입](docs/adr/0005%20SSO%20기반%20사용자%20계정%20모델%20도입.md)
+- [ADR 0006. OAuth2 Client Credentials 기반 API 인증 전환](docs/adr/0006%20OAuth2%20Client%20Credentials%20기반%20API%20인증%20전환.md)
+
+### 현재 API 호출 방식
+
 - 요청 URL: `POST https://api.kr-filter.com/api/v1/filter`
 - headers
-    - `Content-Type: application/json` or `application/x-www-form-urlencoded`
-    - `accept: application/json`
-    - `x-api-key: {API_KEY}`
-        - API_KEY는 제공되는 API_KEY를 사용해주세요.
+	- `Content-Type: application/json` or `application/x-www-form-urlencoded`
+	- `accept: application/json`
+	- `x-api-key: {API_KEY}`
+		- API_KEY는 제공되는 API_KEY를 사용해주세요.
 - parameters:
-    - *`text`: 검증할 문장 (예: "나쁜말")
-    - *`mode`: `QUICK`,`NORMAL`,`FILTER` 중 하나 선택
-        - `QUICK`: 빠른 검사에 적합합니다.
-        - `NORMAL`: 일반적인 검사에 적합합니다.
-        - `FILTER`: 일반적인 검사후 비속어를 `*`로 대체합니다.
-    - `callbackUrl`: 비동기 처리시 결과를 받을 URL
-    - \* 기호가 붙은 파라미터는 필수 입력값입니다.
+	- *`text`: 검증할 문장 (예: "나쁜말")
+	- *`mode`: `QUICK`,`NORMAL`,`FILTER` 중 하나 선택
+		- `QUICK`: 빠른 검사에 적합합니다.
+		- `NORMAL`: 일반적인 검사에 적합합니다.
+		- `FILTER`: 일반적인 검사후 비속어를 `*`로 대체합니다.
+	- `callbackUrl`: 비동기 처리시 결과를 받을 URL
+	- \* 기호가 붙은 파라미터는 필수 입력값입니다.
 
 ### Response Code
 
@@ -73,12 +85,12 @@
 | 2021        | Processing            | 요청 처리가 진행 중인 상태를 의미합니다.                                      |
 | 4000        | Bad Request           | 요청이 비정상적인 경우 입니다. 파라미터 누락,타입 오류등이 있습니다, 상세 내용을 참고하세요.        |
 | 4001        | Invalid Callback URL  | 콜백 URL 형식이 올바르지 않은 경우 발생합니다.                                 |
-| 4002        | Invalid Tracking ID   | Tracking ID가 유효하지 않은 경우 발생합니다.                                |
-| 4003        | Not Fount Tracking ID | Tracking ID를 찾을 수 없는 경우 발생합니다.                                 |
+| 4002        | Invalid Tracking ID   | Tracking ID가 유효하지 않은 경우 발생합니다.                               |
+| 4003        | Not Fount Tracking ID | Tracking ID를 찾을 수 없는 경우 발생합니다.                               |
 | 4010        | Unauthorized          | 요청을 인증할 API 키 값이 없는 경우 발생하는 오류 입니다.                          |
 | 4030        | Forbidden             | 서버에서 요청에 API 키값을 인식하였으나 해당 키가 적절한 권한을 가지지 않았다고 판정한 경우 발생합니다. |
 | 4031        | Not Found Client      | API Key에 해당하는 클라이언트 정보를 찾을 수 없는 경우 발생합니다.                    |
-| 4032        | Invalid API Key       | API Key가 유효하지 않은 경우 발생합니다.                                    |
+| 4032        | Invalid API Key       | API Key가 유효하지 않은 경우 발생합니다.                                   |
 | 4290        | Too Many Requests     | 특정 클라이언트가 너무 많은 요청을 단위 시간 안에 보낸 경우에 이 응답이 리턴됩니다.             |
 | 5000        | Internal Server Error | 서버 측의 문제로 요청에 대한 처리가 불가능한 경우 오류가 발생하였음을 알리기 위해 본 코드를 사용합니다.  |
 | 5030        | Service Unavailable   | 서비스 점검 또는 일시 사용 불가 상태를 의미합니다.                                |
@@ -89,33 +101,33 @@
 
 ```json
 {
-  "trackingId": "bee20667-aa5a-4d39-94f5-0f2dcbd51cac",
-  "status": {
-    "code": 2000,
-    "message": "Ok",
-    "description": "정상적으로 처리 되었습니다.",
-    "DetailDescription": ""
-  },
-  "detected": [
-    {
-      "length": 1,
-      "filteredWord": "나"
-    },
-    {
-      "length": 2,
-      "filteredWord": "나쁜"
-    },
-    {
-      "length": 3,
-      "filteredWord": "나쁜말"
-    },
-    {
-      "length": 2,
-      "filteredWord": "냐쁀"
-    }
-  ],
-  "filtered": "*** 이런 개 ** 짓을 왜 하냐?, **, *",
-  "elapsed": "0.00007676 s / 0.07676 ms / 76.758 µs"
+	"trackingId": "bee20667-aa5a-4d39-94f5-0f2dcbd51cac",
+	"status": {
+		"code": 2000,
+		"message": "Ok",
+		"description": "정상적으로 처리 되었습니다.",
+		"DetailDescription": ""
+	},
+	"detected": [
+		{
+			"length": 1,
+			"filteredWord": "나"
+		},
+		{
+			"length": 2,
+			"filteredWord": "나쁜"
+		},
+		{
+			"length": 3,
+			"filteredWord": "나쁜말"
+		},
+		{
+			"length": 2,
+			"filteredWord": "냐쁀"
+		}
+	],
+	"filtered": "*** 이런 개 ** 짓을 왜 하냐?, **, *",
+	"elapsed": "0.00007676 s / 0.07676 ms / 76.758 µs"
 }
 ```
 
@@ -124,25 +136,6 @@
 - [cURL Guide](examples/curl.md)
 - [Java Guide](examples/java.md)
 - [JavaScript Guide](examples/javascript.md)
-
-## History
-
-| 날짜         | 개발 내용      | 상세 설명                                    |
-|------------|------------|------------------------------------------|
-| 2025-05-11 | 클라이언트 보고서  | 클라이언트별 일일 요청 통계 및 사용량 보고서 생성 기능 추가       |
-| 2025-05-11 | 요청 모니터링    | 클라이언트별 API 요청 횟수 실시간 모니터링 및 제한 기능 개선     |
-| 2025-02-15 | 비속어 동기화    | 중앙 DB에서 비속어 목록 실시간 업데이트 및 에이전트 동기화 기능 구현 |
-| 2025-02-10 | 비속어 제안 API | 부적절한 비속어 신고 및 새로운 비속어 추가 제안을 위한 API 개발   |
-| 2025-01-25 | 인증 시스템 적용  | API Key 기반 인증 시스템 구현 및 배포 완료             |
-| 2025-01-03 | 인증 시스템 개발  | API Key 기반 인증 시스템 개발 착수                  |
-| 2024-12-30 | 특수문자 대응    | 특수문자, 유니코드 변형을 고려한 향상된 검증 로직 적용          |
-| 2024-12-27 | 아키텍처 개선    | 클린 아키텍처 원칙 기반 코드 리팩토링 완료                 |
-| 2024-11-30 | 서버 이전      | 서버 물리적 이전 및 안정성 검증 완료                    |
-| 2024-07-06 | 비속어 DB 확장  | 120+ 추가 비속어 데이터베이스 확장 (누적 620+)          |
-| 2024-07-01 | 비속어 DB 확장  | 500+ 추가 비속어 데이터베이스 확장                    |
-| 2024-06-01 | 서비스 출시     | 초기 버전 서비스 공개 및 운영 시작                     |
-
----
 
 ## 주의사항
 
