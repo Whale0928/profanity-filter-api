@@ -1,11 +1,11 @@
-export type PagePath = "/" | "/register" | `/docs${string}`;
+export type PagePath = "/" | "/register" | "/docs" | `/docs/${string}`;
 
 export const HOME_PATH: PagePath = "/";
-export const DOCS_PREFIX = "/docs";
+export const DOCS_PATH: PagePath = "/docs";
 export const REGISTER_PATH: PagePath = "/register";
 
 export function getCurrentPagePath(pathname: string): PagePath {
-  if (pathname.startsWith(DOCS_PREFIX)) {
+  if (pathname === DOCS_PATH || pathname.startsWith(`${DOCS_PATH}/`)) {
     return pathname as PagePath;
   }
 
