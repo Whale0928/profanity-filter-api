@@ -18,7 +18,7 @@ concurrency:
 jobs:
   test:
     name: ci
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     steps:
       - name: checkout code
         uses: actions/checkout@v6
