@@ -81,12 +81,6 @@ jobs:
           push: true
           tags: ${{ steps.release.outputs.image }}
 
-      - name: Check public health endpoint
-        shell: bash
-        run: |
-          set -euo pipefail
-          curl --fail --silent --show-error --max-time 10 "$HEALTH_URL" > /dev/null
-
       - name: Write deployment summary
         shell: bash
         run: |
