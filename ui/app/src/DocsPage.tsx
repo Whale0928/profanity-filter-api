@@ -13,6 +13,7 @@ import {
   parseMarkdown,
 } from "./docs/utils";
 import { useMarkdownDocument, useOpenApiDocument } from "./docs/hooks";
+import { useClipboard } from "./hooks/useClipboard";
 
 function getDecodedHash() {
   const rawHash = window.location.hash.replace(/^#/, "");
@@ -27,11 +28,11 @@ function getDecodedHash() {
 }
 
 export default function DocsPage() {
-  const [copied, setCopied] = useState(false);
   const [activeHash, setActiveHash] = useState(getDecodedHash);
   const [openSectionSlugs, setOpenSectionSlugs] = useState<Set<string>>(() => new Set());
   const { document, error } = useOpenApiDocument(OPENAPI_DOCUMENT_URL);
   const overview = useMarkdownDocument(OVERVIEW_MARKDOWN_PATH, FALLBACK_OVERVIEW_MARKDOWN);
+  const { copy, status: copyStatus } = useClipboard();
 
   useEffect(() => {
     const syncHash = () => setActiveHash(getDecodedHash());
@@ -115,12 +116,7 @@ export default function DocsPage() {
   }, [activeHash, selectedSection?.slug, overview.content]);
 
   const copyOpenApiUrl = async () => {
-    if (!navigator.clipboard) {
-      return;
-    }
-    await navigator.clipboard.writeText(OPENAPI_DOCUMENT_URL);
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1400);
+    await copy(OPENAPI_DOCUMENT_URL);
   };
 
   if (error) {
@@ -213,7 +209,7 @@ export default function DocsPage() {
         <div className="api-docs-copy-actions" aria-label="문서 액션">
           <span>{isOverview ? (overview.source === "local" ? "Markdown" : "fallback") : document.openapi}</span>
           <button onClick={copyOpenApiUrl} type="button">
-            {copied ? "복사됨" : "OpenAPI 경로 복사"}
+            {copyStatus === "copied" ? "복사됨" : copyStatus === "failed" ? "복사 실패" : "OpenAPI 경로 복사"}
           </button>
         </div>
 

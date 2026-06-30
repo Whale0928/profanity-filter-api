@@ -1,5 +1,5 @@
 {
-  "name": "profanity-filter-console-sample",
+  "name": "profanity-filter-console-ui",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -9,6 +9,9 @@
     "preview": "vite preview",
     "test:register": "node scripts/check-register-flow.mjs",
     "test:docs": "node scripts/check-docs-layout.mjs",
+    "test:hooks": "node scripts/check-hooks-contract.mjs",
+    "test:policy": "node scripts/check-policy-docs.mjs",
+    "test:routing": "node scripts/check-routing-contract.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

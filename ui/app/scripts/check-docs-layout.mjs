@@ -10,7 +10,7 @@ const docsHooks = readFileSync(resolve(appRoot, "src", "docs", "hooks.ts"), "utf
 const docsUtils = readFileSync(resolve(appRoot, "src", "docs", "utils.tsx"), "utf8");
 const homePage = readFileSync(resolve(appRoot, "src", "features", "home", "HomePage.tsx"), "utf8");
 const landingContent = readFileSync(resolve(appRoot, "src", "constants", "landingContent.ts"), "utf8");
-const guidelines = readFileSync(resolve(appRoot, "DESIGN_GUIDELINES.md"), "utf8");
+const designPolicy = readFileSync(resolve(appRoot, "..", "policies", "design-system.md"), "utf8");
 const styles = readFileSync(resolve(appRoot, "src", "styles.css"), "utf8");
 const overview = readFileSync(resolve(appRoot, "public", "overview.md"), "utf8");
 const appSources = [app, homePage, landingContent].join("\n");
@@ -106,9 +106,9 @@ assert.match(mobileBlock, /\.api-docs-content\s*{[^}]*padding:/s, "Mobile docs l
 assert.doesNotMatch(mobileBlock, /\.api-docs-content\s*{[^}]*padding:\s*0\s*;/s, "Mobile docs content must keep horizontal padding instead of touching viewport edges.");
 assert.doesNotMatch(mobileBlock, /\.api-docs-sidebar\s*{[^}]*position:\s*fixed/s, "Mobile sidebar must not become a fixed overlay.");
 
-assert.match(guidelines, /첫 화면은 4개 블록으로 구성한다\./, "Guidelines must define the four-block landing structure.");
-assert.match(guidelines, /2번 블록은 프로젝트 정체성을 짧게 설명한다\./, "Guidelines must define the second block as the project identity section.");
-assert.match(guidelines, /3번 블록은 사용 시나리오를 영상형 흐름으로 보여준다\./, "Guidelines must define the third block as the scenario reel section.");
+assert.match(designPolicy, /첫 화면은 4개 블록으로 구성한다\./, "Design policy must define the four-block landing structure.");
+assert.match(designPolicy, /2번 블록은 프로젝트 정체성을 짧게 설명한다\./, "Design policy must define the second block as the project identity section.");
+assert.match(designPolicy, /3번 블록은 사용 시나리오를 영상형 흐름으로 보여준다\./, "Design policy must define the third block as the scenario reel section.");
 assert.match(styles, /--landing-letterbox:\s*16vw/, "Landing sections must define a ratio-based side letterbox gutter.");
 assert.match(styles, /--landing-rail-width:\s*68vw/, "Landing sections must use a ratio-based readable rail.");
 assert.match(styles, /--landing-section-height:\s*calc\(100dvh - var\(--landing-nav-height\)\)/, "Landing story sections must target one viewport below the fixed nav.");

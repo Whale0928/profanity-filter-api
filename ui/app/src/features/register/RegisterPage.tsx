@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 
 import type { PagePath } from "../../constants/pagePath";
+import { useClipboard } from "../../hooks/useClipboard";
 
 type RegisterPageProps = {
   onNavigate: (path: PagePath) => void;
@@ -28,10 +29,10 @@ const INITIAL_FORM_STATE: RegisterFormState = {
 export function RegisterPage({ onNavigate }: RegisterPageProps) {
   const [formState, setFormState] = useState<RegisterFormState>(INITIAL_FORM_STATE);
   const [issuedClient, setIssuedClient] = useState<IssuedClient | null>(null);
-  const [copyState, setCopyState] = useState<"idle" | "copied">("idle");
   const [emailCodeSent, setEmailCodeSent] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
   const [emailVerified, setEmailVerified] = useState(false);
+  const { copy, reset: resetCopyState, status: copyStatus } = useClipboard();
 
   const canSendEmailCode = Boolean(formState.email.trim());
   const canVerifyEmail = Boolean(emailCodeSent && verificationCode.trim().length === 6);
@@ -41,7 +42,7 @@ export function RegisterPage({ onNavigate }: RegisterPageProps) {
 
   function updateField(field: keyof RegisterFormState, value: string) {
     setFormState((current) => ({ ...current, [field]: value }));
-    setCopyState("idle");
+    resetCopyState();
     setIssuedClient(null);
 
     if (field === "email") {
@@ -61,7 +62,7 @@ export function RegisterPage({ onNavigate }: RegisterPageProps) {
       ...formState,
       apiKey: createLocalApiKey(),
     });
-    setCopyState("idle");
+    resetCopyState();
   }
 
   function sendEmailCode() {
@@ -87,8 +88,7 @@ export function RegisterPage({ onNavigate }: RegisterPageProps) {
       return;
     }
 
-    await navigator.clipboard.writeText(issuedClient.apiKey);
-    setCopyState("copied");
+    await copy(issuedClient.apiKey);
   }
 
   return (
@@ -184,7 +184,7 @@ export function RegisterPage({ onNavigate }: RegisterPageProps) {
               <span>발급됨</span>
               <output>{issuedClient.apiKey}</output>
               <button onClick={copyIssuedKey} type="button">
-                {copyState === "copied" ? "복사됨" : "복사"}
+                {copyStatus === "copied" ? "복사됨" : copyStatus === "failed" ? "복사 실패" : "복사"}
               </button>
             </>
           ) : emailVerified ? (

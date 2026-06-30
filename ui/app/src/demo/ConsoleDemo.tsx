@@ -185,7 +185,7 @@ function buildClientRegisterRequest(name: string, email: string, issuerInfo: str
     name,
     email,
     issuerInfo,
-    note: "sample-app console",
+    note: "ui console",
   };
 }
 
