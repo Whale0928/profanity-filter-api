@@ -3,6 +3,9 @@ package app.security;
 import app.security.authentication.AuthenticationService;
 import app.security.filter.CustomAuthenticationEntryPoint;
 import app.security.filter.CustomAuthenticationFilter;
+import app.security.oauth2.CookieOAuth2AuthorizationRequestRepository;
+import app.security.oauth2.OAuth2LoginFailureHandler;
+import app.security.oauth2.OAuth2LoginSuccessHandler;
 import java.util.Arrays;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +33,10 @@ public class SecurityConfig {
 
   private final AuthenticationService authenticationService;
   private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+  private final CookieOAuth2AuthorizationRequestRepository
+      cookieOAuth2AuthorizationRequestRepository;
+  private final OAuth2LoginSuccessHandler oauth2LoginSuccessHandler;
+  private final OAuth2LoginFailureHandler oauth2LoginFailureHandler;
 
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -43,12 +50,23 @@ public class SecurityConfig {
         .headers(
             headersConfigurer ->
                 headersConfigurer.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
+        .oauth2Login(
+            oauth2 ->
+                oauth2
+                    .authorizationEndpoint(
+                        authorization ->
+                            authorization.authorizationRequestRepository(
+                                cookieOAuth2AuthorizationRequestRepository))
+                    .successHandler(oauth2LoginSuccessHandler)
+                    .failureHandler(oauth2LoginFailureHandler))
         .authorizeHttpRequests(
             authorizationManagerRequestMatcherRegistry ->
                 authorizationManagerRequestMatcherRegistry
                     .requestMatchers(PathRequest.toStaticResources().atCommonLocations())
                     .permitAll()
                     .requestMatchers(HttpMethod.GET, "/", "/index.html")
+                    .permitAll()
+                    .requestMatchers("/sso/**", "/oauth2/**", "/login/oauth2/code/**")
                     .permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/v1/clients/**")
                     .permitAll()

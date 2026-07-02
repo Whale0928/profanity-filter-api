@@ -1,0 +1,17 @@
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          github:
+            client-id: ${GITHUB_OAUTH_CLIENT_ID:}
+            client-secret: ${GITHUB_OAUTH_CLIENT_SECRET:}
+            scope:
+              - read:user
+              - user:email
+
+sso:
+  cookie:
+    name: PF_OAUTH2_AUTHORIZATION_REQUEST
+    ttl-seconds: 300
+    signing-key: ${SSO_COOKIE_SIGNING_KEY:}
