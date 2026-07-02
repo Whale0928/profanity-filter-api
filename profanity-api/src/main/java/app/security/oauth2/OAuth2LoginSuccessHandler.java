@@ -11,10 +11,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
-import org.springframework.stereotype.Component;
 
 @Slf4j
-@Component
 public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
   private static final String MOCK_TOKEN_PREFIX = "mock_dashboard_token_";

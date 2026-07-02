@@ -6,12 +6,14 @@ import app.security.filter.CustomAuthenticationFilter;
 import app.security.oauth2.CookieOAuth2AuthorizationRequestRepository;
 import app.security.oauth2.OAuth2LoginFailureHandler;
 import app.security.oauth2.OAuth2LoginSuccessHandler;
+import app.security.oauth2.OAuth2SecuritySupportConfig;
 import java.util.Arrays;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -28,6 +30,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
+@Import(OAuth2SecuritySupportConfig.class)
 @RequiredArgsConstructor
 public class SecurityConfig {
 

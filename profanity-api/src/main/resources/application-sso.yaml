@@ -4,14 +4,20 @@ spring:
       client:
         registration:
           github:
-            client-id: ${GITHUB_OAUTH_CLIENT_ID:}
-            client-secret: ${GITHUB_OAUTH_CLIENT_SECRET:}
+            client-id: ${GITHUB_OAUTH_CLIENT_ID:stub-github-client}
+            client-secret: ${GITHUB_OAUTH_CLIENT_SECRET:stub-github-secret}
             scope:
               - read:user
               - user:email
+        provider:
+          github:
+            authorization-uri: ${GITHUB_OAUTH_AUTHORIZATION_URI:http://127.0.0.1:65535/oauth2/authorize}
+            token-uri: ${GITHUB_OAUTH_TOKEN_URI:http://127.0.0.1:65535/oauth2/token}
+            user-info-uri: ${GITHUB_OAUTH_USER_INFO_URI:http://127.0.0.1:65535/user}
+            user-name-attribute: id
 
 sso:
   cookie:
     name: PF_OAUTH2_AUTHORIZATION_REQUEST
     ttl-seconds: 300
-    signing-key: ${SSO_COOKIE_SIGNING_KEY:}
+    signing-key: ${SSO_COOKIE_SIGNING_KEY:stub-sso-cookie-signing-key-for-local-and-ci}
