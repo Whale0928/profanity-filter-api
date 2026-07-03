@@ -1,0 +1,4 @@
+interface:
+  display_name: "Env Secret Manager"
+  short_description: "프로젝트 환경 변수와 1Password secret field를 안전하게 관리합니다."
+  default_prompt: "이 프로젝트의 로컬 .env, module.secrets, 1Password secret-source/database-source 환경 변수를 노출 없이 추가, 제거, 수정해줘."

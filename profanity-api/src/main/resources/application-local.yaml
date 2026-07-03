@@ -1,0 +1,6 @@
+spring:
+  config:
+    import:
+      - optional:file:./sso/sso.env[.properties]
+      - optional:file:../sso/sso.env[.properties]
+      - optional:classpath:application-sso.local.yaml

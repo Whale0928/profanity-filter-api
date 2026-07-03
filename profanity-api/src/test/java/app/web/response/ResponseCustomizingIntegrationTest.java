@@ -8,6 +8,7 @@ import app.core.data.response.ApiResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -21,7 +22,10 @@ import org.springframework.web.bind.annotation.RestController;
 /** 실제 MockMvc 직렬화 흐름(@RestControllerAdvice 등록 → supports → 직렬화)까지 검증하는 통합 테스트. */
 @WebMvcTest(
     controllers = ResponseCustomizingIntegrationTest.MetaTestController.class,
-    excludeAutoConfiguration = SecurityAutoConfiguration.class)
+    excludeAutoConfiguration = {
+      SecurityAutoConfiguration.class,
+      OAuth2ClientAutoConfiguration.class
+    })
 @Import({ResponseCustomizingAdvice.class, HostResponseCustomizer.class})
 @TestPropertySource(properties = "app.response.proxied-host=api.kr-filter.com")
 class ResponseCustomizingIntegrationTest {

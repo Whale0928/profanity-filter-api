@@ -4,6 +4,7 @@ import { getCurrentPagePath, type PagePath } from "./constants/pagePath";
 import { OPENAPI_DOCUMENT_URL, OVERVIEW_MARKDOWN_PATH, FALLBACK_OVERVIEW_MARKDOWN } from "./docs/constants";
 import { preloadDocsDocuments } from "./docs/hooks";
 import { HomePage } from "./features/home/HomePage";
+import { LoginPage } from "./features/login/LoginPage";
 import { RegisterPage } from "./features/register/RegisterPage";
 import { Navigation } from "./components/Navigation";
 
@@ -57,6 +58,8 @@ export default function App() {
         </Suspense>
       ) : pagePath === "/register" ? (
         <RegisterPage onNavigate={navigate} />
+      ) : pagePath === "/login" ? (
+        <LoginPage />
       ) : (
         <HomePage onNavigate={navigate} />
       )}

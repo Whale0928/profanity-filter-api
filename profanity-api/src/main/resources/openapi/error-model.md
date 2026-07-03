@@ -27,6 +27,7 @@ API Key 누락처럼 보안 필터에서 차단되는 요청은 HTTP `401`과 `s
 | `4002` | `Invalid_tracking_id`   | 유효하지 않은 tracking ID      |
 | `4003` | `Not_fount_tracking_id` | tracking ID를 찾을 수 없음     |
 | `4010` | `Unauthorized`          | API Key 누락               |
+| `4011` | `Oauth2_login_failed`   | OAuth2 로그인 실패          |
 | `4030` | `Forbidden`             | 권한 부족 또는 차단된 클라이언트       |
 | `4031` | `Not_found_client`      | 클라이언트 정보 없음              |
 | `4032` | `Invalid_api_key`       | 유효하지 않은 API Key          |
