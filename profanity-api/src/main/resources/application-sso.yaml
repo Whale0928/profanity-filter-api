@@ -9,14 +9,29 @@ spring:
             scope:
               - read:user
               - user:email
+          google:
+            client-id: ${GOOGLE_OAUTH_CLIENT_ID:stub-google-client}
+            client-secret: ${GOOGLE_OAUTH_CLIENT_SECRET:stub-google-secret}
+            scope:
+              - openid
+              - profile
+              - email
         provider:
           github:
             authorization-uri: ${GITHUB_OAUTH_AUTHORIZATION_URI:http://127.0.0.1:65535/oauth2/authorize}
             token-uri: ${GITHUB_OAUTH_TOKEN_URI:http://127.0.0.1:65535/oauth2/token}
             user-info-uri: ${GITHUB_OAUTH_USER_INFO_URI:http://127.0.0.1:65535/user}
             user-name-attribute: id
+          google:
+            authorization-uri: ${GOOGLE_OAUTH_AUTHORIZATION_URI:http://127.0.0.1:65535/oauth2/authorize}
+            token-uri: ${GOOGLE_OAUTH_TOKEN_URI:http://127.0.0.1:65535/oauth2/token}
+            user-info-uri: ${GOOGLE_OAUTH_USER_INFO_URI:http://127.0.0.1:65535/userinfo}
+            jwk-set-uri: ${GOOGLE_OAUTH_JWK_SET_URI:http://127.0.0.1:65535/oauth2/certs}
+            user-name-attribute: sub
 
 sso:
+  frontend:
+    redirect-uri: ${SSO_FRONTEND_REDIRECT_URI:http://localhost:5173/login}
   cookie:
     name: PF_OAUTH2_AUTHORIZATION_REQUEST
     ttl-seconds: 300

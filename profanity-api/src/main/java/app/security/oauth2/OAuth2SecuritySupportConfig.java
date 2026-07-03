@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@EnableConfigurationProperties(SsoCookieProperties.class)
+@EnableConfigurationProperties({SsoCookieProperties.class, SsoFrontendProperties.class})
 public class OAuth2SecuritySupportConfig {
 
   @Bean
@@ -15,12 +15,12 @@ public class OAuth2SecuritySupportConfig {
   }
 
   @Bean
-  OAuth2LoginSuccessHandler oauth2LoginSuccessHandler() {
-    return new OAuth2LoginSuccessHandler();
+  OAuth2LoginSuccessHandler oauth2LoginSuccessHandler(SsoFrontendProperties ssoFrontendProperties) {
+    return new OAuth2LoginSuccessHandler(ssoFrontendProperties);
   }
 
   @Bean
-  OAuth2LoginFailureHandler oauth2LoginFailureHandler() {
-    return new OAuth2LoginFailureHandler();
+  OAuth2LoginFailureHandler oauth2LoginFailureHandler(SsoFrontendProperties ssoFrontendProperties) {
+    return new OAuth2LoginFailureHandler(ssoFrontendProperties);
   }
 }

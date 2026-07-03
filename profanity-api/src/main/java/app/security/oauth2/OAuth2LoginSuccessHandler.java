@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -13,37 +14,73 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
 @Slf4j
+@RequiredArgsConstructor
 public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
   private static final String MOCK_TOKEN_PREFIX = "mock_dashboard_token_";
-  private static final String FRONTEND_REDIRECT_URI =
-      "http://localhost:63344/profanity-filter-api/sso/index.html";
+
+  private final SsoFrontendProperties ssoFrontendProperties;
 
   @Override
   public void onAuthenticationSuccess(
       HttpServletRequest request, HttpServletResponse response, Authentication authentication)
       throws IOException {
     OAuth2User oauth2User = (OAuth2User) authentication.getPrincipal();
+    String provider = registrationId(authentication);
     String mockToken = MOCK_TOKEN_PREFIX + UUID.randomUUID().toString().replace("-", "");
-    String githubUserId = attributeAsString(oauth2User, "id");
-    String githubLogin = attributeAsString(oauth2User, "login");
+    ProviderProfile providerProfile = providerProfile(provider, oauth2User);
 
     log.info(
-        "GitHub OAuth2 login succeeded. provider={}, githubUserId={}, githubLogin={}",
-        registrationId(authentication),
-        githubUserId,
-        githubLogin);
+        "OAuth2 login succeeded. provider={}, providerUserId={}, providerLogin={}, providerEmail={}",
+        provider,
+        providerProfile.userId(),
+        providerProfile.login(),
+        providerProfile.email());
 
     response.sendRedirect(
-        FRONTEND_REDIRECT_URI
+        ssoFrontendProperties.redirectUri()
             + "#provider="
-            + encode(registrationId(authentication))
+            + encode(provider)
+            + "&providerUserId="
+            + encode(providerProfile.userId())
+            + "&providerLogin="
+            + encode(providerProfile.login())
+            + "&providerEmail="
+            + encode(providerProfile.email())
             + "&githubUserId="
-            + encode(githubUserId)
+            + encode(providerProfile.githubUserId())
             + "&githubLogin="
-            + encode(githubLogin)
+            + encode(providerProfile.githubLogin())
+            + "&googleUserId="
+            + encode(providerProfile.googleUserId())
+            + "&googleEmail="
+            + encode(providerProfile.googleEmail())
             + "&dashboardAccessToken="
             + encode(mockToken));
+  }
+
+  private ProviderProfile providerProfile(String provider, OAuth2User oauth2User) {
+    return switch (provider) {
+      case "github" ->
+          new ProviderProfile(
+              attributeAsString(oauth2User, "id"),
+              attributeAsString(oauth2User, "login"),
+              attributeAsString(oauth2User, "email"),
+              attributeAsString(oauth2User, "id"),
+              attributeAsString(oauth2User, "login"),
+              "",
+              "");
+      case "google" ->
+          new ProviderProfile(
+              attributeAsString(oauth2User, "sub"),
+              attributeAsString(oauth2User, "name"),
+              attributeAsString(oauth2User, "email"),
+              "",
+              "",
+              attributeAsString(oauth2User, "sub"),
+              attributeAsString(oauth2User, "email"));
+      default -> new ProviderProfile("", "", "", "", "", "", "");
+    };
   }
 
   private String encode(String value) {
@@ -64,4 +101,13 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     }
     return "unknown";
   }
+
+  private record ProviderProfile(
+      String userId,
+      String login,
+      String email,
+      String githubUserId,
+      String githubLogin,
+      String googleUserId,
+      String googleEmail) {}
 }

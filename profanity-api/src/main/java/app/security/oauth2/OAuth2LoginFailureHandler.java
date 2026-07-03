@@ -7,15 +7,16 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 
 @Slf4j
+@RequiredArgsConstructor
 public class OAuth2LoginFailureHandler implements AuthenticationFailureHandler {
 
-  private static final String FRONTEND_REDIRECT_URI =
-      "http://localhost:63344/profanity-filter-api/sso/index.html";
+  private final SsoFrontendProperties ssoFrontendProperties;
 
   @Override
   public void onAuthenticationFailure(
@@ -26,7 +27,7 @@ public class OAuth2LoginFailureHandler implements AuthenticationFailureHandler {
     log.warn("OAuth2 login failed. message={}", exception.getMessage());
 
     response.sendRedirect(
-        FRONTEND_REDIRECT_URI
+        ssoFrontendProperties.redirectUri()
             + "#error=oauth2_login_failed"
             + "&statusCode="
             + status.code()
