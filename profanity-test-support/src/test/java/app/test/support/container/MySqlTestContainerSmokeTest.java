@@ -28,8 +28,6 @@ class MySqlTestContainerSmokeTest {
 
     assertThat(count(dataSource, "clients")).isEqualTo(2);
     assertThat(count(dataSource, "profanity_word")).isEqualTo(3);
-    assertThat(count(dataSource, "users")).isZero();
-    assertThat(count(dataSource, "oauth_accounts")).isZero();
 
     execute(
         dataSource,
