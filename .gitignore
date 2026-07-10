@@ -60,3 +60,4 @@ application-prod.yml
 .omc/
 /.env
 .DS_Store
+/.playwright-mcp/
