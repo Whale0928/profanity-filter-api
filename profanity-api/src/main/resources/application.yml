@@ -12,6 +12,7 @@ spring:
       - redis
       - domain
       - shared
+      - sso
   mail:
     host: smtp.gmail.com
     port: 587

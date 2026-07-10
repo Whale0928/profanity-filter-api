@@ -11,6 +11,7 @@ public enum StatusCode {
       "처리에 실패하였습니다. 요청이 잘못 되었거나 필수 파라미터가 누락된 경우 발생 합니다. Description에서 보다 상세한 오류 메세지를 확인할 수 있습니다."),
   NOT_FOUNT_TRACKING_ID(4003, "유효하지 않은 Tracking ID 입니다. Tracking ID를 확인해 주세요."),
   UNAUTHORIZED(4010, "인증 키가 누락 되었습니다."),
+  OAUTH2_LOGIN_FAILED(4011, "OAuth2 로그인에 실패했습니다."),
   FORBIDDEN(4030, "인증 권한이 부적절합니다. 인증 키가 유효하지 않거나 권한이 없는 경우 발생합니다."),
   NOT_FOUND_CLIENT(4031, "클라이언트 정보를 찾을 수 없습니다. 인증 키가 유효하지 않거나 권한이 없는 경우 발생합니다."),
   INVALID_API_KEY(4032, "API 키가 유효하지 않습니다. 인증 키가 유효하지 않거나 권한이 없는 경우 발생합니다."),

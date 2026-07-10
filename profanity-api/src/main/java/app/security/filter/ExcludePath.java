@@ -14,6 +14,9 @@ public enum ExcludePath {
   OPENAPI("openapi.json", "OpenAPI JSON 스펙", List.of(HttpMethod.GET)),
   OVERVIEW("overview.md", "API Overview Markdown 문서", List.of(HttpMethod.GET)),
   LLMS(List.of("llms.txt", "llm.txt"), "LLM 문서 색인", List.of(HttpMethod.GET)),
+  SSO("sso", "SSO 정적 페이지", List.of(HttpMethod.GET)),
+  OAUTH2("oauth2", "OAuth2 인증 시작", List.of(HttpMethod.GET)),
+  OAUTH2_CALLBACK("login/oauth2/code", "OAuth2 callback", List.of(HttpMethod.GET)),
   ;
 
   private final List<String> paths;

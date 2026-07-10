@@ -52,6 +52,8 @@ application-prod.yml
 /.env.redis
 /docs/index.html
 /data/**
+/sso/sso.env
+/profanity-api/src/main/resources/application-sso.local.yaml
 
 .secrets
 /http/http-client.env.json
