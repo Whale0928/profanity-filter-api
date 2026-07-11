@@ -43,8 +43,18 @@ class OpenApiSpecE2ETest extends AbstractApiTester {
     assertThat(body.at("/components/securitySchemes/ApiKeyAuth/description").asText())
         .as("ApiKeyAuth 보안 스키마는 x-api-key 헤더 설명을 제공해야 한다")
         .isEqualTo("클라이언트 등록 후 발급받은 API Key");
+    assertThat(body.at("/components/securitySchemes/LoginJwtAuth/type").asText()).isEqualTo("http");
+    assertThat(body.at("/components/securitySchemes/LoginJwtAuth/scheme").asText())
+        .isEqualTo("bearer");
+    assertThat(body.at("/components/securitySchemes/LoginJwtAuth/bearerFormat").asText())
+        .isEqualTo("JWT");
     assertThat(body.at("/paths/~1api~1v1~1filter/post").isMissingNode()).isFalse();
     assertThat(body.at("/paths/~1api~1v1~1clients~1register/post").isMissingNode()).isFalse();
+    assertThat(body.at("/paths/~1api~1v1~1auth~1exchange/post").isMissingNode()).isFalse();
+    assertThat(body.at("/paths/~1api~1v1~1auth~1csrf/get").isMissingNode()).isFalse();
+    assertThat(body.at("/paths/~1api~1v1~1auth~1refresh/post").isMissingNode()).isFalse();
+    assertThat(body.at("/paths/~1api~1v1~1auth~1me/get/security/0/LoginJwtAuth").isArray())
+        .isTrue();
     assertThat(body.at("/paths/~1api~1v1~1health/get").isMissingNode()).isFalse();
     assertThat(body.at("/paths/~1overview.md/get").isMissingNode()).isTrue();
     assertThat(body.at("/paths/~1llms.txt/get").isMissingNode()).isTrue();
@@ -122,6 +132,10 @@ class OpenApiSpecE2ETest extends AbstractApiTester {
           new OperationPath("/paths/~1api~1v1~1clients~1send-email/put/responses/200/content"),
           new OperationPath("/paths/~1api~1v1~1filter/post/responses/200/content"),
           new OperationPath("/paths/~1api~1v1~1filter~1advanced/post/responses/200/content"),
+          new OperationPath("/paths/~1api~1v1~1auth~1exchange/post/responses/200/content"),
+          new OperationPath("/paths/~1api~1v1~1auth~1csrf/get/responses/200/content"),
+          new OperationPath("/paths/~1api~1v1~1auth~1refresh/post/responses/200/content"),
+          new OperationPath("/paths/~1api~1v1~1auth~1me/get/responses/200/content"),
           new OperationPath("/paths/~1api~1v1~1sync/get/responses/200/content"),
           new OperationPath(
               "/paths/~1api~1v1~1word~1accept~1{requestId}/post/responses/200/content")

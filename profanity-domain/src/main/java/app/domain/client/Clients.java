@@ -23,7 +23,7 @@ import org.hibernate.annotations.Comment;
 
 @Getter
 @Builder
-@ToString(of = {"id", "name", "email", "apiKey"})
+@ToString(of = {"id", "name", "email"})
 @EqualsAndHashCode(of = "id")
 @AllArgsConstructor(access = PRIVATE)
 @NoArgsConstructor(access = PROTECTED)

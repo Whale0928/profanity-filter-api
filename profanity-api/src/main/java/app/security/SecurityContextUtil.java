@@ -1,7 +1,10 @@
 package app.security;
 
 import app.domain.client.PermissionsType;
-import app.security.authentication.CustomPrincipal;
+import app.security.authentication.ApiKeyPrincipal;
+import app.security.authentication.AuthenticationType;
+import app.security.authentication.LoginUserPrincipal;
+import app.security.authentication.ServicePrincipal;
 import java.util.List;
 import java.util.UUID;
 import lombok.AccessLevel;
@@ -18,22 +21,36 @@ import org.springframework.stereotype.Component;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class SecurityContextUtil {
 
-  /**
-   * SecurityContext에서 CustomPrincipal을 조회합니다. authentication이 null인 경우 anonymous 권한을 가진 Principal을
-   * 반환합니다.
-   */
-  public static CustomPrincipal getAuthentication() {
+  /** SecurityContext에서 서비스 인증 주체를 조회합니다. */
+  public static ServicePrincipal getAuthentication() {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    if (authentication == null) {
-      return CustomPrincipal.anonymous();
+    if (authentication == null
+        || !authentication.isAuthenticated()
+        || !(authentication.getPrincipal() instanceof ServicePrincipal principal)) {
+      return null;
     }
-    return CustomPrincipal.of(authentication.getPrincipal());
+    return principal;
+  }
+
+  /** 현재 인증 타입을 반환합니다. */
+  public static AuthenticationType getAuthenticationType() {
+    ServicePrincipal principal = getAuthentication();
+    return principal == null ? null : principal.authenticationType();
+  }
+
+  /** 현재 요청이 API Key로 인증됐는지 확인합니다. */
+  public static boolean isApiKeyAuthentication() {
+    return getAuthenticationType() == AuthenticationType.API_KEY;
+  }
+
+  /** 현재 요청이 로그인 JWT로 인증됐는지 확인합니다. */
+  public static boolean isLoginJwtAuthentication() {
+    return getAuthenticationType() == AuthenticationType.LOGIN_JWT;
   }
 
   /** 현재 접근 주체가 인증된 클라이언트인지 확인합니다. (익명 사용자, 차단 또는 폐기된 상태가 아님) */
   public static boolean isVerifiedClient() {
-    CustomPrincipal principal = getAuthentication();
-    if (principal == null || "anonymous".equals(principal.issuerInfo())) {
+    if (!isApiKeyAuthentication()) {
       return false;
     }
     return !hasPermission(PermissionsType.BLOCK) && !hasPermission(PermissionsType.DISCARD);
@@ -51,27 +68,38 @@ public class SecurityContextUtil {
 
   /** 현재 접근 주체가 특정 권한을 가지고 있는지 확인하는 유틸리티 메소드입니다. */
   private static boolean hasPermission(PermissionsType permissionType) {
-    CustomPrincipal principal = getAuthentication();
-    if (principal == null) {
+    ServicePrincipal principal = getAuthentication();
+    if (!(principal instanceof ApiKeyPrincipal apiKeyPrincipal)) {
       return false;
     }
-    List<String> permissions = principal.permissions();
+    List<String> permissions = apiKeyPrincipal.permissions();
     log.debug("Checking permission {} for current permissions: {}", permissionType, permissions);
-    return permissions != null && permissions.contains(permissionType.getValue());
+    return permissions.contains(permissionType.getValue());
   }
 
   /** 현재 사용자가 인증되었는지 확인합니다. */
   public static boolean isAuthenticated() {
-    return SecurityContextHolder.getContext().getAuthentication() != null;
+    return getAuthentication() != null;
   }
 
   /**
-   * 현재 인증된 사용자의 ID를 반환합니다.
+   * 현재 API Key 클라이언트의 ID를 반환합니다.
    *
    * @throws IllegalStateException 인증되지 않은 경우
    */
+  public static UUID getCurrentApiClientId() {
+    return getApiKeyPrincipalWithCheck().id();
+  }
+
+  /** 기존 호출부 호환용 별칭입니다. 새 코드에서는 getCurrentApiClientId를 사용합니다. */
+  @Deprecated(forRemoval = false)
   public static UUID getCurrentUserId() {
-    return getAuthenticationWithCheck().id();
+    return getCurrentApiClientId();
+  }
+
+  /** 현재 로그인 사용자의 ID를 반환합니다. */
+  public static UUID getCurrentLoginUserId() {
+    return getLoginUserPrincipalWithCheck().id();
   }
 
   /**
@@ -80,7 +108,17 @@ public class SecurityContextUtil {
    * @throws IllegalStateException 인증되지 않은 경우
    */
   public static String getCurrentApikey() {
-    return getAuthenticationWithCheck().apiKey();
+    return getCurrentApiKey();
+  }
+
+  /** 현재 API Key 원문을 반환합니다. */
+  public static String getCurrentApiKey() {
+    getApiKeyPrincipalWithCheck();
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (!(authentication.getCredentials() instanceof String apiKey) || apiKey.isBlank()) {
+      throw new IllegalStateException("API key credential is unavailable");
+    }
+    return apiKey;
   }
 
   /**
@@ -98,19 +136,30 @@ public class SecurityContextUtil {
    * @throws IllegalStateException 인증되지 않은 경우
    */
   public static List<String> getCurrentUserPermissions() {
-    return getAuthenticationWithCheck().permissions();
+    return getApiKeyPrincipalWithCheck().permissions();
   }
 
-  /**
-   * 인증 상태를 체크하고 CustomPrincipal을 반환합니다.
-   *
-   * @throws IllegalStateException 인증되지 않은 경우
-   */
-  private static CustomPrincipal getAuthenticationWithCheck() {
-    CustomPrincipal principal = getAuthentication();
-    if (principal == null || "anonymous".equals(principal.issuerInfo())) {
+  private static ServicePrincipal getAuthenticationWithCheck() {
+    ServicePrincipal principal = getAuthentication();
+    if (principal == null) {
       throw new IllegalStateException("Not authenticated");
     }
     return principal;
+  }
+
+  private static ApiKeyPrincipal getApiKeyPrincipalWithCheck() {
+    ServicePrincipal principal = getAuthenticationWithCheck();
+    if (!(principal instanceof ApiKeyPrincipal apiKeyPrincipal)) {
+      throw new IllegalStateException("API key authentication is required");
+    }
+    return apiKeyPrincipal;
+  }
+
+  private static LoginUserPrincipal getLoginUserPrincipalWithCheck() {
+    ServicePrincipal principal = getAuthenticationWithCheck();
+    if (!(principal instanceof LoginUserPrincipal loginUserPrincipal)) {
+      throw new IllegalStateException("Login JWT authentication is required");
+    }
+    return loginUserPrincipal;
   }
 }

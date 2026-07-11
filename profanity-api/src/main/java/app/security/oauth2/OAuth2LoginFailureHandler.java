@@ -1,14 +1,13 @@
 package app.security.oauth2;
 
-import app.core.data.response.Status;
 import app.core.data.response.constant.StatusCode;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.CacheControl;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 
@@ -22,27 +21,14 @@ public class OAuth2LoginFailureHandler implements AuthenticationFailureHandler {
   public void onAuthenticationFailure(
       HttpServletRequest request, HttpServletResponse response, AuthenticationException exception)
       throws IOException {
-    Status status = Status.of(StatusCode.OAUTH2_LOGIN_FAILED, exception.getMessage());
+    log.warn("OAuth2 login failed. exceptionType={}", exception.getClass().getSimpleName());
 
-    log.warn("OAuth2 login failed. message={}", exception.getMessage());
-
+    response.setHeader(HttpHeaders.CACHE_CONTROL, CacheControl.noStore().getHeaderValue());
+    response.setHeader(HttpHeaders.PRAGMA, "no-cache");
     response.sendRedirect(
         ssoFrontendProperties.redirectUri()
             + "#error=oauth2_login_failed"
             + "&statusCode="
-            + status.code()
-            + "&statusMessage="
-            + encode(status.message())
-            + "&statusDescription="
-            + encode(status.description())
-            + "&statusDetailDescription="
-            + encode(status.DetailDescription()));
-  }
-
-  private String encode(String value) {
-    if (value == null) {
-      return "";
-    }
-    return URLEncoder.encode(value, StandardCharsets.UTF_8).replace("+", "%20");
+            + StatusCode.OAUTH2_LOGIN_FAILED.code());
   }
 }

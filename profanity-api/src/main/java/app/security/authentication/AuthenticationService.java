@@ -1,47 +1,47 @@
 package app.security.authentication;
 
-import app.application.client.MetadataReader;
 import app.core.data.response.constant.StatusCode;
-import app.domain.client.ClientMetadata;
+import app.security.filter.RequestCredential;
+import app.security.filter.RequestCredentialResolver;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.EnumMap;
 import java.util.List;
-import lombok.RequiredArgsConstructor;
+import java.util.Map;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.stereotype.Component;
 
 @Component
-@RequiredArgsConstructor
 public class AuthenticationService {
-  private static final String AUTH_TOKEN_HEADER_NAME = "X-API-KEY";
-  private static final String ROLE_PREFIX = "ROLE_";
-  private final MetadataReader clientMetadataReader;
+  private final RequestCredentialResolver credentialResolver;
+  private final Map<AuthenticationType, RequestAuthenticator> authenticators;
+
+  public AuthenticationService(
+      RequestCredentialResolver credentialResolver, List<RequestAuthenticator> authenticators) {
+    this.credentialResolver = credentialResolver;
+    EnumMap<AuthenticationType, RequestAuthenticator> indexed =
+        new EnumMap<>(AuthenticationType.class);
+    for (RequestAuthenticator authenticator : authenticators) {
+      RequestAuthenticator duplicate = indexed.put(authenticator.supports(), authenticator);
+      if (duplicate != null) {
+        throw new IllegalStateException(
+            "Multiple authenticators registered for " + authenticator.supports());
+      }
+    }
+    this.authenticators = Map.copyOf(indexed);
+  }
 
   public Authentication getAuthentication(HttpServletRequest request) {
-    String apiKey = request.getHeader(AUTH_TOKEN_HEADER_NAME);
-
-    if (apiKey == null || apiKey.isEmpty()) {
-      StatusCode unauthorized = StatusCode.UNAUTHORIZED;
-      throw new BadCredentialsException(String.valueOf(unauthorized.code()));
+    RequestCredential credential = credentialResolver.resolve(request);
+    if (credential.type() == AuthenticationType.OAUTH2_ACCESS_TOKEN) {
+      throw new CredentialAuthenticationException(
+          HttpStatus.UNAUTHORIZED, StatusCode.OAUTH2_ACCESS_TOKEN_UNSUPPORTED);
     }
-
-    ClientMetadata metadata = clientMetadataReader.read(apiKey);
-
-    CustomPrincipal principal =
-        CustomPrincipal.builder()
-            .apiKey(apiKey)
-            .id(metadata.id())
-            .email(metadata.email())
-            .issuerInfo(metadata.issuerInfo())
-            .permissions(metadata.permissions())
-            .issuedAt(metadata.issuedAt())
-            .build();
-
-    final List<String> authorityList =
-        principal.permissions().stream().map(permission -> ROLE_PREFIX + permission).toList();
-
-    return new CustomAuthentication(
-        apiKey, AuthorityUtils.createAuthorityList(authorityList), principal);
+    RequestAuthenticator authenticator = authenticators.get(credential.type());
+    if (authenticator == null) {
+      throw new BadCredentialsException(StatusCode.UNAUTHORIZED.stringCode());
+    }
+    return authenticator.authenticate(credential);
   }
 }

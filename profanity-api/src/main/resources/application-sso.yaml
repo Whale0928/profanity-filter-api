@@ -36,3 +36,27 @@ sso:
     name: PF_OAUTH2_AUTHORIZATION_REQUEST
     ttl-seconds: 300
     signing-key: ${SSO_COOKIE_SIGNING_KEY:stub-sso-cookie-signing-key-for-local-and-ci}
+
+security:
+  login:
+    exchange-code-ttl: ${LOGIN_EXCHANGE_CODE_TTL:60s}
+    refresh-token-ttl: ${LOGIN_REFRESH_TOKEN_TTL:14d}
+    absolute-session-ttl: ${LOGIN_ABSOLUTE_SESSION_TTL:30d}
+    refresh-reuse-grace: ${LOGIN_REFRESH_REUSE_GRACE:5s}
+    allowed-origins: ${SSO_FRONTEND_ALLOWED_ORIGINS:http://localhost:5173}
+    refresh-cookie:
+      name: ${LOGIN_REFRESH_COOKIE_NAME:PF_LOGIN_REFRESH}
+      secure: ${LOGIN_REFRESH_COOKIE_SECURE:false}
+      same-site: ${LOGIN_REFRESH_COOKIE_SAME_SITE:Strict}
+      path: /api/v1/auth
+
+app:
+  security:
+    jwt:
+      issuer: ${LOGIN_JWT_ISSUER:http://localhost:8080}
+      audience: ${LOGIN_JWT_AUDIENCE:profanity-dashboard}
+      access-token-ttl: ${LOGIN_JWT_ACCESS_TTL:15m}
+      clock-skew: ${LOGIN_JWT_CLOCK_SKEW:30s}
+      keys:
+        private-jwk: ${LOGIN_JWT_PRIVATE_JWK:}
+        public-jwk-set: ${LOGIN_JWT_PUBLIC_JWK_SET:}

@@ -2,6 +2,7 @@ package app.security.filter;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
+import app.security.authentication.CredentialAuthenticationException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Objects;
@@ -32,5 +33,8 @@ public class CustomAuthenticationEntryPoint
     Exception exception = (Exception) request.getAttribute("exception");
     if (Objects.isNull(exception)) exception = authException;
     resolver.resolveException(request, response, null, exception);
+    if (authException instanceof CredentialAuthenticationException credentialException) {
+      response.setStatus(credentialException.httpStatus().value());
+    }
   }
 }

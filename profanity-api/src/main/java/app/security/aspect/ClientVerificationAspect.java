@@ -29,12 +29,16 @@ public class ClientVerificationAspect {
     Method method = signature.getMethod();
     VerifiedClientOnly annotation = method.getAnnotation(VerifiedClientOnly.class);
 
+    if (!SecurityContextUtil.isApiKeyAuthentication()) {
+      return ApiResponse.error(Status.of(FORBIDDEN, "API Key 클라이언트 인증이 필요합니다."));
+    }
+
     if (annotation.checkBlocked() && SecurityContextUtil.isBlockedClient()) {
-      log.info("차단된 클라이언트의 접근이 감지되었습니다. : {}", SecurityContextUtil.getAuthentication());
+      log.info("차단된 클라이언트의 접근이 감지되었습니다. clientId={}", SecurityContextUtil.getCurrentApiClientId());
       return ApiResponse.error(Status.of(FORBIDDEN, "차단된 클라이언트입니다."));
     }
     if (annotation.checkDiscarded() && SecurityContextUtil.isDiscardedClient()) {
-      log.info("폐기된 클라이언트의 접근이 감지되었습니다. : {}", SecurityContextUtil.getAuthentication());
+      log.info("폐기된 클라이언트의 접근이 감지되었습니다. clientId={}", SecurityContextUtil.getCurrentApiClientId());
       return ApiResponse.error(Status.of(FORBIDDEN, "폐기된 클라이언트입니다."));
     }
 
