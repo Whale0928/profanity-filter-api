@@ -8,5 +8,7 @@ public interface UserAccountRepository {
 
   Optional<UserAccount> findByIdForUpdate(UUID id);
 
+  Optional<UserAccount> findByPrimaryEmailForUpdate(String primaryEmail);
+
   UserAccount save(UserAccount userAccount);
 }

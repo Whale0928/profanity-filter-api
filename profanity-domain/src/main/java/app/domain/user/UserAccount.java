@@ -9,6 +9,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
@@ -19,7 +20,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 @Getter
-@Builder
+@Builder(access = PRIVATE)
 @ToString(of = {"id", "displayName", "status"})
 @EqualsAndHashCode(of = "id")
 @AllArgsConstructor(access = PRIVATE)
@@ -36,7 +37,7 @@ public class UserAccount {
   @Column(name = "display_name", nullable = false, length = 100)
   private String displayName;
 
-  @Column(name = "primary_email", length = 255)
+  @Column(name = "primary_email", nullable = false, unique = true, length = 255)
   private String primaryEmail;
 
   @Column(name = "avatar_url", length = 500)
@@ -59,7 +60,7 @@ public class UserAccount {
     Instant requiredNow = Objects.requireNonNull(now, "now must not be null");
     return UserAccount.builder()
         .displayName(requiredDisplayName)
-        .primaryEmail(blankToNull(primaryEmail))
+        .primaryEmail(requirePrimaryEmail(primaryEmail))
         .avatarUrl(blankToNull(avatarUrl))
         .createdAt(requiredNow)
         .updatedAt(requiredNow)
@@ -68,16 +69,17 @@ public class UserAccount {
 
   public void synchronizeProfile(
       String displayName, String primaryEmail, String avatarUrl, Instant now) {
-    this.displayName = requireDisplayName(displayName);
-    String synchronizedEmail = blankToNull(primaryEmail);
-    if (synchronizedEmail != null) {
-      this.primaryEmail = synchronizedEmail;
-    }
+    String requiredDisplayName = requireDisplayName(displayName);
+    String requiredPrimaryEmail = requirePrimaryEmail(primaryEmail);
     String synchronizedAvatarUrl = blankToNull(avatarUrl);
+    Instant requiredNow = Objects.requireNonNull(now, "now must not be null");
+
+    this.displayName = requiredDisplayName;
+    this.primaryEmail = requiredPrimaryEmail;
     if (synchronizedAvatarUrl != null) {
       this.avatarUrl = synchronizedAvatarUrl;
     }
-    this.updatedAt = Objects.requireNonNull(now, "now must not be null");
+    this.updatedAt = requiredNow;
   }
 
   public boolean isActive() {
@@ -94,6 +96,13 @@ public class UserAccount {
       throw new IllegalArgumentException("displayName must not be blank");
     }
     return value.trim();
+  }
+
+  private static String requirePrimaryEmail(String value) {
+    if (value == null || value.isBlank()) {
+      throw new IllegalArgumentException("primaryEmail must not be blank");
+    }
+    return value.trim().toLowerCase(Locale.ROOT);
   }
 
   private static String blankToNull(String value) {

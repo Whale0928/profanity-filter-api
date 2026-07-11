@@ -133,6 +133,13 @@ class LoginRefreshTokenServiceTest {
     }
 
     @Override
+    public Optional<UserAccount> findByPrimaryEmailForUpdate(String primaryEmail) {
+      return values.values().stream()
+          .filter(user -> user.getPrimaryEmail().equalsIgnoreCase(primaryEmail.trim()))
+          .findFirst();
+    }
+
+    @Override
     public UserAccount save(UserAccount userAccount) {
       values.put(userAccount.getId(), userAccount);
       return userAccount;

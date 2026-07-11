@@ -31,7 +31,9 @@ assert.doesNotMatch(loginPage, /console\.(?:log|info|debug|warn|error)/, "Login 
 assert.doesNotMatch(loginPage, /<pre\b/, "The login page must not render a raw API or provider response.");
 assert.doesNotMatch(loginPage, /loginResult|formattedResult|OAuthLoginResult/, "The old raw callback result renderer must stay removed.");
 assert.match(loginPage, /authView\.user\.displayName/, "Authenticated UI must render only the normalized user view.");
-assert.match(loginPage, /authView\.user\.email \?\? "공개된 이메일 없음"/, "Nullable user email must have a safe UI fallback.");
+assert.match(loginPage, /email: string;/, "Authenticated user email must be required by the UI contract.");
+assert.match(loginPage, /email: readRequiredString\(record, "email"\)/, "Login responses must include a non-empty email.");
+assert.doesNotMatch(loginPage, /공개된 이메일 없음/, "The login UI must not keep a nullable email fallback.");
 assert.match(loginPage, /toSafeAvatarUrl\(authView\.user\.avatarUrl\)/, "Nullable avatar URLs must be normalized before rendering.");
 
 assert.equal(packageJson.scripts["test:login"], "node scripts/check-login-auth.mjs", "Package scripts must expose the login invariant check.");

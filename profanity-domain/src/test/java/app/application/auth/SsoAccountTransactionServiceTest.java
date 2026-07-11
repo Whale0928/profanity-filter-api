@@ -1,6 +1,7 @@
 package app.application.auth;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import app.domain.user.OAuthAccount;
 import app.domain.user.OAuthAccountRepository;
@@ -46,43 +47,50 @@ class SsoAccountTransactionServiceTest {
   }
 
   @Test
-  @DisplayName("이메일이 같아도 provider identity가 다르면 사용자를 자동 연결하지 않는다")
-  void upsertInNewTransaction_whenOnlyEmailMatches_createsSeparateUsers() {
+  @DisplayName("검증된 이메일이 같으면 대소문자와 공백을 정규해 기존 사용자에 OAuth 계정을 연결한다")
+  void upsertInNewTransaction_whenVerifiedEmailMatches_linksExistingUser() {
     UserAccount githubUser =
         service.upsertInNewTransaction(
-            profile(OAuthProvider.GITHUB, "github-user", "same@example.com", "GitHub User"),
+            profile(OAuthProvider.GITHUB, "github-user", " Same@Example.COM ", "GitHub User"),
             FIRST_LOGIN_AT);
     UserAccount googleUser =
         service.upsertInNewTransaction(
             profile(OAuthProvider.GOOGLE, "google-user", "same@example.com", "Google User"),
             FIRST_LOGIN_AT.plusSeconds(1));
 
-    assertThat(googleUser.getId()).isNotEqualTo(githubUser.getId());
-    assertThat(userRepository.size()).isEqualTo(2);
+    assertThat(googleUser.getId()).isEqualTo(githubUser.getId());
+    assertThat(googleUser.getPrimaryEmail()).isEqualTo("same@example.com");
+    assertThat(userRepository.size()).isEqualTo(1);
     assertThat(oauthRepository.size()).isEqualTo(2);
   }
 
   @Test
-  @DisplayName("provider가 검증하지 않은 이메일은 내부 대표 이메일로 설정하지 않는다")
-  void upsertInNewTransaction_whenEmailIsUnverified_doesNotUseItAsPrimaryEmail() {
+  @DisplayName("provider가 검증하지 않은 이메일이면 SSO 계정 생성을 거부한다")
+  void upsertInNewTransaction_whenEmailIsUnverified_rejectsAccount() {
     OAuthLoginProfile unverifiedProfile =
         new OAuthLoginProfile(
             OAuthProvider.GITHUB,
             "unverified-user",
             "unverified@example.com",
             false,
+            true,
             "unverified",
             "Unverified User",
             null);
 
-    UserAccount user = service.upsertInNewTransaction(unverifiedProfile, FIRST_LOGIN_AT);
-
-    assertThat(user.getPrimaryEmail()).isNull();
+    assertThatThrownBy(() -> service.upsertInNewTransaction(unverifiedProfile, FIRST_LOGIN_AT))
+        .isInstanceOfSatisfying(
+            LoginAccountUnavailableException.class,
+            exception ->
+                assertThat(exception.reason())
+                    .isEqualTo(LoginAccountUnavailableException.Reason.VERIFIED_EMAIL_REQUIRED));
+    assertThat(userRepository.size()).isZero();
+    assertThat(oauthRepository.size()).isZero();
   }
 
   @Test
-  @DisplayName("미검증 이메일 재로그인은 기존의 검증된 대표 이메일을 덮지 않는다")
-  void upsertInNewTransaction_whenReloginEmailIsUnverified_keepsVerifiedPrimaryEmail() {
+  @DisplayName("미검증 이메일 재로그인은 거부하고 기존 사용자를 변경하지 않는다")
+  void upsertInNewTransaction_whenReloginEmailIsUnverified_rejectsWithoutChanges() {
     OAuthLoginProfile verifiedProfile =
         profile(OAuthProvider.GITHUB, "provider-user-2", "verified@example.com", "Verified");
     UserAccount first = service.upsertInNewTransaction(verifiedProfile, FIRST_LOGIN_AT);
@@ -92,21 +100,122 @@ class SsoAccountTransactionServiceTest {
             "provider-user-2",
             "unverified@example.com",
             false,
+            true,
             "unverified",
             "Unverified",
             null);
 
-    UserAccount second =
-        service.upsertInNewTransaction(unverifiedProfile, FIRST_LOGIN_AT.plusSeconds(30));
+    assertThatThrownBy(
+            () -> service.upsertInNewTransaction(unverifiedProfile, FIRST_LOGIN_AT.plusSeconds(30)))
+        .isInstanceOf(LoginAccountUnavailableException.class);
+    assertThat(first.getPrimaryEmail()).isEqualTo("verified@example.com");
+  }
 
-    assertThat(second.getId()).isEqualTo(first.getId());
-    assertThat(second.getPrimaryEmail()).isEqualTo("verified@example.com");
+  @Test
+  @DisplayName("기존 provider identity도 권위 있는 이메일이 아니면 upsert를 거부한다")
+  void upsertInNewTransaction_whenIdentityExistsButEmailIsNotAuthoritative_rejectsUpsert() {
+    OAuthLoginProfile trustedProfile =
+        profile(OAuthProvider.GITHUB, "existing-identity", "existing@example.com", "Existing");
+    UserAccount first = service.upsertInNewTransaction(trustedProfile, FIRST_LOGIN_AT);
+    OAuthLoginProfile untrustedProfile =
+        new OAuthLoginProfile(
+            OAuthProvider.GITHUB,
+            "existing-identity",
+            "existing@example.com",
+            true,
+            false,
+            "existing",
+            "Existing Updated",
+            null);
+
+    assertThatThrownBy(
+            () -> service.upsertInNewTransaction(untrustedProfile, FIRST_LOGIN_AT.plusSeconds(30)))
+        .isInstanceOfSatisfying(
+            LoginAccountUnavailableException.class,
+            exception ->
+                assertThat(exception.reason())
+                    .isEqualTo(
+                        LoginAccountUnavailableException.Reason.AUTHORITATIVE_EMAIL_REQUIRED));
+    assertThat(first.getDisplayName()).isEqualTo("Existing");
+    assertThat(userRepository.size()).isEqualTo(1);
+    assertThat(oauthRepository.size()).isEqualTo(1);
+  }
+
+  @Test
+  @DisplayName("신뢰할 수 없는 이메일은 기존 사용자에 새 OAuth 계정으로 연결하지 않는다")
+  void upsertInNewTransaction_whenEmailMatchesButIsUntrusted_rejectsLink() {
+    UserAccount existing =
+        service.upsertInNewTransaction(
+            profile(OAuthProvider.GITHUB, "trusted-user", "shared@example.com", "Trusted"),
+            FIRST_LOGIN_AT);
+    OAuthLoginProfile untrustedProfile =
+        new OAuthLoginProfile(
+            OAuthProvider.GOOGLE,
+            "untrusted-user",
+            " SHARED@EXAMPLE.COM ",
+            true,
+            false,
+            "untrusted",
+            "Untrusted",
+            null);
+
+    assertThatThrownBy(
+            () -> service.upsertInNewTransaction(untrustedProfile, FIRST_LOGIN_AT.plusSeconds(1)))
+        .isInstanceOfSatisfying(
+            LoginAccountUnavailableException.class,
+            exception ->
+                assertThat(exception.reason())
+                    .isEqualTo(
+                        LoginAccountUnavailableException.Reason.AUTHORITATIVE_EMAIL_REQUIRED));
+    assertThat(existing.getDisplayName()).isEqualTo("Trusted");
+    assertThat(userRepository.size()).isEqualTo(1);
+    assertThat(oauthRepository.size()).isEqualTo(1);
+  }
+
+  @Test
+  @DisplayName("동일 사용자가 없어도 권위 있는 이메일이 아니면 신규 계정을 생성하지 않는다")
+  void upsertInNewTransaction_whenEmailIsNotAuthoritativeAndUnused_rejectsCreation() {
+    OAuthLoginProfile untrustedProfile =
+        new OAuthLoginProfile(
+            OAuthProvider.GITHUB,
+            "new-untrusted-user",
+            "NEW@EXAMPLE.COM",
+            true,
+            false,
+            "new-untrusted",
+            "New Untrusted",
+            null);
+
+    assertThatThrownBy(() -> service.upsertInNewTransaction(untrustedProfile, FIRST_LOGIN_AT))
+        .isInstanceOfSatisfying(
+            LoginAccountUnavailableException.class,
+            exception ->
+                assertThat(exception.reason())
+                    .isEqualTo(
+                        LoginAccountUnavailableException.Reason.AUTHORITATIVE_EMAIL_REQUIRED));
+    assertThat(userRepository.size()).isZero();
+    assertThat(oauthRepository.size()).isZero();
+  }
+
+  @Test
+  @DisplayName("provider에 검증된 이메일 값이 없으면 SSO 계정 생성을 거부한다")
+  void upsertInNewTransaction_whenVerifiedEmailIsMissing_rejectsAccount() {
+    OAuthLoginProfile missingEmailProfile =
+        new OAuthLoginProfile(
+            OAuthProvider.GOOGLE, "missing-email", null, true, true, null, "Missing Email", null);
+
+    assertThatThrownBy(() -> service.upsertInNewTransaction(missingEmailProfile, FIRST_LOGIN_AT))
+        .isInstanceOfSatisfying(
+            LoginAccountUnavailableException.class,
+            exception ->
+                assertThat(exception.reason())
+                    .isEqualTo(LoginAccountUnavailableException.Reason.VERIFIED_EMAIL_REQUIRED));
   }
 
   private static OAuthLoginProfile profile(
       OAuthProvider provider, String providerUserId, String email, String displayName) {
     return new OAuthLoginProfile(
-        provider, providerUserId, email, true, displayName, displayName, null);
+        provider, providerUserId, email, true, true, displayName, displayName, null);
   }
 
   private static final class InMemoryUserAccountRepository implements UserAccountRepository {
@@ -120,6 +229,13 @@ class SsoAccountTransactionServiceTest {
     @Override
     public Optional<UserAccount> findByIdForUpdate(UUID id) {
       return findById(id);
+    }
+
+    @Override
+    public Optional<UserAccount> findByPrimaryEmailForUpdate(String primaryEmail) {
+      return values.values().stream()
+          .filter(user -> user.getPrimaryEmail().equalsIgnoreCase(primaryEmail.trim()))
+          .findFirst();
     }
 
     @Override

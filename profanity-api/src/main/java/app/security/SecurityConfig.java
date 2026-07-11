@@ -8,6 +8,8 @@ import app.security.filter.CustomAuthenticationFilter;
 import app.security.filter.RequestCredentialResolver;
 import app.security.login.LoginSessionProperties;
 import app.security.oauth2.CookieOAuth2AuthorizationRequestRepository;
+import app.security.oauth2.GitHubOAuth2UserService;
+import app.security.oauth2.GoogleOidcUserService;
 import app.security.oauth2.OAuth2LoginFailureHandler;
 import app.security.oauth2.OAuth2LoginSuccessHandler;
 import app.security.oauth2.OAuth2SecuritySupportConfig;
@@ -50,6 +52,8 @@ public class SecurityConfig {
   private final CustomAccessDeniedHandler customAccessDeniedHandler;
   private final CookieOAuth2AuthorizationRequestRepository
       cookieOAuth2AuthorizationRequestRepository;
+  private final GitHubOAuth2UserService gitHubOAuth2UserService;
+  private final GoogleOidcUserService googleOidcUserService;
   private final OAuth2LoginSuccessHandler oauth2LoginSuccessHandler;
   private final OAuth2LoginFailureHandler oauth2LoginFailureHandler;
   private final LoginSessionProperties loginSessionProperties;
@@ -89,6 +93,11 @@ public class SecurityConfig {
                         authorization ->
                             authorization.authorizationRequestRepository(
                                 cookieOAuth2AuthorizationRequestRepository))
+                    .userInfoEndpoint(
+                        userInfo ->
+                            userInfo
+                                .userService(gitHubOAuth2UserService)
+                                .oidcUserService(googleOidcUserService))
                     .successHandler(oauth2LoginSuccessHandler)
                     .failureHandler(oauth2LoginFailureHandler))
         .authorizeHttpRequests(

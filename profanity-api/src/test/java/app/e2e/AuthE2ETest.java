@@ -252,9 +252,10 @@ class AuthE2ETest extends AbstractApiTester {
         new OAuthLoginProfile(
             OAuthProvider.GOOGLE,
             providerUserId,
-            providerUserId + "@example.com",
+            providerUserId + "@gmail.com",
             true,
-            providerUserId + "@example.com",
+            true,
+            providerUserId + "@gmail.com",
             providerUserId,
             null));
   }

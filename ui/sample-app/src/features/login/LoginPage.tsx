@@ -8,7 +8,7 @@ type LoginProvider = "github" | "google";
 type LoginUser = {
   id: string;
   displayName: string;
-  email: string | null;
+  email: string;
   avatarUrl: string | null;
 };
 
@@ -222,7 +222,7 @@ function LoginStatusPanel({ authView, onCheckSession }: { authView: AuthView; on
           )}
           <div>
             <p className="login-user-name">{authView.user.displayName}</p>
-            <p className="login-user-email">{authView.user.email ?? "공개된 이메일 없음"}</p>
+            <p className="login-user-email">{authView.user.email}</p>
           </div>
           <p className="login-session-note">
             현재 브라우저에서 로그인 상태를 유지합니다. 약 {expiresInMinutes}분 후 자동 갱신이 필요합니다.
@@ -360,7 +360,7 @@ function readLoginUser(value: unknown): LoginUser {
   return {
     id: String(id),
     displayName: readRequiredString(record, "displayName"),
-    email: readNullableString(record, "email"),
+    email: readRequiredString(record, "email"),
     avatarUrl: readNullableString(record, "avatarUrl"),
   };
 }

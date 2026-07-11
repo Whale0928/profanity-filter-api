@@ -258,6 +258,13 @@ class LoginJwtServiceTest {
     }
 
     @Override
+    public Optional<UserAccount> findByPrimaryEmailForUpdate(String primaryEmail) {
+      return users.values().stream()
+          .filter(user -> user.getPrimaryEmail().equalsIgnoreCase(primaryEmail))
+          .findFirst();
+    }
+
+    @Override
     public UserAccount save(UserAccount userAccount) {
       users.put(userAccount.getId(), userAccount);
       return userAccount;

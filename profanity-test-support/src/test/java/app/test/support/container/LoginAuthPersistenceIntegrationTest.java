@@ -104,6 +104,7 @@ class LoginAuthPersistenceIntegrationTest {
             "concurrent-provider-user",
             "concurrent@example.com",
             true,
+            true,
             "concurrent-user",
             "Concurrent User",
             null);
@@ -128,6 +129,54 @@ class LoginAuthPersistenceIntegrationTest {
     assertThat(firstUser.getId()).isEqualTo(secondUser.getId());
     assertThat(userRepository.count()).isEqualTo(1);
     assertThat(oauthRepository.count()).isEqualTo(1);
+  }
+
+  @Test
+  @DisplayName("동일한 신뢰 이메일의 서로 다른 provider 동시 로그인은 내부 사용자 하나에 연결된다")
+  void upsert_whenDifferentProvidersWithSameAuthoritativeEmailAreConcurrent_linksOneUser()
+      throws Exception {
+    OAuthLoginProfile githubProfile =
+        new OAuthLoginProfile(
+            OAuthProvider.GITHUB,
+            "concurrent-github-user",
+            "same@gmail.com",
+            true,
+            true,
+            "github-user",
+            "GitHub User",
+            null);
+    OAuthLoginProfile googleProfile =
+        new OAuthLoginProfile(
+            OAuthProvider.GOOGLE,
+            "concurrent-google-user",
+            "Same@Gmail.COM",
+            true,
+            true,
+            "google-user",
+            "Google User",
+            null);
+    CyclicBarrier barrier = new CyclicBarrier(2);
+
+    Future<UserAccount> github =
+        executor.submit(
+            () -> {
+              barrier.await();
+              return ssoAccountService.upsert(githubProfile, NOW);
+            });
+    Future<UserAccount> google =
+        executor.submit(
+            () -> {
+              barrier.await();
+              return ssoAccountService.upsert(googleProfile, NOW);
+            });
+
+    UserAccount githubUser = github.get();
+    UserAccount googleUser = google.get();
+
+    assertThat(githubUser.getId()).isEqualTo(googleUser.getId());
+    assertThat(githubUser.getPrimaryEmail()).isEqualTo("same@gmail.com");
+    assertThat(userRepository.count()).isEqualTo(1);
+    assertThat(oauthRepository.count()).isEqualTo(2);
   }
 
   @Test

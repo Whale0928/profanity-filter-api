@@ -19,4 +19,9 @@ public interface JpaUserAccountRepository
   @Lock(LockModeType.PESSIMISTIC_WRITE)
   @Query("select u from users u where u.id = :id")
   Optional<UserAccount> findByIdForUpdate(@Param("id") UUID id);
+
+  @Override
+  @Lock(LockModeType.PESSIMISTIC_WRITE)
+  @Query("select u from users u where u.primaryEmail = :primaryEmail")
+  Optional<UserAccount> findByPrimaryEmailForUpdate(@Param("primaryEmail") String primaryEmail);
 }

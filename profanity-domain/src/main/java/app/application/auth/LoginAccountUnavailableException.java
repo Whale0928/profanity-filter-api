@@ -15,6 +15,8 @@ public class LoginAccountUnavailableException extends RuntimeException {
 
   public enum Reason {
     USER_NOT_FOUND,
-    USER_INACTIVE
+    USER_INACTIVE,
+    VERIFIED_EMAIL_REQUIRED,
+    AUTHORITATIVE_EMAIL_REQUIRED
   }
 }

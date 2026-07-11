@@ -25,6 +25,16 @@ public class OAuth2SecuritySupportConfig {
   }
 
   @Bean
+  GitHubOAuth2UserService gitHubOAuth2UserService() {
+    return new GitHubOAuth2UserService();
+  }
+
+  @Bean
+  GoogleOidcUserService googleOidcUserService() {
+    return new GoogleOidcUserService();
+  }
+
+  @Bean
   OAuth2LoginSuccessHandler oauth2LoginSuccessHandler(
       SsoFrontendProperties ssoFrontendProperties,
       SsoLoginCompletionService loginCompletionService) {

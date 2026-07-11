@@ -7,6 +7,7 @@ public record OAuthLoginProfile(
     String providerUserId,
     String providerEmail,
     boolean emailVerified,
+    boolean emailAuthoritative,
     String providerUsername,
     String displayName,
     String avatarUrl) {

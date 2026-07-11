@@ -41,9 +41,10 @@ class LoginAuthTransactionE2ETest extends AbstractApiTester {
             new OAuthLoginProfile(
                 OAuthProvider.GOOGLE,
                 "exchange-rollback-user",
-                "exchange-rollback@example.com",
+                "exchange-rollback@gmail.com",
                 true,
-                "exchange-rollback@example.com",
+                true,
+                "exchange-rollback@gmail.com",
                 "Exchange Rollback",
                 null));
 

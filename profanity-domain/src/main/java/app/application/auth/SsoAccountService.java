@@ -17,13 +17,13 @@ public class SsoAccountService {
   public UserAccount upsert(OAuthLoginProfile profile, Instant now) {
     try {
       return transactionService.upsertInNewTransaction(profile, now);
-    } catch (DataAccessException concurrentCreateConflict) {
+    } catch (DataAccessException concurrentAccountConflict) {
       Optional<UserAccount> winner =
           transactionService.synchronizeExistingInNewTransaction(profile, now);
       if (winner.isPresent()) {
         return winner.get();
       }
-      throw concurrentCreateConflict;
+      throw concurrentAccountConflict;
     }
   }
 }
