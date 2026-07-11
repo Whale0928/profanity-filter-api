@@ -1,35 +1,164 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 
-const API_BASE_URL = "http://localhost:8080";
-const LOGIN_RESULT_EMPTY = "아직 로그인 응답이 없습니다.";
+const DEFAULT_API_BASE_URL = "http://localhost:8080";
+const API_BASE_URL = resolveApiBaseUrl(import.meta.env.VITE_API_BASE_URL);
 
 type LoginProvider = "github" | "google";
 
-type OAuthLoginResult = Record<string, string>;
+type LoginUser = {
+  id: string;
+  displayName: string;
+  email: string | null;
+  avatarUrl: string | null;
+};
+
+type AuthSession = {
+  accessToken: string;
+  tokenType: "Bearer";
+  expiresIn: number;
+  user: LoginUser;
+};
+
+type AuthView =
+  | { state: "checking"; message: string }
+  | { state: "anonymous"; message: string }
+  | { state: "error"; message: string }
+  | { state: "authenticated"; user: LoginUser; expiresIn: number };
+
+type LoginCallback =
+  | { state: "none" }
+  | { state: "invalid" }
+  | { state: "ready"; code: string };
+
+type CsrfToken = {
+  token: string;
+  headerName: string;
+};
+
+class AuthRequestError extends Error {
+  constructor(readonly status: number) {
+    super("Authentication request failed");
+    this.name = "AuthRequestError";
+  }
+}
 
 export function LoginPage() {
-  const [loginResult, setLoginResult] = useState<OAuthLoginResult | null>(() => parseLoginResult());
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [authView, setAuthView] = useState<AuthView>({
+    state: "checking",
+    message: "로그인 상태를 확인하고 있습니다.",
+  });
+  const callbackRef = useRef<LoginCallback | null>(null);
+  const initializationStartedRef = useRef(false);
+  const refreshFlightRef = useRef<Promise<AuthSession> | null>(null);
 
-  useEffect(() => {
-    function syncLoginResult() {
-      setLoginResult(parseLoginResult());
+  if (callbackRef.current === null) {
+    callbackRef.current = readLoginCallback();
+  }
+
+  const verifySession = useCallback(async (session: AuthSession) => {
+    setAccessToken(session.accessToken);
+    setAuthView({ state: "checking", message: "로그인 정보를 확인하고 있습니다." });
+
+    try {
+      const user = await fetchCurrentUser(session.accessToken, session.tokenType);
+      setAuthView({ state: "authenticated", user, expiresIn: session.expiresIn });
+    } catch {
+      setAccessToken(null);
+      setAuthView({
+        state: "error",
+        message: "로그인 정보를 확인하지 못했습니다. 다시 로그인해 주세요.",
+      });
     }
-
-    window.addEventListener("hashchange", syncLoginResult);
-    return () => window.removeEventListener("hashchange", syncLoginResult);
   }, []);
 
-  const formattedResult = useMemo(() => {
-    if (!loginResult) {
-      return LOGIN_RESULT_EMPTY;
+  const refreshSession = useCallback(() => {
+    if (refreshFlightRef.current) {
+      return refreshFlightRef.current;
     }
 
-    return JSON.stringify(loginResult, null, 2);
-  }, [loginResult]);
+    const refreshFlight = requestRefreshSession().finally(() => {
+      if (refreshFlightRef.current === refreshFlight) {
+        refreshFlightRef.current = null;
+      }
+    });
+
+    refreshFlightRef.current = refreshFlight;
+    return refreshFlight;
+  }, []);
+
+  const restoreSession = useCallback(async () => {
+    setAuthView({ state: "checking", message: "로그인 상태를 복구하고 있습니다." });
+
+    try {
+      const session = await refreshSession();
+      await verifySession(session);
+    } catch (error) {
+      setAccessToken(null);
+      setAuthView(toRefreshFailureView(error));
+    }
+  }, [refreshSession, verifySession]);
+
+  useLayoutEffect(() => {
+    if (initializationStartedRef.current) {
+      return;
+    }
+
+    initializationStartedRef.current = true;
+    const callback = callbackRef.current ?? { state: "none" };
+    callbackRef.current = { state: "none" };
+    removeLoginFragment();
+
+    if (callback.state === "invalid") {
+      setAuthView({
+        state: "error",
+        message: "로그인 응답을 확인할 수 없습니다. 소셜 로그인을 다시 시작해 주세요.",
+      });
+      return;
+    }
+
+    if (callback.state === "ready") {
+      setAuthView({ state: "checking", message: "소셜 로그인을 완료하고 있습니다." });
+      void exchangeLoginCode(callback.code)
+        .then(verifySession)
+        .catch(() => {
+          setAccessToken(null);
+          setAuthView({
+            state: "error",
+            message: "로그인을 완료하지 못했습니다. 소셜 로그인을 다시 시작해 주세요.",
+          });
+        });
+      return;
+    }
+
+    void restoreSession();
+  }, [restoreSession, verifySession]);
 
   function startOAuthLogin(provider: LoginProvider) {
     window.location.assign(`${API_BASE_URL}/oauth2/authorization/${provider}`);
   }
+
+  async function checkCurrentSession() {
+    if (!accessToken) {
+      await restoreSession();
+      return;
+    }
+
+    const expiresIn = authView.state === "authenticated" ? authView.expiresIn : 0;
+    setAuthView({ state: "checking", message: "로그인 상태를 확인하고 있습니다." });
+    try {
+      const user = await fetchCurrentUser(accessToken, "Bearer");
+      setAuthView({ state: "authenticated", user, expiresIn });
+    } catch {
+      setAccessToken(null);
+      setAuthView({
+        state: "anonymous",
+        message: "로그인 세션이 만료되었습니다. 다시 로그인해 주세요.",
+      });
+    }
+  }
+
+  const isChecking = authView.state === "checking";
 
   return (
     <section className="login-page" aria-labelledby="login-title">
@@ -41,37 +170,271 @@ export function LoginPage() {
           </div>
 
           <div className="login-provider-list" aria-label="소셜 로그인 제공자">
-            <button className="login-provider-button" onClick={() => startOAuthLogin("github")} type="button">
+            <button
+              className="login-provider-button"
+              disabled={isChecking}
+              onClick={() => startOAuthLogin("github")}
+              type="button"
+            >
               <GitHubIcon />
               <span>GitHub</span>
             </button>
-            <button className="login-provider-button" onClick={() => startOAuthLogin("google")} type="button">
+            <button
+              className="login-provider-button"
+              disabled={isChecking}
+              onClick={() => startOAuthLogin("google")}
+              type="button"
+            >
               <GoogleIcon />
               <span>Google</span>
             </button>
           </div>
         </div>
 
-        <aside className="login-result-panel" aria-live="polite">
-          <span>최종 응답</span>
-          <pre data-empty={loginResult ? "false" : "true"}>{formattedResult}</pre>
-        </aside>
+        <LoginStatusPanel authView={authView} onCheckSession={() => void checkCurrentSession()} />
       </div>
     </section>
   );
 }
 
-function parseLoginResult(): OAuthLoginResult | null {
-  const hash = window.location.hash.replace(/^#/, "");
+function LoginStatusPanel({ authView, onCheckSession }: { authView: AuthView; onCheckSession: () => void }) {
+  if (authView.state === "authenticated") {
+    const avatarUrl = toSafeAvatarUrl(authView.user.avatarUrl);
+    const expiresInMinutes = Math.max(1, Math.ceil(authView.expiresIn / 60));
 
+    return (
+      <aside className="login-result-panel" aria-live="polite">
+        <span>로그인됨</span>
+        <div className="login-user-card">
+          {avatarUrl ? (
+            <img
+              alt=""
+              className="login-user-avatar"
+              height="64"
+              referrerPolicy="no-referrer"
+              src={avatarUrl}
+              width="64"
+            />
+          ) : (
+            <div aria-hidden="true" className="login-user-avatar login-user-avatar-fallback">
+              {authView.user.displayName.slice(0, 1).toUpperCase()}
+            </div>
+          )}
+          <div>
+            <p className="login-user-name">{authView.user.displayName}</p>
+            <p className="login-user-email">{authView.user.email ?? "공개된 이메일 없음"}</p>
+          </div>
+          <p className="login-session-note">
+            현재 브라우저에서 로그인 상태를 유지합니다. 약 {expiresInMinutes}분 후 자동 갱신이 필요합니다.
+          </p>
+          <button className="login-session-button" onClick={onCheckSession} type="button">
+            로그인 상태 확인
+          </button>
+        </div>
+      </aside>
+    );
+  }
+
+  return (
+    <aside className="login-result-panel" aria-live="polite">
+      <span>{authView.state === "checking" ? "확인 중" : "로그인 상태"}</span>
+      <div className="login-status-message" data-state={authView.state} role="status">
+        <p>{authView.message}</p>
+        {authView.state !== "checking" ? (
+          <button className="login-session-button" onClick={onCheckSession} type="button">
+            세션 다시 확인
+          </button>
+        ) : null}
+      </div>
+    </aside>
+  );
+}
+
+function readLoginCallback(): LoginCallback {
+  const hash = window.location.hash.replace(/^#/, "");
   if (!hash) {
-    return null;
+    return { state: "none" };
   }
 
   const params = new URLSearchParams(hash);
-  const result = Object.fromEntries(params.entries());
+  const codes = params.getAll("code");
+  const hasOnlyCode = Array.from(params.keys()).every((key) => key === "code");
 
-  return Object.keys(result).length > 0 ? result : null;
+  if (!hasOnlyCode || codes.length !== 1 || codes[0].length === 0 || codes[0].length > 4096) {
+    return { state: "invalid" };
+  }
+
+  return { state: "ready", code: codes[0] };
+}
+
+function removeLoginFragment() {
+  if (!window.location.hash) {
+    return;
+  }
+
+  const cleanUrl = `${window.location.pathname}${window.location.search}`;
+  window.history.replaceState(window.history.state, "", cleanUrl);
+}
+
+async function exchangeLoginCode(code: string): Promise<AuthSession> {
+  const data = await requestApiData("/api/v1/auth/exchange", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code }),
+  });
+
+  return readAuthSession(data);
+}
+
+async function requestRefreshSession(): Promise<AuthSession> {
+  const csrfData = await requestApiData("/api/v1/auth/csrf", { method: "GET" });
+  const csrfToken = readCsrfToken(csrfData);
+  const data = await requestApiData("/api/v1/auth/refresh", {
+    method: "POST",
+    headers: { [csrfToken.headerName]: csrfToken.token },
+  });
+
+  return readAuthSession(data);
+}
+
+async function fetchCurrentUser(accessToken: string, tokenType: "Bearer"): Promise<LoginUser> {
+  const data = await requestApiData("/api/v1/auth/me", {
+    method: "GET",
+    headers: { Authorization: `${tokenType} ${accessToken}` },
+  });
+
+  const record = toRecord(data);
+  return readLoginUser("user" in record ? record.user : record);
+}
+
+async function requestApiData(path: string, init: RequestInit): Promise<unknown> {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...init,
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    throw new AuthRequestError(response.status);
+  }
+
+  const payload: unknown = await response.json();
+  const envelope = toRecord(payload);
+  if (!("data" in envelope)) {
+    throw new AuthRequestError(response.status);
+  }
+
+  return envelope.data;
+}
+
+function readAuthSession(value: unknown): AuthSession {
+  const record = toRecord(value);
+  const accessToken = readRequiredString(record, "accessToken");
+  const tokenType = readRequiredString(record, "tokenType");
+  const expiresIn = record.expiresIn;
+
+  if (
+    tokenType.toLowerCase() !== "bearer" ||
+    typeof expiresIn !== "number" ||
+    !Number.isFinite(expiresIn) ||
+    expiresIn <= 0
+  ) {
+    throw new TypeError("Invalid authentication session");
+  }
+
+  return {
+    accessToken,
+    tokenType: "Bearer",
+    expiresIn,
+    user: readLoginUser(record.user),
+  };
+}
+
+function readLoginUser(value: unknown): LoginUser {
+  const record = toRecord(value);
+  const id = record.id;
+
+  if ((typeof id !== "string" && typeof id !== "number") || String(id).length === 0) {
+    throw new TypeError("Invalid login user");
+  }
+
+  return {
+    id: String(id),
+    displayName: readRequiredString(record, "displayName"),
+    email: readNullableString(record, "email"),
+    avatarUrl: readNullableString(record, "avatarUrl"),
+  };
+}
+
+function readCsrfToken(value: unknown): CsrfToken {
+  const record = toRecord(value);
+  const headerName = readRequiredString(record, "headerName");
+
+  if (!/^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/.test(headerName)) {
+    throw new TypeError("Invalid CSRF header name");
+  }
+
+  return {
+    token: readRequiredString(record, "token"),
+    headerName,
+  };
+}
+
+function readRequiredString(record: Record<string, unknown>, key: string): string {
+  const value = record[key];
+  if (typeof value !== "string" || value.length === 0) {
+    throw new TypeError(`Invalid ${key}`);
+  }
+  return value;
+}
+
+function readNullableString(record: Record<string, unknown>, key: string): string | null {
+  const value = record[key];
+  if (value === null || value === undefined) {
+    return null;
+  }
+  if (typeof value !== "string") {
+    throw new TypeError(`Invalid ${key}`);
+  }
+  return value;
+}
+
+function toRecord(value: unknown): Record<string, unknown> {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new TypeError("Invalid API response");
+  }
+  return value as Record<string, unknown>;
+}
+
+function toRefreshFailureView(error: unknown): AuthView {
+  if (error instanceof AuthRequestError && (error.status === 401 || error.status === 403)) {
+    return {
+      state: "anonymous",
+      message: "로그인이 필요합니다. GitHub 또는 Google 계정으로 시작해 주세요.",
+    };
+  }
+
+  return {
+    state: "error",
+    message: "로그인 상태를 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+  };
+}
+
+function toSafeAvatarUrl(value: string | null): string | null {
+  if (!value) {
+    return null;
+  }
+
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" || url.protocol === "http:" ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+function resolveApiBaseUrl(value: string | undefined): string {
+  const configuredUrl = value?.trim().replace(/\/+$/, "");
+  return configuredUrl || DEFAULT_API_BASE_URL;
 }
 
 function GitHubIcon() {

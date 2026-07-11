@@ -29,6 +29,14 @@ npm run preview
 
 Vite의 기본 흐름은 `npm run dev`로 개발 서버를 띄우고, `npm run build`로 `dist/` 정적 파일을 만드는 방식입니다.
 
+로그인 API는 기본적으로 `http://localhost:8080`을 사용합니다. 다른 API 호스트를 사용할 때는 빌드 또는 개발 서버 실행 전에 공개 설정값인 `VITE_API_BASE_URL`을 지정합니다.
+
+```bash
+VITE_API_BASE_URL=https://api.example.com npm run dev
+```
+
+로그인 access token은 React 실행 메모리에만 두고, refresh token은 서버가 발급한 `HttpOnly` cookie로만 사용합니다. 브라우저를 새로고침하면 `/api/v1/auth/csrf` 확인 후 `/api/v1/auth/refresh`를 한 번만 호출해 로그인 상태를 복구합니다.
+
 ## 폴더 구조
 
 ```text

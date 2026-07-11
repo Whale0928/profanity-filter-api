@@ -1520,6 +1520,11 @@ button {
   outline: 0;
 }
 
+.login-provider-button:disabled {
+  cursor: wait;
+  opacity: 0.56;
+}
+
 .login-provider-icon {
   width: 24px;
   height: 24px;
@@ -1546,28 +1551,101 @@ button {
   font-weight: 850;
 }
 
-.login-result-panel pre {
+.login-status-message,
+.login-user-card {
   min-width: 0;
   max-width: 100%;
-  overflow: auto;
-  margin: 0;
   border: 1px solid color-mix(in srgb, var(--ivory) 24%, transparent);
   border-radius: 8px;
   background: color-mix(in srgb, black 20%, var(--pine));
   padding: 18px;
   color: var(--sage);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 14px;
   line-height: 1.6;
-  white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 
-.login-result-panel pre[data-empty="true"] {
+.login-status-message {
   display: grid;
   place-items: center;
+  align-content: center;
+  gap: 18px;
   color: color-mix(in srgb, var(--ivory) 62%, transparent);
   text-align: center;
+}
+
+.login-status-message p,
+.login-user-card p {
+  margin: 0;
+}
+
+.login-status-message[data-state="error"] {
+  color: var(--ivory);
+}
+
+.login-user-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-content: center;
+  gap: 18px;
+}
+
+.login-user-avatar {
+  width: 64px;
+  height: 64px;
+  border: 1px solid color-mix(in srgb, var(--ivory) 42%, transparent);
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.login-user-avatar-fallback {
+  display: grid;
+  place-items: center;
+  background: var(--sage);
+  color: var(--pine);
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.login-user-name {
+  color: var(--ivory);
+  font-size: clamp(22px, 2.6vw, 30px);
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.login-user-email {
+  margin-top: 4px !important;
+  color: color-mix(in srgb, var(--ivory) 68%, transparent);
+  font-size: 14px;
+}
+
+.login-session-note,
+.login-session-button {
+  grid-column: 1 / -1;
+}
+
+.login-session-note {
+  border-top: 1px solid color-mix(in srgb, var(--ivory) 18%, transparent);
+  padding-top: 16px;
+  color: color-mix(in srgb, var(--ivory) 68%, transparent);
+  font-size: 13px;
+}
+
+.login-session-button {
+  min-height: 46px;
+  border: 1px solid color-mix(in srgb, var(--ivory) 46%, transparent);
+  border-radius: 8px;
+  background: transparent;
+  padding: 0 16px;
+  color: var(--ivory);
+  font-weight: 850;
+}
+
+.login-session-button:hover,
+.login-session-button:focus-visible {
+  background: var(--sage);
+  color: var(--pine);
+  outline: 0;
 }
 
 .footer-cta {
