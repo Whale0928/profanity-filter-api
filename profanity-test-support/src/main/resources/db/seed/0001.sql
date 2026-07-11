@@ -1,5 +1,10 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
+DELETE FROM `login_refresh_tokens`;
+DELETE FROM `login_refresh_sessions`;
+DELETE FROM `login_exchange_codes`;
+DELETE FROM `oauth_accounts`;
+DELETE FROM `users`;
 DELETE FROM `client_reports`;
 DELETE FROM `records`;
 DELETE FROM `word_management`;
