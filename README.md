@@ -17,7 +17,8 @@
 > - https://api.kr-filter.com/api/v1/health
 
 - 기존 `x-api-key` 신규 발급은 중단 예정이며, 이미 발급된 키는 호환성 유지를 위해 유지합니다.
-- 신규 사용자는 Google/GitHub SSO 기반 대시보드에서 API 클라이언트를 발급하고, OAuth2 Client Credentials 기반 Bearer 인증으로 전환할 예정입니다.
+- Google/GitHub SSO 로그인용 JWT access token과 rotating refresh token을 지원합니다.
+- OAuth2 Client Credentials 기반 외부 API Bearer 인증은 아직 미구현이며, 향후 대시보드의 API 클라이언트 발급 기능과 함께 제공할 예정입니다.
 
 ## Overview
 
@@ -48,9 +49,9 @@
 
 ### 인증 전환 방향
 
-현재 API 호출은 `x-api-key` 헤더를 사용합니다. 신규 인증 모델은 SSO 로그인으로 API 클라이언트를 발급한 뒤 `client_id`와 `client_secret`으로 `/oauth2/token`에서 access token을 발급받아 `Authorization: Bearer {access_token}`으로 호출하는 방식입니다.
+현재 외부 API 호출은 기존 `x-api-key` 헤더를 사용합니다. 사람의 대시보드 로그인은 Google/GitHub SSO 완료 후 발급되는 `LOGIN_JWT`와 rotating refresh token을 사용하며, 외부 API 인증과 분리되어 있습니다.
 
-전환 기간에는 기존 `x-api-key`와 신규 Bearer token을 모두 지원합니다. 대시보드 접근은 Google/GitHub SSO 세션만 허용하고, 외부 API 호출 인증과 분리합니다.
+OAuth2 Client Credentials의 `/oauth2/token`, `client_id/client_secret`, 외부 API용 Bearer access token은 다음 단계의 범위입니다. 현재 외부 API에 제출된 Bearer token은 지원되지 않는 `OAUTH2_ACCESS_TOKEN` 경계에서 fail-closed 처리하며, 기존 API Key 동작은 유지합니다. 상세 계약은 [Authentication](profanity-api/src/main/resources/openapi/authentication.md)을 참고하세요.
 
 - [ADR 0005. SSO 기반 사용자 계정 모델 도입](docs/adr/0005%20SSO%20기반%20사용자%20계정%20모델%20도입.md)
 - [ADR 0006. OAuth2 Client Credentials 기반 API 인증 전환](docs/adr/0006%20OAuth2%20Client%20Credentials%20기반%20API%20인증%20전환.md)
@@ -87,10 +88,19 @@
 | 4001        | Invalid Callback URL  | 콜백 URL 형식이 올바르지 않은 경우 발생합니다.                                 |
 | 4002        | Invalid Tracking ID   | Tracking ID가 유효하지 않은 경우 발생합니다.                               |
 | 4003        | Not Fount Tracking ID | Tracking ID를 찾을 수 없는 경우 발생합니다.                               |
+| 4004        | Ambiguous Credentials | 다중 또는 중복 인증 정보를 제출한 경우 발생합니다.                               |
 | 4010        | Unauthorized          | 요청을 인증할 API 키 값이 없는 경우 발생하는 오류 입니다.                          |
+| 4011        | OAuth2 Login Failed   | Google/GitHub SSO 로그인에 실패한 경우 발생합니다.                         |
+| 4012        | Login Code Invalid    | 로그인 교환 코드가 잘못됐거나 만료 또는 재사용된 경우 발생합니다.                       |
+| 4013        | Login Token Invalid   | 로그인 access token 검증에 실패한 경우 발생합니다.                          |
+| 4014        | Login Token Expired   | 로그인 access token이 만료된 경우 발생합니다.                              |
+| 4015        | Refresh Token Invalid | refresh token 또는 session이 잘못됐거나 만료·폐기된 경우 발생합니다.              |
+| 4016        | Refresh Token Reused  | 이미 소비된 refresh token이 다시 제출된 경우 발생합니다.                         |
+| 4017        | OAuth2 Token Unsupported | 외부 API용 OAuth2 access token이 아직 지원되지 않는 경우 발생합니다.             |
 | 4030        | Forbidden             | 서버에서 요청에 API 키값을 인식하였으나 해당 키가 적절한 권한을 가지지 않았다고 판정한 경우 발생합니다. |
 | 4031        | Not Found Client      | API Key에 해당하는 클라이언트 정보를 찾을 수 없는 경우 발생합니다.                    |
 | 4032        | Invalid API Key       | API Key가 유효하지 않은 경우 발생합니다.                                   |
+| 4033        | User Inactive         | 로그인 사용자가 비활성 상태인 경우 발생합니다.                                  |
 | 4290        | Too Many Requests     | 특정 클라이언트가 너무 많은 요청을 단위 시간 안에 보낸 경우에 이 응답이 리턴됩니다.             |
 | 5000        | Internal Server Error | 서버 측의 문제로 요청에 대한 처리가 불가능한 경우 오류가 발생하였음을 알리기 위해 본 코드를 사용합니다.  |
 | 5030        | Service Unavailable   | 서비스 점검 또는 일시 사용 불가 상태를 의미합니다.                                |

@@ -28,6 +28,15 @@
 - 외부 API 엔드포인트는 전환 기간 동안 Bearer token과 legacy `x-api-key`를 모두 허용한다.
 - 대시보드 엔드포인트는 SSO 세션만 허용하고, legacy `x-api-key`로 접근할 수 없게 한다.
 
+## Implementation Status
+
+이 ADR은 아직 제안 상태이며 OAuth2 Client Credentials는 구현하지 않았다.
+
+- `/oauth2/token`, `client_id/client_secret` 발급·저장, Authorization Server는 존재하지 않는다.
+- 인증 타입에는 미래 확장 경계인 `OAUTH2_ACCESS_TOKEN`만 정의한다.
+- 외부 API에 제출된 Bearer token은 현재 HTTP `401`과 business code `4017`로 fail-closed 처리하며 API Key나 로그인 JWT로 fallback하지 않는다.
+- 구현된 Bearer 인증은 사람의 대시보드 접근을 위한 `LOGIN_JWT`이며, 본 ADR의 외부 API access token과 다른 credential이다.
+
 ## Consequences
 - 신규 API 인증은 OAuth2 표준 형식을 따르므로 OpenAPI 문서, SDK, 외부 개발자 경험을 개선할 수 있다.
 - `client_id/client_secret`은 토큰 발급에만 사용하고, 실제 API 호출에는 짧은 수명의 access token을 사용한다.
