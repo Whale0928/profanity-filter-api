@@ -16,7 +16,7 @@ class OAuth2LoginFailureHandlerTest {
       new SsoFrontendProperties("http://localhost:5173/login");
 
   @Test
-  @DisplayName("OAuth2 로그인 실패 시 표준 status 코드와 상세 사유를 FE fragment로 redirect한다")
+  @DisplayName("OAuth2 로그인 실패 시 상세 예외를 노출하지 않고 표준 코드로 redirect한다")
   void onAuthenticationFailure_whenOAuth2LoginFailed_redirectsToFrontendFragment()
       throws Exception {
     OAuth2LoginFailureHandler failureHandler = new OAuth2LoginFailureHandler(FRONTEND_PROPERTIES);
@@ -30,7 +30,6 @@ class OAuth2LoginFailureHandlerTest {
         .startsWith("http://localhost:5173/login#")
         .contains("error=oauth2_login_failed")
         .contains("statusCode=" + StatusCode.OAUTH2_LOGIN_FAILED.code())
-        .contains("statusMessage=" + StatusCode.OAUTH2_LOGIN_FAILED.status())
-        .contains("statusDetailDescription=state%20mismatch");
+        .doesNotContain("statusDetailDescription", "state%20mismatch");
   }
 }

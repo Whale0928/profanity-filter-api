@@ -39,7 +39,7 @@ public class WordManagementController {
     String word = request.word();
     String reason = request.reason();
     String severity = request.severity().name();
-    UUID currentUserId = SecurityContextUtil.getCurrentUserId();
+    UUID currentUserId = SecurityContextUtil.getCurrentApiClientId();
     var response =
         switch (request.type()) {
           case ADD -> wordManagement.requestNewWord(currentUserId, word, reason, severity);

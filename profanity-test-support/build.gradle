@@ -9,6 +9,7 @@ dependencies {
     runtimeOnly 'com.mysql:mysql-connector-j'
 
     testImplementation project(':profanity-storage:rdb')
+    testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
 }
 

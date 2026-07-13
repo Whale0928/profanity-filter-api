@@ -4,8 +4,11 @@ import app.core.data.response.ApiResponse;
 import app.core.data.response.Status;
 import app.core.data.response.constant.StatusCode;
 import app.core.exception.BusinessException;
+import app.security.authentication.CredentialAuthenticationException;
+import app.security.login.LoginFlowException;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
@@ -36,6 +39,20 @@ public class GlobalExceptionHandler {
     return ApiResponse.error(Status.of(resolve));
   }
 
+  @ExceptionHandler(LoginFlowException.class)
+  public ResponseEntity<ApiResponse<Void>> handleLoginFlowException(LoginFlowException ex) {
+    log.warn("로그인 인증 예외 발생: {}", ex.getStatusCode().name());
+    return ApiResponse.error(ex.getHttpStatus(), Status.of(ex.getStatusCode()));
+  }
+
+  @ExceptionHandler(CredentialAuthenticationException.class)
+  public ResponseEntity<ApiResponse<Void>> handleCredentialAuthenticationException(
+      CredentialAuthenticationException ex) {
+    StatusCode statusCode = StatusCode.resolve(ex.getMessage());
+    log.warn("요청 인증 예외 발생: {}", statusCode.name());
+    return ApiResponse.error(ex.httpStatus(), Status.of(statusCode));
+  }
+
   @ExceptionHandler(AuthenticationException.class)
   public ResponseEntity<ApiResponse<Void>> handleAuthenticationException(
       AuthenticationException ex) {
@@ -46,9 +63,8 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(AccessDeniedException.class)
   public ResponseEntity<ApiResponse<Void>> handleAccessDeniedException(AccessDeniedException ex) {
-    log.warn("접근 권한 예외 발생: {}", ex.getMessage());
-    StatusCode resolve = StatusCode.resolve(ex.getMessage());
-    return ApiResponse.error(Status.of(resolve));
+    log.warn("접근 권한 예외 발생: {}", ex.getClass().getSimpleName());
+    return ApiResponse.error(HttpStatus.FORBIDDEN, Status.of(StatusCode.FORBIDDEN));
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)

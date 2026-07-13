@@ -2,13 +2,13 @@ CREATE TABLE users
 (
 	id binary (16) NOT NULL COMMENT '사용자 고유 식별자',
 	display_name  varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '표시 이름',
-	primary_email varchar(255) COLLATE utf8mb4_unicode_ci          DEFAULT NULL COMMENT '대표 이메일',
+	primary_email varchar(255) COLLATE utf8mb4_bin        NOT NULL COMMENT '대표 이메일',
 	avatar_url    varchar(500) COLLATE utf8mb4_unicode_ci          DEFAULT NULL COMMENT '프로필 이미지 URL',
 	status        varchar(30) COLLATE utf8mb4_unicode_ci  NOT NULL DEFAULT 'ACTIVE' COMMENT '사용자 상태',
 	created_at    datetime(6)                             NOT NULL COMMENT '생성 시각',
 	updated_at    datetime(6)                             NOT NULL COMMENT '수정 시각',
 	PRIMARY KEY (id),
-	KEY           idx_users_primary_email(primary_email),
+	UNIQUE KEY    uk_users_primary_email(primary_email),
 	KEY           idx_users_status(status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='사용자 계정';
 
