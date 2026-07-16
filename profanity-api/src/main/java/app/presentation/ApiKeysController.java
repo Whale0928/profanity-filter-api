@@ -5,8 +5,8 @@ import app.application.apikey.ApiKeyManagementService.ApiKeyView;
 import app.application.apikey.ApiKeyManagementService.IssuedApiKey;
 import app.core.data.response.ApiResponse;
 import app.dto.request.CreateApiKeyRequest;
-import app.openapi.ApiKeysOpenApi;
 import app.security.SecurityContextUtil;
+import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
@@ -25,18 +25,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@ApiKeysOpenApi.ApiTag
+@Hidden
 @RequestMapping(value = "/api/v1/dashboard/keys", produces = MediaType.APPLICATION_JSON_VALUE)
 public class ApiKeysController {
   private final ApiKeyManagementService apiKeyManagementService;
 
-  @ApiKeysOpenApi.ListKeys
   @GetMapping
   public ResponseEntity<ApiResponse<List<ApiKeyView>>> list() {
     return noStore(apiKeyManagementService.findAll(SecurityContextUtil.getCurrentLoginUserId()));
   }
 
-  @ApiKeysOpenApi.IssueKey
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<ApiResponse<IssuedApiKey>> issue(
       @Valid @RequestBody CreateApiKeyRequest request) {
@@ -47,14 +45,12 @@ public class ApiKeysController {
             request.toCommand()));
   }
 
-  @ApiKeysOpenApi.ReissueKey
   @PostMapping("/{apiKeyId}/reissue")
   public ResponseEntity<ApiResponse<IssuedApiKey>> reissue(@PathVariable UUID apiKeyId) {
     return noStore(
         apiKeyManagementService.reissue(SecurityContextUtil.getCurrentLoginUserId(), apiKeyId));
   }
 
-  @ApiKeysOpenApi.ExpireKey
   @DeleteMapping("/{apiKeyId}")
   public ResponseEntity<ApiResponse<ApiKeyView>> expire(@PathVariable UUID apiKeyId) {
     return noStore(

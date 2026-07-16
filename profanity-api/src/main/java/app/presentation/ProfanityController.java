@@ -11,6 +11,7 @@ import app.dto.request.FilterRequest;
 import app.openapi.ProfanityOpenApi;
 import app.security.SecurityContextUtil;
 import app.security.annotation.VerifiedClientOnly;
+import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.util.Objects;
@@ -75,7 +76,7 @@ public class ProfanityController {
 
   @VerifiedClientOnly
   @Cacheable(value = "request_filter", key = "#request.text + '_' + #request.mode")
-  @ProfanityOpenApi.BasicProfanityForm
+  @Hidden
   @PostMapping(consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
   public ResponseEntity<FilterApiResponse> basicProfanityByUrlencodedValue(
       HttpServletRequest httpRequest,
