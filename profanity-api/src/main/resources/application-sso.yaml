@@ -6,12 +6,14 @@ spring:
           github:
             client-id: ${GITHUB_OAUTH_CLIENT_ID:stub-github-client}
             client-secret: ${GITHUB_OAUTH_CLIENT_SECRET:stub-github-secret}
+            redirect-uri: ${API_SERVER_URL:http://localhost:8080}/login/oauth2/code/{registrationId}
             scope:
               - read:user
               - user:email
           google:
             client-id: ${GOOGLE_OAUTH_CLIENT_ID:stub-google-client}
             client-secret: ${GOOGLE_OAUTH_CLIENT_SECRET:stub-google-secret}
+            redirect-uri: ${API_SERVER_URL:http://localhost:8080}/login/oauth2/code/{registrationId}
             scope:
               - openid
               - profile

@@ -15,6 +15,12 @@ coverage/
 .nuxt/
 .svelte-kit/
 
+# Local product-design review evidence
+app/design-audit/
+app/design-audit.md
+app/design-qa-evidence/
+app/design-qa.md
+
 # TypeScript/Vite generated files
 *.tsbuildinfo
 vite.config.js
