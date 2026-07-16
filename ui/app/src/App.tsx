@@ -188,9 +188,13 @@ function OverviewPage({
           <button className="text-action" onClick={() => onNavigate("/docs")} type="button">API 문서 보기</button>
         </div>
         <div className="auth-summary">
-          <p>{authenticated ? "바로 연동할 수 있습니다" : "로그인 후 선택할 수 있습니다"}</p>
+          <p>{authenticated ? "API Key로 바로 연동할 수 있습니다" : "로그인 후 선택할 수 있습니다"}</p>
           <div><Key size={24} /><span><b>API Key</b>빠르고 단순한 연동</span></div>
-          <div><LockKey size={24} /><span><b>OAuth2 Client Credentials</b>운영·서버 간 연동 권장</span></div>
+          <div aria-disabled="true" className="auth-summary-future">
+            <LockKey size={24} />
+            <span><b>OAuth2 Client Credentials</b>운영·서버 간 연동 예정</span>
+            <small>추후 제공</small>
+          </div>
         </div>
       </section>
 
@@ -251,7 +255,7 @@ function CredentialsSection({
     <section className="credentials-page page-width" id="credentials">
       <header className="page-heading">
         <h1>자격 증명</h1>
-        <p>{authenticated ? "연동 방식에 맞는 자격 증명을 선택하세요." : "Google 또는 GitHub 계정으로 로그인한 뒤 만들 수 있습니다."}</p>
+        <p>{authenticated ? "API Key를 만들거나 다음 인증 방식을 미리 확인하세요." : "Google 또는 GitHub 계정으로 로그인한 뒤 만들 수 있습니다."}</p>
       </header>
       <div className="credential-grid">
         <CredentialMethod
@@ -267,12 +271,13 @@ function CredentialsSection({
           onCreate={createCredential}
         />
         <CredentialMethod
-          action={authenticated ? "OAuth 클라이언트 만들기" : "로그인 후 OAuth 클라이언트 만들기"}
+          action="OAuth 클라이언트 만들기"
           code={'curl -X POST https://api.kr-filter.com/oauth2/token \\\n  -u "$CLIENT_ID:$CLIENT_SECRET" \\\n  -d "grant_type=client_credentials"'}
-          description="클라이언트 자격 증명으로 access token을 발급받고, 그 token을 API 요청에 사용하는 서버 간 인증 흐름입니다."
+          description="클라이언트 생성 직후 Client Secret을 한 번만 확인하고, 이후 access token을 발급받는 서버 간 인증 흐름입니다."
+          disabled
           icon={<LockKey size={28} />}
           kind="oauth"
-          points={["클라이언트 자격 증명으로 token 요청", "발급된 token을 Bearer 헤더로 전달", "만료 시 token을 다시 발급"]}
+          points={["발급 완료 화면에서 Client Secret 최초 1회 확인", "Client ID와 Secret으로 token 요청", "만료 시 token을 다시 발급"]}
           recommended
           requestLabel="Token 요청 예시"
           subtitle="운영·서버 간 연동 권장"
@@ -289,6 +294,7 @@ type CredentialMethodProps = {
   action: string;
   code: string;
   description: string;
+  disabled?: boolean;
   icon: React.ReactNode;
   kind: CredentialKind;
   onCreate: (kind: CredentialKind) => void;
@@ -307,14 +313,21 @@ function CredentialMethod(props: CredentialMethodProps) {
     window.setTimeout(() => setCopied(false), 1200);
   }
   return (
-    <article className="credential-method">
+    <article aria-disabled={props.disabled || undefined} className={props.disabled ? "credential-method credential-method-future" : "credential-method"}>
+      {props.disabled ? (
+        <div className="future-sign" role="note">
+          <span>추후 업데이트</span>
+          <strong>OAuth2 Client Credentials 준비 중</strong>
+          <small>구성과 사용 흐름을 미리 확인할 수 있습니다.</small>
+        </div>
+      ) : null}
       <div className="method-title"><span className="method-icon">{props.icon}</span><h2>{props.title}</h2>{props.recommended ? <em>운영 권장</em> : null}</div>
       <p className="method-subtitle">{props.subtitle}</p>
       <p className="method-description">{props.description}</p>
       <label>{props.requestLabel}</label>
-      <button aria-label={`${props.requestLabel} 복사`} className="code-example" onClick={copyExample} type="button"><code>{props.code}</code>{copied ? <Check size={19} /> : <Copy size={19} />}</button>
+      <button aria-label={`${props.requestLabel} 복사`} className="code-example" disabled={props.disabled} onClick={copyExample} type="button"><code>{props.code}</code>{copied ? <Check size={19} /> : <Copy size={19} />}</button>
       <ul>{props.points.map((point) => <li key={point}><Check size={18} />{point}</li>)}</ul>
-      <button className="create-action" onClick={() => props.onCreate(props.kind)} type="button">{props.action}<ArrowRight size={19} /></button>
+      <button className="create-action" disabled={props.disabled} onClick={() => props.onCreate(props.kind)} type="button">{props.action}<ArrowRight size={19} /></button>
     </article>
   );
 }

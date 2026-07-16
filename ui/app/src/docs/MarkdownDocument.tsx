@@ -110,11 +110,20 @@ function renderTable(lines: string[], key: string) {
     .filter((line) => !/^\|\s*-/.test(line))
     .map((line) => line.split("|").slice(1, -1).map((cell) => cell.trim()));
   const [head, ...body] = rows;
+  const hasPlannedOAuth = body.some((row) => row.some((cell) => cell.includes("OAUTH2_ACCESS_TOKEN")));
   return (
     <div className="markdown-table-wrap" key={key}>
+      {hasPlannedOAuth ? <div className="docs-future-sign"><span>추후 제공</span>OAuth2 Client Credentials는 아직 사용할 수 없습니다.</div> : null}
       <table>
         {head ? <thead><tr>{head.map((cell, index) => <th key={`${cell}-${index}`}>{renderInline(cell)}</th>)}</tr></thead> : null}
-        <tbody>{body.map((row, rowIndex) => <tr key={`${row.join("|")}-${rowIndex}`}>{row.map((cell, cellIndex) => <td key={`${cell}-${cellIndex}`}>{renderInline(cell)}</td>)}</tr>)}</tbody>
+        <tbody>{body.map((row, rowIndex) => {
+          const plannedOAuth = row.some((cell) => cell.includes("OAUTH2_ACCESS_TOKEN"));
+          return (
+            <tr aria-disabled={plannedOAuth || undefined} className={plannedOAuth ? "markdown-planned-row" : undefined} key={`${row.join("|")}-${rowIndex}`}>
+              {row.map((cell, cellIndex) => <td key={`${cell}-${cellIndex}`}>{renderInline(cell)}</td>)}
+            </tr>
+          );
+        })}</tbody>
       </table>
     </div>
   );

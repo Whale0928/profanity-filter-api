@@ -14,7 +14,7 @@
 
 - 사람 로그인과 외부 API 호출 인증을 분리한다.
 - 사람 로그인은 Google 또는 GitHub SSO만 제공한다.
-- API Key와 OAuth2 Client Credentials를 모두 제공한다.
+- API Key를 먼저 제공하고 OAuth2 Client Credentials는 후속 업데이트로 제공한다.
 - 두 자격 증명은 Google 또는 GitHub SSO 로그인 후에만 발급한다.
 - 비로그인 공개 API Key 발급은 제공하지 않는다.
 - API가 준비되기 전에는 자격 증명 발급을 동작하는 UI처럼 표현하지 않는다.
@@ -51,7 +51,7 @@ Signed-in utility
 - 비로그인 사용자가 `/app` 또는 `/app/account`에 접근하면 `/login`으로 이동한다.
 - 로그인 사용자가 `/login`에 접근하면 `/app`으로 이동한다.
 - 알 수 없는 route는 별도 기능으로 추정하지 않고 Not Found 상태를 표시한다.
-- 권한이나 API가 없는 메뉴는 disabled 상태로 미리 노출하지 않는다.
+- 권한이나 API가 없는 메뉴는 disabled 상태로 미리 노출하지 않는다. 단, 자격 증명 비교와 API 문서에서는 후속 OAuth2 방식을 `추후 제공` 상태로 명확히 구분해 미리 볼 수 있다.
 
 ## 메뉴 표현 규칙
 
@@ -99,7 +99,7 @@ Signed-in utility
 3. `/openapi.json`의 tag 순서를 따르는 API 그룹 메뉴
 4. 기본적으로 접힌 API 그룹과, 펼쳤을 때 summary를 표시하는 operation 앵커
 5. Scalar 기반 OpenAPI reference
-6. API Key와 OAuth2 Client Credentials 사용 방식의 구분
+6. API Key와 OAuth2 Client Credentials 사용 방식의 구분 및 OAuth2의 `추후 제공` 상태
 
 문서 화면은 읽기 전용이다. API 실행 버튼과 credential 입력 기능을 제공하지 않는다.
 문서 내용은 운영 `/overview.md`와 `/openapi.json`을 애플리케이션 진입 시 선조회하고 같은 session에서 재사용한다. 두 요청 외의 제품 API를 호출하지 않는다.
@@ -115,11 +115,11 @@ Signed-in utility
 ### 자격 증명
 
 1. API Key: 빠르고 단순한 연동
-2. OAuth2 Client Credentials: 운영·서버 간 연동 권장
+2. OAuth2 Client Credentials: 운영·서버 간 연동 권장, 현재는 `추후 제공` 상태
 3. 각 방식의 발급 순서와 환경 변수 기반 요청 예시
 4. 자격 증명 목록에서는 API Key, Client Secret, access token 원문을 표시하지 않음
 
-소개 페이지의 하위 섹션에서 두 방식을 같은 높이와 같은 정보 순서로 비교하고 OAuth2 Client Credentials를 운영 환경 권장 방식으로 설명한다. secret 최초 1회 확인이 필요하면 별도의 발급 완료 단계에서만 제공한다. API가 준비되기 전에는 생성 CTA가 실제 자격 증명을 발급하지 않는다.
+소개 페이지의 하위 섹션에서 두 방식을 같은 높이와 같은 정보 순서로 비교한다. OAuth2 Client Credentials는 내용을 읽을 수 있게 유지하되 팻말 형태의 `추후 제공` 표시와 disabled 상태로 생성·복사 상호작용을 차단한다. Client Secret은 후속 구현에서도 별도의 발급 완료 단계에서 최초 1회만 제공한다.
 
 ### 내 계정
 

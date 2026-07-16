@@ -1,4 +1,4 @@
-import { CaretRight } from "@phosphor-icons/react";
+import { CaretLeft, CaretRight } from "@phosphor-icons/react";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from "react";
 
 import type { Theme } from "../types";
@@ -35,6 +35,8 @@ export default function DocsPage({ theme }: { theme: Theme }) {
   const markdownNavigation = useMemo(() => buildMarkdownNavigation(overview.data ?? ""), [overview.data]);
   const apiNavigation = useMemo(() => buildApiNavigation(openApi.data ?? {}), [openApi.data]);
   const isReference = activeHash.startsWith("docs/tag/");
+  const activeGroup = apiNavigation.find((group) => activeHash.startsWith(`${createTagAnchor(group)}/`));
+  const activeOperation = activeGroup?.operations.find((operation) => createOperationAnchor(operation) === activeHash);
 
   useEffect(() => {
     void import("./ScalarReference");
@@ -55,7 +57,6 @@ export default function DocsPage({ theme }: { theme: Theme }) {
   }, [pendingAnchor]);
 
   useEffect(() => {
-    const activeGroup = apiNavigation.find((group) => activeHash.startsWith(`${createTagAnchor(group)}/`));
     if (!activeGroup) return;
     setOpenGroups((current) => {
       if (current.has(activeGroup.slug)) return current;
@@ -203,6 +204,7 @@ export default function DocsPage({ theme }: { theme: Theme }) {
   };
 
   const activeMarkdownAnchor = activeHash || markdownNavigation[0]?.anchor;
+  const returnToApiMenu = () => sidebarRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
 
   return (
     <section className="docs-page" data-section={isReference ? "reference" : "overview"}>
@@ -265,6 +267,12 @@ export default function DocsPage({ theme }: { theme: Theme }) {
       </aside>
 
       <article className={isReference ? "docs-reference-article" : undefined}>
+        {isReference ? (
+          <div className="docs-mobile-context">
+            <button onClick={returnToApiMenu} type="button"><CaretLeft aria-hidden="true" size={15} />API 메뉴</button>
+            <span aria-label="현재 API 위치">{activeGroup?.name ?? "API"}{activeOperation ? ` / ${activeOperation.summary}` : ""}</span>
+          </div>
+        ) : null}
         <div className="docs-source-bar">
           <span>{isReference ? "OpenAPI" : "Markdown"}</span>
           <code>{isReference ? OPENAPI_URL : OVERVIEW_URL}</code>
