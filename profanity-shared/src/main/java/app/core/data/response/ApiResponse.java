@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.Builder;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 
 @Schema(description = "공통 API 응답 래퍼")
@@ -26,5 +27,9 @@ public record ApiResponse<T>(
 
   public static <T> ResponseEntity<ApiResponse<T>> error(Status status) {
     return ResponseEntity.ok(ApiResponse.<T>of(status, null));
+  }
+
+  public static <T> ResponseEntity<ApiResponse<T>> error(HttpStatusCode httpStatus, Status status) {
+    return ResponseEntity.status(httpStatus).body(ApiResponse.<T>of(status, null));
   }
 }

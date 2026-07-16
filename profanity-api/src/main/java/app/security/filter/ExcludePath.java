@@ -17,20 +17,33 @@ public enum ExcludePath {
   SSO("sso", "SSO 정적 페이지", List.of(HttpMethod.GET)),
   OAUTH2("oauth2", "OAuth2 인증 시작", List.of(HttpMethod.GET)),
   OAUTH2_CALLBACK("login/oauth2/code", "OAuth2 callback", List.of(HttpMethod.GET)),
+  AUTH_EXCHANGE("/api/v1/auth/exchange", "로그인 코드 교환", List.of(HttpMethod.POST), true),
+  AUTH_CSRF("/api/v1/auth/csrf", "로그인 CSRF 토큰", List.of(HttpMethod.GET), true),
+  AUTH_REFRESH("/api/v1/auth/refresh", "로그인 토큰 갱신", List.of(HttpMethod.POST), true),
   ;
 
   private final List<String> paths;
   private final String description;
   private final List<HttpMethod> method;
+  private final boolean exactPath;
 
   ExcludePath(String path, String description, List<HttpMethod> method) {
-    this(List.of(path), description, method);
+    this(List.of(path), description, method, false);
   }
 
   ExcludePath(List<String> paths, String description, List<HttpMethod> method) {
+    this(paths, description, method, false);
+  }
+
+  ExcludePath(String path, String description, List<HttpMethod> method, boolean exactPath) {
+    this(List.of(path), description, method, exactPath);
+  }
+
+  ExcludePath(List<String> paths, String description, List<HttpMethod> method, boolean exactPath) {
     this.paths = paths;
     this.description = description;
     this.method = method;
+    this.exactPath = exactPath;
   }
 
   public static List<ExcludePath> getPaths() {
@@ -53,6 +66,9 @@ public enum ExcludePath {
   }
 
   private boolean isPathMatch(String path) {
+    if (exactPath) {
+      return this.paths.stream().anyMatch(path::equals);
+    }
     return this.paths.stream().anyMatch(excludePath -> path.contains("/" + excludePath));
   }
 }

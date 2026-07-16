@@ -14,6 +14,12 @@ public record CustomPrincipal(
     List<String> permissions,
     String issuedAt)
     implements Serializable {
+
+  @Override
+  public String toString() {
+    return "CustomPrincipal[id=" + id + ", email=" + email + ", apiKey=redacted]";
+  }
+
   public static CustomPrincipal of(Object principal) {
     if (principal == null) {
       return null;
