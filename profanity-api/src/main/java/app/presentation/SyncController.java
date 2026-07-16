@@ -5,7 +5,7 @@ import static app.application.HttpClient.getReferrer;
 
 import app.application.manage.SyncHandler;
 import app.core.data.manage.response.ResultMessage;
-import app.openapi.SyncOpenApi;
+import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Objects;
 import lombok.AllArgsConstructor;
@@ -21,12 +21,11 @@ import org.springframework.web.bind.annotation.RestController;
 @AllArgsConstructor
 @RequestMapping("/api/v1/sync")
 @RestController
-@SyncOpenApi.ApiTag
+@Hidden
 public class SyncController {
 
   private final SyncHandler syncHandler;
 
-  @SyncOpenApi.DoSync
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<ResultMessage> doSync(
       HttpServletRequest httpRequest, @RequestParam("password") String password) {

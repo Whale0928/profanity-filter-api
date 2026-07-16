@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.MissingNode;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
@@ -43,19 +44,15 @@ class OpenApiSpecE2ETest extends AbstractApiTester {
     assertThat(body.at("/components/securitySchemes/ApiKeyAuth/description").asText())
         .as("ApiKeyAuth 보안 스키마는 x-api-key 헤더 설명을 제공해야 한다")
         .isEqualTo("클라이언트 등록 후 발급받은 API Key");
-    assertThat(body.at("/components/securitySchemes/LoginJwtAuth/type").asText()).isEqualTo("http");
-    assertThat(body.at("/components/securitySchemes/LoginJwtAuth/scheme").asText())
-        .isEqualTo("bearer");
-    assertThat(body.at("/components/securitySchemes/LoginJwtAuth/bearerFormat").asText())
-        .isEqualTo("JWT");
+    assertThat(body.at("/components/securitySchemes/LoginJwtAuth").isMissingNode()).isTrue();
+    assertThat(countOperations(body.path("paths"))).isEqualTo(12);
     assertThat(body.at("/paths/~1api~1v1~1filter/post").isMissingNode()).isFalse();
     assertThat(body.at("/paths/~1api~1v1~1clients~1register/post").isMissingNode()).isFalse();
-    assertThat(body.at("/paths/~1api~1v1~1auth~1exchange/post").isMissingNode()).isFalse();
-    assertThat(body.at("/paths/~1api~1v1~1auth~1csrf/get").isMissingNode()).isFalse();
-    assertThat(body.at("/paths/~1api~1v1~1auth~1refresh/post").isMissingNode()).isFalse();
-    assertThat(body.at("/paths/~1api~1v1~1auth~1me/get/security/0/LoginJwtAuth").isArray())
-        .isTrue();
     assertThat(body.at("/paths/~1api~1v1~1health/get").isMissingNode()).isFalse();
+    assertThat(body.at("/paths/~1api~1v1~1ping/get").isMissingNode()).isFalse();
+    assertThat(body.at("/paths/~1api~1v1~1auth").isMissingNode()).isTrue();
+    assertThat(body.at("/paths/~1api~1v1~1sync").isMissingNode()).isTrue();
+    assertThat(body.at("/paths/~1api~1v1~1word~1accept~1{requestId}").isMissingNode()).isTrue();
     assertThat(body.at("/paths/~1overview.md/get").isMissingNode()).isTrue();
     assertThat(body.at("/paths/~1llms.txt/get").isMissingNode()).isTrue();
     assertThat(body.at("/paths/~1swagger-ui~1index.html/get").isMissingNode()).isTrue();
@@ -132,13 +129,7 @@ class OpenApiSpecE2ETest extends AbstractApiTester {
           new OperationPath("/paths/~1api~1v1~1clients~1send-email/put/responses/200/content"),
           new OperationPath("/paths/~1api~1v1~1filter/post/responses/200/content"),
           new OperationPath("/paths/~1api~1v1~1filter~1advanced/post/responses/200/content"),
-          new OperationPath("/paths/~1api~1v1~1auth~1exchange/post/responses/200/content"),
-          new OperationPath("/paths/~1api~1v1~1auth~1csrf/get/responses/200/content"),
-          new OperationPath("/paths/~1api~1v1~1auth~1refresh/post/responses/200/content"),
-          new OperationPath("/paths/~1api~1v1~1auth~1me/get/responses/200/content"),
-          new OperationPath("/paths/~1api~1v1~1sync/get/responses/200/content"),
-          new OperationPath(
-              "/paths/~1api~1v1~1word~1accept~1{requestId}/post/responses/200/content")
+          new OperationPath("/paths/~1api~1v1~1word~1request/post/responses/200/content")
         }) {
       JsonNode responseContent = body.at(operationPath.pointer());
       assertThat(responseContent.has("application/json"))
@@ -220,87 +211,6 @@ class OpenApiSpecE2ETest extends AbstractApiTester {
   }
 
   @Test
-  @DisplayName("로그인 API는 token, cookie, CSRF와 오류 응답 계약을 문서화한다")
-  void openapiJson_whenAuthOpenApiAnnotationProvided_returnsAuthenticationContract()
-      throws Exception {
-    // when
-    var response = mockMvcTester.get().uri("/openapi.json").exchange();
-
-    // then
-    assertThat(response).hasStatusOk();
-
-    JsonNode body = objectMapper.readTree(response.getResponse().getContentAsString());
-    JsonNode exchange = body.at("/paths/~1api~1v1~1auth~1exchange/post");
-    assertThat(exchange.at("/requestBody/content/application~1json/schema/$ref").asText())
-        .isEqualTo("#/components/schemas/AuthCodeExchangeRequest");
-    assertThat(
-            exchange
-                .at("/requestBody/content/application~1json/examples/exchangeCode/value/code")
-                .asText())
-        .isEqualTo("sso_exchange_code_example");
-    assertThat(exchange.at("/responses/200/headers/Set-Cookie").isMissingNode()).isFalse();
-    assertThat(
-            exchange
-                .at(
-                    "/responses/200/content/application~1json/examples/success/value/data/tokenType")
-                .asText())
-        .isEqualTo("Bearer");
-    assertThat(
-            exchange
-                .at(
-                    "/responses/200/content/application~1json/examples/invalidRequest/value/status/code")
-                .asInt())
-        .isEqualTo(4000);
-    assertThat(
-            exchange
-                .at(
-                    "/responses/401/content/application~1json/examples/invalidCode/value/status/code")
-                .asInt())
-        .isEqualTo(4012);
-
-    JsonNode csrf = body.at("/paths/~1api~1v1~1auth~1csrf/get");
-    assertThat(csrf.at("/responses/200/headers/Set-Cookie").isMissingNode()).isFalse();
-    assertThat(
-            csrf.at(
-                    "/responses/200/content/application~1json/examples/csrfToken/value/data/headerName")
-                .asText())
-        .isEqualTo("X-XSRF-TOKEN");
-
-    JsonNode refresh = body.at("/paths/~1api~1v1~1auth~1refresh/post");
-    assertThat(
-            findParameter(refresh.path("parameters"), "PF_LOGIN_REFRESH", "cookie").isMissingNode())
-        .isFalse();
-    assertThat(findParameter(refresh.path("parameters"), "XSRF-TOKEN", "cookie").isMissingNode())
-        .isFalse();
-    assertThat(findParameter(refresh.path("parameters"), "X-XSRF-TOKEN", "header").isMissingNode())
-        .isFalse();
-    assertThat(
-            refresh
-                .at(
-                    "/responses/401/content/application~1json/examples/reusedToken/value/status/code")
-                .asInt())
-        .isEqualTo(4016);
-    assertThat(
-            refresh
-                .at(
-                    "/responses/403/content/application~1json/examples/csrfRejected/value/status/code")
-                .asInt())
-        .isEqualTo(4030);
-
-    JsonNode me = body.at("/paths/~1api~1v1~1auth~1me/get");
-    assertThat(me.at("/security/0/LoginJwtAuth").isArray()).isTrue();
-    assertThat(
-            me.at("/responses/200/content/application~1json/examples/currentUser/value/data/email")
-                .asText())
-        .isEqualTo("user@example.com");
-    assertThat(
-            me.at(
-                    "/responses/401/content/application~1json/examples/invalidToken/value/status/code")
-                .asInt())
-        .isEqualTo(4013);
-  }
-
-  @Test
   @DisplayName("응답 모델은 Scalar 모델 섹션에 표시할 설명을 가진다")
   void openapiJson_whenResponseSchemasRendered_returnsDescribedResponseProperties()
       throws Exception {
@@ -332,6 +242,21 @@ class OpenApiSpecE2ETest extends AbstractApiTester {
   }
 
   private record OperationPath(String pointer) {}
+
+  private static int countOperations(JsonNode paths) {
+    Set<String> methods =
+        Set.of("get", "post", "put", "patch", "delete", "head", "options", "trace");
+    int count = 0;
+    for (JsonNode pathItem : paths) {
+      var fields = pathItem.fieldNames();
+      while (fields.hasNext()) {
+        if (methods.contains(fields.next())) {
+          count++;
+        }
+      }
+    }
+    return count;
+  }
 
   private static JsonNode findParameter(JsonNode parameters, String name, String in) {
     if (!parameters.isArray()) {

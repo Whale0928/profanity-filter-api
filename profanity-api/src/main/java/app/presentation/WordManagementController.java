@@ -9,6 +9,7 @@ import app.dto.request.WordRequest;
 import app.dto.response.MessageResponse;
 import app.openapi.WordManagementOpenApi;
 import app.security.SecurityContextUtil;
+import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
@@ -49,7 +50,7 @@ public class WordManagementController {
     return ApiResponse.ok(response);
   }
 
-  @WordManagementOpenApi.AcceptWord
+  @Hidden
   @PostMapping(value = "/accept/{requestId}", produces = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<ApiResponse<Boolean>> acceptWord(@PathVariable List<Long> requestId) {
     final String write = PermissionsType.WRITE.getValue();

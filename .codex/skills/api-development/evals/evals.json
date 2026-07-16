@@ -1,0 +1,23 @@
+{
+  "skill_name": "api-development",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "외부 고객이 API Key로 호출할 수 있는 GET /api/v1/filter/history endpoint를 추가해줘. 기간과 페이지 파라미터가 있고 필터링 이력 목록을 반환해야 해.",
+      "expected_output": "외부 API로 분류하고 matching OpenApi holder에 상세 합성 annotation, ApiKeyAuth, concrete schema와 예제를 추가하며 공개 문서와 양방향 E2E를 갱신한다.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "운영자가 장애 대응 때 캐시를 강제로 비우는 POST /api/v1/admin/cache/evict API를 추가해줘.",
+      "expected_output": "관리자 API로 분류해 controller 또는 method에 @Hidden만 사용하고 OpenApi holder를 만들지 않으며 스펙 비노출 E2E를 추가한다.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "대시보드에서 통계 조회할 API 하나 추가해줘. GET /api/v1/stats로 하면 될 것 같아.",
+      "expected_output": "외부 연동 대상인지 자사 대시보드 전용인지 불명확하므로 구현 전에 공개 여부를 사용자에게 확인한다.",
+      "files": []
+    }
+  ]
+}

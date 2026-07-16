@@ -1,6 +1,5 @@
 package app.architecture;
 
-import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.methods;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
@@ -70,6 +69,14 @@ class OpenApiArchitectureTest {
         }
       };
 
+  private static final DescribedPredicate<JavaMethod> DOCUMENTED_CONTROLLER_ENDPOINT =
+      new DescribedPredicate<>("공개 OpenAPI 컨트롤러 엔드포인트") {
+        @Override
+        public boolean test(JavaMethod method) {
+          return isControllerEndpoint(method) && !isHidden(method);
+        }
+      };
+
   private static final Set<String> ENDPOINT_MAPPING_ANNOTATIONS =
       Set.of(
           DeleteMapping.class.getName(),
@@ -91,34 +98,33 @@ class OpenApiArchitectureTest {
           Content.class.getName(),
           ExampleObject.class.getName(),
           Schema.class.getName(),
-          Tag.class.getName(),
-          Hidden.class.getName());
+          Tag.class.getName());
 
   @ArchTest
-  @DisplayName("컨트롤러는 Swagger 문서 어노테이션을 직접 사용하지 않는다")
+  @DisplayName("컨트롤러는 Hidden 외 Swagger 문서 어노테이션을 직접 사용하지 않는다")
   static void controller_should_not_depend_on_swagger_operation_annotations(JavaClasses classes) {
-    log.info("컨트롤러 계층의 직접 Swagger 문서 어노테이션 의존을 검사합니다.");
+    log.info("컨트롤러 계층이 @Hidden 외 Swagger 문서 어노테이션에 직접 의존하지 않는지 검사합니다.");
 
     noClasses()
         .that()
         .resideInAPackage("app.presentation..")
         .should()
         .dependOnClassesThat(DISALLOWED_SWAGGER_ANNOTATION)
-        .as("컨트롤러는 Swagger 문서 어노테이션을 직접 사용하지 않는다")
-        .because("API 문서 계약은 app.openapi의 합성 어노테이션으로만 관리해야 컨트롤러가 비대해지지 않습니다.")
+        .as("컨트롤러는 @Hidden 외 Swagger 문서 어노테이션을 직접 사용하지 않는다")
+        .because("공개 계약은 app.openapi 합성 어노테이션으로 관리하고 비공개 여부만 @Hidden으로 표시합니다.")
         .check(classes);
   }
 
   @ArchTest
-  @DisplayName("컨트롤러 엔드포인트는 OpenAPI 합성 어노테이션을 정확히 하나 가진다")
-  static void controller_endpoint_should_have_exactly_one_openapi_annotation(JavaClasses classes) {
-    log.info("컨트롤러 엔드포인트와 OpenAPI 합성 어노테이션의 1:1 매핑을 검사합니다.");
+  @DisplayName("컨트롤러 엔드포인트는 공개 문서 또는 Hidden 중 하나로만 분류한다")
+  static void controller_endpoint_should_have_exactly_one_visibility_decision(JavaClasses classes) {
+    log.info("컨트롤러 엔드포인트의 공개 문서와 @Hidden 배타 분류를 검사합니다.");
 
     methods()
         .that(CONTROLLER_ENDPOINT)
-        .should(haveExactlyOneOpenApiAnnotation())
-        .as("컨트롤러 엔드포인트 메서드는 app.openapi 합성 어노테이션을 정확히 하나 가져야 한다")
-        .because("문서 누락과 중복 문서 정의를 동시에 막기 위한 규칙입니다.")
+        .should(haveExactlyOneVisibilityDecision())
+        .as("엔드포인트는 app.openapi 합성 어노테이션 하나 또는 @Hidden 중 하나만 가져야 한다")
+        .because("공개 여부 미결정과 공개 문서 및 숨김의 중복 선언을 동시에 막기 위한 규칙입니다.")
         .check(classes);
   }
 
@@ -128,7 +134,7 @@ class OpenApiArchitectureTest {
     log.info("컨트롤러와 OpenAPI holder의 이름 기반 매칭을 검사합니다.");
 
     methods()
-        .that(CONTROLLER_ENDPOINT)
+        .that(DOCUMENTED_CONTROLLER_ENDPOINT)
         .should(useMatchingOpenApiHolder())
         .as("예: ProfanityController는 ProfanityOpenApi의 합성 어노테이션만 사용해야 한다")
         .because("컨트롤러와 문서 어노테이션의 소유 경계를 1:1로 유지하기 위한 규칙입니다.")
@@ -172,7 +178,13 @@ class OpenApiArchitectureTest {
   }
 
   private static boolean isVerifiedClientEndpoint(JavaMethod method) {
-    return isControllerEndpoint(method) && method.isAnnotatedWith(VerifiedClientOnly.class);
+    return isControllerEndpoint(method)
+        && !isHidden(method)
+        && method.isAnnotatedWith(VerifiedClientOnly.class);
+  }
+
+  private static boolean isHidden(JavaMethod method) {
+    return method.isAnnotatedWith(Hidden.class) || method.getOwner().isAnnotatedWith(Hidden.class);
   }
 
   private static boolean hasAnyAnnotation(JavaMethod method, Set<String> annotationNames) {
@@ -182,18 +194,24 @@ class OpenApiArchitectureTest {
         .anyMatch(annotationNames::contains);
   }
 
-  private static ArchCondition<JavaMethod> haveExactlyOneOpenApiAnnotation() {
-    return new ArchCondition<>("have exactly one app.openapi annotation") {
+  private static ArchCondition<JavaMethod> haveExactlyOneVisibilityDecision() {
+    return new ArchCondition<>("have exactly one OpenAPI visibility decision") {
       @Override
       public void check(JavaMethod method, ConditionEvents events) {
         List<JavaAnnotation<JavaMethod>> annotations = openApiAnnotations(method);
-        if (annotations.size() != 1) {
+        boolean hidden = isHidden(method);
+        boolean valid = hidden ? annotations.isEmpty() : annotations.size() == 1;
+        if (!valid) {
           events.add(
               SimpleConditionEvent.violated(
                   method,
                   method.getFullName()
-                      + " must have exactly one app.openapi annotation but has "
-                      + annotations.size()));
+                      + " must be either @Hidden or have exactly one app.openapi annotation"
+                      + " (hidden="
+                      + hidden
+                      + ", annotations="
+                      + annotations.size()
+                      + ")"));
         }
       }
     };
