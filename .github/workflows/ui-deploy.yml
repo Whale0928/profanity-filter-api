@@ -1,0 +1,100 @@
+name: UI Deploy
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ui/app/**
+
+permissions:
+  contents: read
+  deployments: write
+
+concurrency:
+  group: ui-deploy-main
+  cancel-in-progress: true
+
+jobs:
+  deploy-production:
+    name: test, build and push UI
+    runs-on: ubuntu-24.04-arm
+    environment:
+      name: Production
+      url: https://developers.kr-filter.com
+    env:
+      REGISTRY_HOST: docker-registry.bottle-note.com
+      IMAGE_NAME: profanity-ui
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: ui/app/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ui/app
+        run: npm ci
+
+      - name: Run UI CI
+        working-directory: ui/app
+        run: npm run typecheck && npm run build
+
+      - name: Prepare image tag
+        id: image
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="v0.${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "image=${REGISTRY_HOST}/${IMAGE_NAME}:${tag}" >> "$GITHUB_OUTPUT"
+
+      - name: Ensure registry secrets are configured
+        shell: bash
+        env:
+          ZOT_REGISTRY_USERNAME: ${{ secrets.ZOT_REGISTRY_USERNAME }}
+          ZOT_REGISTRY_PASSWORD: ${{ secrets.ZOT_REGISTRY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$ZOT_REGISTRY_USERNAME" || -z "$ZOT_REGISTRY_PASSWORD" ]]; then
+            echo "Production environment secrets ZOT_REGISTRY_USERNAME and ZOT_REGISTRY_PASSWORD are required." >&2
+            exit 1
+          fi
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY_HOST }}
+          username: ${{ secrets.ZOT_REGISTRY_USERNAME }}
+          password: ${{ secrets.ZOT_REGISTRY_PASSWORD }}
+
+      - name: Build and push UI image
+        uses: docker/build-push-action@v6
+        with:
+          context: ui/app
+          platforms: linux/arm64
+          push: true
+          tags: ${{ steps.image.outputs.image }}
+
+      - name: Write deployment summary
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo "## UI deployment"
+            echo ""
+            echo "| Field | Value |"
+            echo "| --- | --- |"
+            echo "| Public URL | https://developers.kr-filter.com |"
+            echo "| Image | ${{ steps.image.outputs.image }} |"
+            echo "| Commit | $GITHUB_SHA |"
+            echo "| Rollout | ArgoCD Image Updater |"
+          } >> "$GITHUB_STEP_SUMMARY"
