@@ -1,7 +1,7 @@
 package app.e2e;
 
-import static app.test.support.fixture.SeedClients.READ_CLIENT;
-import static app.test.support.fixture.SeedClients.WRITE_CLIENT;
+import static app.test.support.fixture.SeedApiKeys.READ_CLIENT;
+import static app.test.support.fixture.SeedApiKeys.WRITE_CLIENT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import app.core.data.response.ApiResponse;
@@ -144,14 +144,14 @@ class WordManagementE2ETest extends AbstractApiTester {
   }
 
   @Test
-  @DisplayName("READ 권한 클라이언트가 단어 요청을 승인하면 서버 에러 응답으로 말린다")
-  void acceptWord_whenReadClientRequests_returnsInternalServerError() throws Exception {
+  @DisplayName("READ 권한 클라이언트가 단어 요청을 승인하면 권한 오류를 반환한다")
+  void acceptWord_whenReadClientRequests_returnsBadRequest() throws Exception {
     // when
     ApiCallResponse<ApiResponse<Boolean>> response = wordManagementApi.acceptWord(READ_CLIENT, 1L);
 
     // then
     assertThat(response.result()).hasStatusOk();
-    assertThat(response.body().status().code()).isEqualTo(StatusCode.INTERNAL_SERVER_ERROR.code());
+    assertThat(response.body().status().code()).isEqualTo(StatusCode.BAD_REQUEST.code());
   }
 
   @Test

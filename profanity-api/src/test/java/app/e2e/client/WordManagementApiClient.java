@@ -3,7 +3,7 @@ package app.e2e.client;
 import app.core.data.response.ApiResponse;
 import app.dto.request.WordRequest;
 import app.presentation.WordManagementController;
-import app.test.support.fixture.SeedClient;
+import app.test.support.fixture.SeedApiKey;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
@@ -36,7 +36,7 @@ public final class WordManagementApiClient {
   }
 
   public ApiCallResponse<ApiResponse<WordRequestResult>> requestNewWord(
-      SeedClient client, WordRequest request) throws Exception {
+      SeedApiKey client, WordRequest request) throws Exception {
     var result =
         mockMvcTester
             .post()
@@ -50,12 +50,12 @@ public final class WordManagementApiClient {
         result, objectMapper, new TypeReference<ApiResponse<WordRequestResult>>() {});
   }
 
-  public ApiCallResponse<ApiResponse<Boolean>> acceptWord(SeedClient client, Long requestId) {
+  public ApiCallResponse<ApiResponse<Boolean>> acceptWord(SeedApiKey client, Long requestId) {
     return acceptWord(client, List.of(requestId));
   }
 
   public ApiCallResponse<ApiResponse<Boolean>> acceptWord(
-      SeedClient client, List<Long> requestIds) {
+      SeedApiKey client, List<Long> requestIds) {
     String requestPath =
         requestIds.stream()
             .map(String::valueOf)

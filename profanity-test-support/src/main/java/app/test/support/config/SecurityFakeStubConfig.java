@@ -1,8 +1,8 @@
 package app.test.support.config;
 
+import app.application.apikey.ApiKeyMetadataReader;
 import app.application.client.KeyGenerator;
-import app.application.client.MetadataReader;
-import app.test.support.fake.FakeClientMetadataReader;
+import app.test.support.fake.FakeApiKeyMetadataReader;
 import java.security.NoSuchAlgorithmException;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -13,8 +13,8 @@ public class SecurityFakeStubConfig {
 
   @Bean
   @Primary
-  public MetadataReader fakeMetadataReader(KeyGenerator apiKeyGenerator)
+  public ApiKeyMetadataReader fakeMetadataReader(KeyGenerator apiKeyGenerator)
       throws NoSuchAlgorithmException {
-    return new FakeClientMetadataReader(apiKeyGenerator);
+    return new FakeApiKeyMetadataReader(apiKeyGenerator);
   }
 }

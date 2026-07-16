@@ -37,9 +37,9 @@ public class Records {
   @Column(nullable = false, name = "mode")
   private Mode mode;
 
-  @Comment("API Key")
-  @Column
-  private String apiKey;
+  @Comment("API Key SHA-256 해시")
+  @Column(name = "api_key_hash", length = 64, columnDefinition = "CHAR(64)")
+  private String apiKeyHash;
 
   @Comment("요청된 텍스트")
   @Column(nullable = false)
@@ -71,7 +71,7 @@ public class Records {
   private Records(Builder builder) {
     this.trackingId = builder.trackingId;
     this.mode = builder.mode;
-    this.apiKey = builder.apiKey;
+    this.apiKeyHash = builder.apiKeyHash;
     this.requestText = builder.requestText;
     this.words = builder.words;
     this.referrer = builder.referrer;
@@ -81,7 +81,7 @@ public class Records {
   /** The type Builder. */
   public static class Builder {
     private UUID trackingId;
-    private String apiKey;
+    private String apiKeyHash;
     private Mode mode;
     private String requestText;
     private String words;
@@ -93,8 +93,8 @@ public class Records {
       return this;
     }
 
-    public Builder apiKey(String apiKey) {
-      this.apiKey = apiKey;
+    public Builder apiKeyHash(String apiKeyHash) {
+      this.apiKeyHash = apiKeyHash;
       return this;
     }
 
@@ -134,8 +134,8 @@ public class Records {
           + trackingId
           + "mode="
           + mode
-          + ", apiKey='"
-          + apiKey
+          + ", apiKeyHash='"
+          + apiKeyHash
           + '\''
           + ", requestText='"
           + requestText

@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 public record FilterEvent(
     UUID trackingId,
     Mode mode,
-    String apiKey,
+    String apiKeyHash,
     String requestText,
     Set<String> words,
     String referrer,
@@ -21,7 +21,7 @@ public record FilterEvent(
     return new FilterEvent(
         filterApiResponse.trackingId(),
         filterRequest.mode(),
-        filterRequest.apiKey(),
+        filterRequest.apiKeyHash(),
         filterRequest.text(),
         filterApiResponse.detected().stream()
             .map(Detected::filteredWord)

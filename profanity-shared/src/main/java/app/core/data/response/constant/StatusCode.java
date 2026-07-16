@@ -26,6 +26,8 @@ public enum StatusCode {
   INVALID_TRACKING_ID(4002, "유효하지 않은 Tracking ID 입니다. Tracking ID를 확인해 주세요."),
   INVALID_CALLBACK_URL(4001, "콜백 URL 형식이 올바르지 않습니다. 콜백 URL을 확인해 주세요."),
   AMBIGUOUS_CREDENTIALS(4004, "하나의 요청에는 하나의 인증 정보만 전달할 수 있습니다."),
+  API_KEY_ALREADY_EXPIRED(4005, "이미 만료된 API Key입니다."),
+  API_KEY_NOT_FOUND(4040, "API Key를 찾을 수 없습니다."),
   INTERNAL_SERVER_ERROR(5000, "서버 내부 오류가 발생 했습니다., 재시도 시 문제가 지속 되는 경우 관리자에게 문의 바랍니다."),
   SERVICE_UNAVAILABLE(5030, "현재 서비스가 점검중이므로 서비스 응답할 수 없는 경우 발생합니다."),
   ;

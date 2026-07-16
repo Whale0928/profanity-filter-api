@@ -2,8 +2,8 @@ package app.security.authentication;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import app.application.client.MetadataReader;
-import app.domain.client.ClientMetadata;
+import app.application.apikey.ApiKeyMetadataReader;
+import app.domain.apikey.ApiKeyMetadata;
 import app.security.filter.RequestCredential;
 import java.util.List;
 import java.util.UUID;
@@ -17,27 +17,17 @@ class ApiKeyAuthenticatorTest {
   @DisplayName("API Key 검증 결과에 인증 타입 authority와 기존 권한을 함께 설정한다")
   void authenticate_validApiKey_returnsTypedAuthenticationWithLegacyAuthorities() {
     UUID clientId = UUID.randomUUID();
-    MetadataReader metadataReader =
-        new MetadataReader() {
+    ApiKeyMetadataReader metadataReader =
+        new ApiKeyMetadataReader() {
           @Override
-          public ClientMetadata read(String apiKey) {
-            return new ClientMetadata(
+          public ApiKeyMetadata read(String apiKey) {
+            return new ApiKeyMetadata(
                 clientId,
                 "client@example.com",
                 "test client",
-                null,
                 List.of("READ", "WRITE"),
-                "2026-07-11T00:00:00Z");
-          }
-
-          @Override
-          public String getApiKeyByEmail(String email) {
-            throw new UnsupportedOperationException();
-          }
-
-          @Override
-          public boolean verifyClientByEmail(String email) {
-            throw new UnsupportedOperationException();
+                "2026-07-11T00:00:00Z",
+                "key-hash");
           }
         };
     ApiKeyAuthenticator authenticator = new ApiKeyAuthenticator(metadataReader);

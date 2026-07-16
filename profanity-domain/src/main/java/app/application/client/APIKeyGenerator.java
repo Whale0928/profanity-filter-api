@@ -1,9 +1,11 @@
 package app.application.client;
 
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
+import java.util.HexFormat;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -67,5 +69,26 @@ public class APIKeyGenerator implements KeyGenerator {
     } catch (Exception e) {
       return false;
     }
+  }
+
+  @Override
+  public String hashApiKey(String apiKey) {
+    if (!validateApiKey(apiKey)) {
+      throw new IllegalArgumentException("API key must be valid before hashing");
+    }
+    try {
+      MessageDigest digest = MessageDigest.getInstance("SHA-256");
+      return HexFormat.of().formatHex(digest.digest(apiKey.getBytes(StandardCharsets.UTF_8)));
+    } catch (NoSuchAlgorithmException exception) {
+      throw new IllegalStateException("SHA-256 is unavailable", exception);
+    }
+  }
+
+  @Override
+  public String keyHint(String apiKey) {
+    if (!validateApiKey(apiKey)) {
+      throw new IllegalArgumentException("API key must be valid before creating a hint");
+    }
+    return apiKey.substring(0, 6) + "..." + apiKey.substring(apiKey.length() - 4);
   }
 }

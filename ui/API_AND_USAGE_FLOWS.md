@@ -8,9 +8,9 @@
 
 | 구분 | Credential | 사용 범위 |
 | --- | --- | --- |
-| Public | 없음 | SSO 시작·교환·갱신, 클라이언트 등록·복구, 문서, 상태 확인 |
-| Login JWT | `Authorization: Bearer {accessToken}` | 로그인 사용자 조회와 향후 `/api/v1/dashboard/**` |
-| API Key | `x-api-key: {apiKey}` | 필터, 클라이언트 관리, 단어 관리, 동기화 |
+| Public | 없음 | SSO 시작·교환·갱신, 문서, 상태 확인 |
+| Login JWT | `Authorization: Bearer {accessToken}` | 로그인 사용자와 API Key 관리 |
+| API Key | `x-api-key: {apiKey}` | 필터, 단어 관리, 동기화 |
 
 Login JWT를 API Key 대신 사용할 수 없으며, 현재 외부 API용 OAuth2 access token은 지원하지 않는다.
 
@@ -31,21 +31,18 @@ Login JWT를 API Key 대신 사용할 수 없으며, 현재 외부 API용 OAuth2
 | POST | `/api/v1/auth/refresh` | Refresh cookie + CSRF | access token 갱신과 refresh token rotation |
 | GET | `/api/v1/auth/me` | Login JWT | 현재 로그인 사용자 조회 |
 
-현재 `/api/v1/dashboard/**`는 Login JWT 보호 경로만 예약되어 있고 실제 endpoint는 없다. 로그아웃 endpoint도 없다.
+로그아웃 endpoint는 아직 없다.
 
 ### API Key 발급과 관리
 
 | Method | Path | 인증 | 역할 |
 | --- | --- | --- | --- |
-| POST | `/api/v1/clients/register` | Public | `name`, `email`, `issuerInfo`, `note`로 신규 API Key 발급 |
-| GET | `/api/v1/clients/send-email` | Public | `email` query의 기존 등록 이메일로 인증 코드 발송 |
-| PUT | `/api/v1/clients/send-email` | Public | 이메일과 인증 코드를 검증하고 기존 API Key 반환 |
-| GET | `/api/v1/clients` | API Key | 현재 클라이언트 정보 조회 |
-| POST | `/api/v1/clients/update` | API Key | 발급자 정보와 메모 수정 |
-| POST | `/api/v1/clients/reissue` | API Key | API Key 재발급 |
-| DELETE | `/api/v1/clients` | API Key | 클라이언트 폐기 |
+| GET | `/api/v1/dashboard/keys` | Login JWT | 본인의 활성·만료 API Key 목록 조회 |
+| POST | `/api/v1/dashboard/keys` | Login JWT | `name`, `issuerInfo`, `note`로 신규 API Key 발급 |
+| POST | `/api/v1/dashboard/keys/{keyId}/reissue` | Login JWT | 기존 키 만료 후 대체 키 발급 |
+| DELETE | `/api/v1/dashboard/keys/{keyId}` | Login JWT | API Key 만료 |
 
-`send-email` 두 API는 신규 등록 전 이메일 인증이 아니라 이미 등록된 이메일의 API Key 복구 흐름이다. 현재 SSO 사용자와 API Key 클라이언트를 연결하는 API는 없다.
+입력 이메일은 받지 않고 Login JWT 사용자의 primary email을 사용한다. API Key 원문은 발급·재발행 응답에서만 한 번 반환한다. 기존 `/api/v1/clients/**`는 삭제됐다.
 
 ### 비속어 필터
 
@@ -87,22 +84,22 @@ Login JWT를 API Key 대신 사용할 수 없으며, 현재 외부 API용 OAuth2
 7. access token 갱신이 필요하면 `GET /api/v1/auth/csrf` 후 반환된 header 이름과 token으로 `POST /api/v1/auth/refresh`를 호출한다.
 8. 갱신 응답의 새 access token으로 메모리 상태를 교체한다.
 
+### 기존 API Key 자동 연결
+
+1. 기존 `clients` 데이터는 V4 migration에서 같은 ID의 `api_keys`로 복제되고 원문은 SHA-256 hash로 전환된다.
+2. 사용자가 SSO 로그인하면 검증된 primary email을 기준으로 소유자가 없는 기존 키를 비동기로 조회한다.
+3. 동일 이메일의 미이관 키에만 현재 `users.id`를 연결한다.
+4. 이미 소유자가 있거나 이메일이 다른 키는 변경하지 않으며 이후 로그인은 no-op이다.
+
 ### API Key 신규 발급
 
-1. 사용자가 이름 또는 조직명, 이메일, 발급자 정보와 메모를 입력한다.
-2. UI가 `POST /api/v1/clients/register`를 호출한다.
-3. 반환된 API Key를 한 번 명확하게 노출하고 사용자가 안전하게 복사하도록 한다.
-4. 이후 외부 API 호출에는 `x-api-key` 헤더를 사용한다.
+1. 로그인 사용자가 이름, 발급자 정보와 선택 메모를 입력한다.
+2. UI가 Login JWT로 `POST /api/v1/dashboard/keys`를 호출한다.
+3. 서버는 요청 이메일 대신 SSO primary email로 키를 발급한다.
+4. 반환된 API Key 원문을 완료 화면에서 한 번 노출하고 안전하게 복사하도록 한다.
+5. 이후 외부 API 호출에는 `x-api-key` 헤더를 사용한다.
 
-신규 발급 전에 `send-email` 인증을 거치지 않는다.
-
-### 기존 API Key 복구
-
-1. 사용자가 기존 등록 이메일을 입력한다.
-2. UI가 `GET /api/v1/clients/send-email?email=...`로 인증 코드를 요청한다.
-3. 사용자가 이메일로 받은 코드를 입력한다.
-4. UI가 이메일과 코드를 `PUT /api/v1/clients/send-email`로 검증한다.
-5. 성공 응답의 기존 API Key를 노출하고 복사할 수 있게 한다.
+API Key 원문 복구 기능은 없다. 분실한 키는 재발행한다.
 
 ### 필터 사용
 
@@ -115,9 +112,10 @@ Login JWT를 API Key 대신 사용할 수 없으며, 현재 외부 API용 OAuth2
 
 ### API Key 관리
 
-1. API Key로 `GET /api/v1/clients`를 호출해 현재 정보를 확인한다.
-2. 정보 수정은 `/update`, 키 교체는 `/reissue`, 폐기는 `DELETE /api/v1/clients`로 각각 분리한다.
-3. 재발급과 폐기는 기존 credential에 영향을 주는 작업이므로 실행 전 확인 단계를 둔다.
+1. Login JWT로 `/api/v1/dashboard/keys`를 호출해 본인의 활성·만료 키를 확인한다.
+2. 재발행은 기존 키를 즉시 만료하고 새 키 원문을 한 번 반환한다.
+3. 만료는 soft-expire로 반복 요청해도 같은 만료 시각을 유지한다.
+4. 재발행과 만료는 기존 credential에 영향을 주므로 UI에서 실행 전 확인 단계를 둔다.
 
 ### 단어 변경 요청
 

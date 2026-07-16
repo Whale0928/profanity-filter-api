@@ -28,7 +28,8 @@ class SecurityContextUtilTest {
   void apiKeyAuthentication_whenRead_returnsApiClientValues() {
     UUID clientId = UUID.randomUUID();
     ApiKeyPrincipal principal =
-        new ApiKeyPrincipal(clientId, "client@example.com", "test", List.of("READ"), "2026-07-11");
+        new ApiKeyPrincipal(
+            clientId, "client@example.com", "test", List.of("READ"), "2026-07-11", "key-hash");
     setAuthentication(
         new CustomAuthentication(
             AuthenticationType.API_KEY,
@@ -43,6 +44,7 @@ class SecurityContextUtilTest {
     assertThat(SecurityContextUtil.getCurrentApiClientId()).isEqualTo(clientId);
     assertThat(SecurityContextUtil.getCurrentUserId()).isEqualTo(clientId);
     assertThat(SecurityContextUtil.getCurrentApiKey()).isEqualTo("secret-api-key");
+    assertThat(SecurityContextUtil.getCurrentApiKeyHash()).isEqualTo("key-hash");
     assertThat(SecurityContextUtil.getCurrentUserPermissions()).containsExactly("READ");
     assertThat(SecurityContextUtil.isVerifiedClient()).isTrue();
   }
@@ -80,7 +82,8 @@ class SecurityContextUtilTest {
             "blocked@example.com",
             "test",
             List.of(PermissionsType.BLOCK.getValue()),
-            "2026-07-11");
+            "2026-07-11",
+            "key-hash");
     setAuthentication(
         new CustomAuthentication(AuthenticationType.API_KEY, "redacted", List.of(), principal));
 
@@ -96,7 +99,8 @@ class SecurityContextUtilTest {
             AuthenticationType.API_KEY,
             "must-not-leak",
             List.of(),
-            new ApiKeyPrincipal(UUID.randomUUID(), "client@example.com", "test", List.of(), "now"));
+            new ApiKeyPrincipal(
+                UUID.randomUUID(), "client@example.com", "test", List.of(), "now", "key-hash"));
 
     assertThat(authentication.toString()).doesNotContain("must-not-leak");
   }

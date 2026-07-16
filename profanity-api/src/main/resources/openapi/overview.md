@@ -4,9 +4,11 @@
 
 ### 시작하기
 
-1. `POST /api/v1/clients/register`로 API Key를 발급합니다.
+1. 개발자 포털에서 Google 또는 GitHub SSO로 로그인하고 API Key를 발급합니다.
 2. 보호된 API는 `x-api-key` 헤더를 포함해 호출합니다.
 3. `POST /api/v1/filter`에 `text`와 `mode`를 전달합니다.
+
+API Key 원문은 발급·재발행 직후 한 번만 표시되며 분실한 키는 복구하지 않고 재발행합니다.
 
 ### 처리 모드
 

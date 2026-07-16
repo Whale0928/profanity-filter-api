@@ -9,6 +9,7 @@ import app.core.util.ApiKeys;
 import app.dto.request.ApiRequest;
 import app.dto.request.FilterRequest;
 import app.openapi.ProfanityOpenApi;
+import app.security.SecurityContextUtil;
 import app.security.annotation.VerifiedClientOnly;
 import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.servlet.http.HttpServletRequest;
@@ -57,7 +58,12 @@ public class ProfanityController {
         request.isAsync());
 
     final FilterRequest filterRequest =
-        FilterRequest.create(request.text(), request.mode(), apiKey, clientIp, referrer);
+        FilterRequest.create(
+            request.text(),
+            request.mode(),
+            SecurityContextUtil.getCurrentApiKeyHash(),
+            clientIp,
+            referrer);
 
     if (request.isAsync()) {
       FilterApiResponse response =
@@ -88,7 +94,12 @@ public class ProfanityController {
         request.text() == null ? 0 : request.text().length());
 
     final FilterRequest filterRequest =
-        FilterRequest.create(request.text(), request.mode(), apiKey, clientIp, referrer);
+        FilterRequest.create(
+            request.text(),
+            request.mode(),
+            SecurityContextUtil.getCurrentApiKeyHash(),
+            clientIp,
+            referrer);
     FilterApiResponse response = profanityHandler.requestFacadeFilter(filterRequest, null);
     return ResponseEntity.ok(response);
   }

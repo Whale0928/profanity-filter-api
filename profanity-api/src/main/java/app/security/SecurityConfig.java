@@ -121,25 +121,16 @@ public class SecurityConfig {
                     .requestMatchers(
                         HttpMethod.GET, "/openapi.json", "/overview.md", "/llms.txt", "/llm.txt")
                     .permitAll()
-                    .requestMatchers(HttpMethod.POST, "/api/v1/clients/register")
-                    .permitAll()
-                    .requestMatchers(
-                        HttpMethod.GET, "/api/v1/clients/send-email", "/api/v1/auth/csrf")
-                    .permitAll()
-                    .requestMatchers(HttpMethod.PUT, "/api/v1/clients/send-email")
+                    .requestMatchers(HttpMethod.GET, "/api/v1/auth/csrf")
                     .permitAll()
                     .requestMatchers(
                         HttpMethod.POST, "/api/v1/auth/exchange", "/api/v1/auth/refresh")
                     .permitAll()
-                    .requestMatchers(HttpMethod.GET, "/api/v1/auth/me", "/api/v1/dashboard/**")
+                    .requestMatchers(HttpMethod.GET, "/api/v1/auth/me")
                     .hasAuthority(AUTH_LOGIN_JWT)
-                    .requestMatchers(
-                        "/api/v1/filter/**",
-                        "/api/v1/clients",
-                        "/api/v1/clients/update",
-                        "/api/v1/clients/reissue",
-                        "/api/v1/word/**",
-                        "/api/v1/sync")
+                    .requestMatchers("/api/v1/dashboard/**")
+                    .hasAuthority(AUTH_LOGIN_JWT)
+                    .requestMatchers("/api/v1/filter/**", "/api/v1/word/**", "/api/v1/sync")
                     .hasAuthority(AUTH_API_KEY)
                     .anyRequest()
                     .denyAll())

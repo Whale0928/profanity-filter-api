@@ -4,7 +4,7 @@ import app.core.data.constant.Mode;
 import app.core.data.response.FilterApiResponse;
 import app.dto.request.ApiRequest;
 import app.presentation.ProfanityController;
-import app.test.support.fixture.SeedClient;
+import app.test.support.fixture.SeedApiKey;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
@@ -31,7 +31,7 @@ public final class ProfanityApiClient {
     this.objectMapper = objectMapper;
   }
 
-  public ApiCallResponse<FilterApiResponse> basicProfanity(SeedClient client, ApiRequest request)
+  public ApiCallResponse<FilterApiResponse> basicProfanity(SeedApiKey client, ApiRequest request)
       throws Exception {
     var result =
         mockMvcTester
@@ -46,7 +46,7 @@ public final class ProfanityApiClient {
   }
 
   public ApiCallResponse<FilterApiResponse> basicProfanityByUrlencodedValue(
-      SeedClient client, String text, Mode mode) {
+      SeedApiKey client, String text, Mode mode) {
     var result =
         mockMvcTester
             .post()
@@ -61,11 +61,11 @@ public final class ProfanityApiClient {
   }
 
   public ApiCallResponse<FilterApiResponse> basicProfanity(
-      SeedClient client, String text, Mode mode) throws Exception {
+      SeedApiKey client, String text, Mode mode) throws Exception {
     return basicProfanity(client, ApiRequest.builder().text(text).mode(mode).build());
   }
 
-  public ApiCallResponse<FilterApiResponse> advancedProfanity(SeedClient client, String word) {
+  public ApiCallResponse<FilterApiResponse> advancedProfanity(SeedApiKey client, String word) {
     var result =
         mockMvcTester
             .post()

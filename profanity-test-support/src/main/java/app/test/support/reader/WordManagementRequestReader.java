@@ -1,6 +1,6 @@
 package app.test.support.reader;
 
-import app.test.support.fixture.SeedClient;
+import app.test.support.fixture.SeedApiKey;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -14,7 +14,7 @@ public final class WordManagementRequestReader {
     this.dataSource = dataSource;
   }
 
-  public int countRequests(SeedClient client, String word, String requestType) {
+  public int countRequests(SeedApiKey client, String word, String requestType) {
     String sql =
         """
         SELECT COUNT(*)
