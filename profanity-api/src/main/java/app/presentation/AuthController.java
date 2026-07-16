@@ -7,10 +7,10 @@ import app.dto.request.AuthCodeExchangeRequest;
 import app.dto.response.CsrfTokenResponse;
 import app.dto.response.LoginTokenResponse;
 import app.dto.response.LoginUserResponse;
-import app.openapi.AuthOpenApi;
 import app.security.SecurityContextUtil;
 import app.security.login.LoginFlowException;
 import app.security.login.LoginRefreshCookieWriter;
+import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -31,13 +31,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@AuthOpenApi.ApiTag
+@Hidden
 @RequestMapping(value = "/api/v1/auth", produces = MediaType.APPLICATION_JSON_VALUE)
 public class AuthController {
   private final LoginAuthService loginAuthService;
   private final LoginRefreshCookieWriter refreshCookieWriter;
 
-  @AuthOpenApi.Exchange
   @PostMapping(value = "/exchange", consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<ApiResponse<LoginTokenResponse>> exchange(
       @Valid @RequestBody AuthCodeExchangeRequest request, HttpServletResponse response) {
@@ -46,7 +45,6 @@ public class AuthController {
     return noStore(tokenResponse(bundle));
   }
 
-  @AuthOpenApi.Csrf
   @GetMapping("/csrf")
   public ResponseEntity<ApiResponse<CsrfTokenResponse>> csrf(HttpServletRequest request) {
     CsrfToken csrfToken = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
@@ -59,7 +57,6 @@ public class AuthController {
     return noStore(new CsrfTokenResponse(csrfToken.getHeaderName(), csrfToken.getToken()));
   }
 
-  @AuthOpenApi.Refresh
   @PostMapping("/refresh")
   public ResponseEntity<ApiResponse<LoginTokenResponse>> refresh(
       HttpServletRequest request, HttpServletResponse response) {
@@ -76,7 +73,6 @@ public class AuthController {
     }
   }
 
-  @AuthOpenApi.Me
   @GetMapping("/me")
   public ResponseEntity<ApiResponse<LoginUserResponse>> me() {
     UUID userId = SecurityContextUtil.getCurrentLoginUserId();

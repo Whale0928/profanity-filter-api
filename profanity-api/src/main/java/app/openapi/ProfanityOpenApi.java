@@ -2,7 +2,6 @@ package app.openapi;
 
 import app.core.data.response.FilterApiResponse;
 import app.dto.request.ApiRequest;
-import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -173,15 +172,6 @@ public final class ProfanityOpenApi {
                       })),
       security = @SecurityRequirement(name = "ApiKeyAuth"))
   public @interface BasicProfanity {}
-
-  @Target(ElementType.METHOD)
-  @Retention(RetentionPolicy.RUNTIME)
-  @Hidden
-  @Operation(
-      summary = "비속어 필터링 요청 form",
-      description = "application/x-www-form-urlencoded 형식으로 비속어 검사를 요청합니다.",
-      security = @SecurityRequirement(name = "ApiKeyAuth"))
-  public @interface BasicProfanityForm {}
 
   @Target(ElementType.METHOD)
   @Retention(RetentionPolicy.RUNTIME)

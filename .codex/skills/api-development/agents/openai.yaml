@@ -1,0 +1,4 @@
+interface:
+  display_name: "API Development"
+  short_description: "외부 공개 API와 내부 Hidden 경계를 지키며 endpoint를 개발합니다."
+  default_prompt: "신규 API의 외부 공개 여부를 먼저 분류하고 controller, 상세 OpenAPI 합성 어노테이션 또는 @Hidden, 공개 문서, ArchUnit과 E2E 테스트까지 일관되게 구현해줘."
