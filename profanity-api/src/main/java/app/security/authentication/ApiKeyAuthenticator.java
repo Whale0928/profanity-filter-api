@@ -1,7 +1,7 @@
 package app.security.authentication;
 
-import app.application.client.MetadataReader;
-import app.domain.client.ClientMetadata;
+import app.application.apikey.ApiKeyMetadataReader;
+import app.domain.apikey.ApiKeyMetadata;
 import app.security.filter.RequestCredential;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 public class ApiKeyAuthenticator implements RequestAuthenticator {
   private static final String ROLE_PREFIX = "ROLE_";
 
-  private final MetadataReader clientMetadataReader;
+  private final ApiKeyMetadataReader apiKeyReader;
 
   @Override
   public AuthenticationType supports() {
@@ -27,9 +27,9 @@ public class ApiKeyAuthenticator implements RequestAuthenticator {
   @Override
   public Authentication authenticate(RequestCredential credential) {
     String apiKey = credential.value();
-    ClientMetadata metadata;
+    ApiKeyMetadata metadata;
     try {
-      metadata = clientMetadataReader.read(apiKey);
+      metadata = apiKeyReader.read(apiKey);
     } catch (IllegalArgumentException | NoSuchElementException exception) {
       throw new BadCredentialsException(exception.getMessage(), exception);
     }
@@ -40,7 +40,8 @@ public class ApiKeyAuthenticator implements RequestAuthenticator {
             metadata.email(),
             metadata.issuerInfo(),
             metadata.permissions(),
-            metadata.issuedAt());
+            metadata.issuedAt(),
+            metadata.keyHash());
     List<String> authorities = new ArrayList<>();
     authorities.add(AuthenticationType.API_KEY.authority());
     authorities.addAll(

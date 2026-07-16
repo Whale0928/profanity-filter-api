@@ -3,10 +3,10 @@ package app.dto.request;
 import app.core.data.constant.Mode;
 
 public record FilterRequest(
-    String text, Mode mode, String apiKey, String clientIp, String referrer) {
+    String text, Mode mode, String apiKeyHash, String clientIp, String referrer) {
   public static FilterRequest create(
-      String text, Mode mode, String apiKey, String clientIp, String referrer) {
-    return new FilterRequest(text, mode, apiKey, clientIp, referrer);
+      String text, Mode mode, String apiKeyHash, String clientIp, String referrer) {
+    return new FilterRequest(text, mode, apiKeyHash, clientIp, referrer);
   }
 
   @Override
@@ -17,8 +17,8 @@ public record FilterRequest(
         + '\''
         + ", mode="
         + mode
-        + ", apiKey='"
-        + apiKey
+        + ", apiKeyHash='"
+        + apiKeyHash
         + '\''
         + ", clientIp='"
         + clientIp

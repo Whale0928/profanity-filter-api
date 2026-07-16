@@ -6,4 +6,8 @@ public interface KeyGenerator {
   String generateApiKey() throws NoSuchAlgorithmException;
 
   boolean validateApiKey(String apiKey);
+
+  String hashApiKey(String apiKey);
+
+  String keyHint(String apiKey);
 }

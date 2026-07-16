@@ -108,7 +108,12 @@ class AuthenticationServiceTest {
           type == AuthenticationType.LOGIN_JWT
               ? new LoginUserPrincipal(UUID.randomUUID(), "user@example.com")
               : new ApiKeyPrincipal(
-                  UUID.randomUUID(), "client@example.com", "test", List.of("READ"), "now"));
+                  UUID.randomUUID(),
+                  "client@example.com",
+                  "test",
+                  List.of("READ"),
+                  "now",
+                  "key-hash"));
     }
   }
 }

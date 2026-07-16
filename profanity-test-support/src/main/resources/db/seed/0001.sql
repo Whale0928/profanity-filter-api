@@ -7,10 +7,10 @@ DELETE FROM `oauth_accounts`;
 DELETE FROM `users`;
 DELETE FROM `client_reports`;
 DELETE FROM `records`;
+DELETE FROM `api_keys`;
 DELETE FROM `word_management`;
 DELETE FROM `profanity_word`;
 DELETE FROM `manage_account`;
-DELETE FROM `clients`;
 
 ALTER TABLE `client_reports` AUTO_INCREMENT = 1;
 ALTER TABLE `records` AUTO_INCREMENT = 1;

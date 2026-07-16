@@ -25,6 +25,7 @@ dependencies {
     implementation libs.springdoc.openapi.starter.webmvc.api
     testImplementation project(':profanity-test-support')
     testImplementation libs.archunit.junit5
+    testImplementation 'org.flywaydb:flyway-core'
 
     //Mail
     implementation 'org.springframework.boot:spring-boot-starter-mail'

@@ -16,7 +16,7 @@ import org.springframework.context.annotation.Configuration;
       type = SecuritySchemeType.APIKEY,
       in = SecuritySchemeIn.HEADER,
       paramName = "x-api-key",
-      description = "클라이언트 등록 후 발급받은 API Key"),
+      description = "SSO 로그인 후 개발자 포털에서 발급받은 API Key"),
   @SecurityScheme(
       name = "LoginJwtAuth",
       type = SecuritySchemeType.HTTP,

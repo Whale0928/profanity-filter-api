@@ -27,7 +27,8 @@ public class InmemoryRecordRepository implements RecordRepository {
   public void delete(Records records) {}
 
   @Override
-  public Pair<Long, Long> getClientDailyUsageStatistics(String apiKey, LocalDateTime yesterday) {
+  public Pair<Long, Long> getApiKeyDailyUsageStatistics(
+      String apiKeyHash, LocalDateTime yesterday) {
     return null;
   }
 

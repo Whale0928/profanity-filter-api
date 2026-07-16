@@ -12,7 +12,12 @@ import app.TestConfig;
 import app.core.data.constant.Mode;
 import app.core.data.response.FilterApiResponse;
 import app.dto.request.ApiRequest;
+import app.security.authentication.ApiKeyPrincipal;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
+import java.util.UUID;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -22,6 +27,8 @@ import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfi
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(
@@ -35,6 +42,26 @@ class ProfanityControllerTest {
   private static final String REQUEST_URL = "/api/v1/filter";
   @Autowired private ObjectMapper mapper;
   @Autowired private MockMvc mockMvc;
+
+  @BeforeEach
+  void setApiKeyAuthentication() {
+    ApiKeyPrincipal principal =
+        new ApiKeyPrincipal(
+            UUID.randomUUID(),
+            "test@example.com",
+            "test",
+            List.of("READ"),
+            "2026-07-17T00:00:00",
+            "a".repeat(64));
+    SecurityContextHolder.getContext()
+        .setAuthentication(
+            UsernamePasswordAuthenticationToken.authenticated(principal, "test", List.of()));
+  }
+
+  @AfterEach
+  void clearAuthentication() {
+    SecurityContextHolder.clearContext();
+  }
 
   @Nested
   @DisplayName("Quick 타입의 요청을 할 수 있다.")

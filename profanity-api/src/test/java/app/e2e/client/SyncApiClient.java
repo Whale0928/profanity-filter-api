@@ -2,7 +2,7 @@ package app.e2e.client;
 
 import app.core.data.manage.response.ResultMessage;
 import app.presentation.SyncController;
-import app.test.support.fixture.SeedClient;
+import app.test.support.fixture.SeedApiKey;
 import app.test.support.fixture.SeedManageAccount;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
@@ -29,11 +29,11 @@ public final class SyncApiClient {
     this.objectMapper = objectMapper;
   }
 
-  public ApiCallResponse<ResultMessage> doSync(SeedClient client, SeedManageAccount account) {
+  public ApiCallResponse<ResultMessage> doSync(SeedApiKey client, SeedManageAccount account) {
     return doSync(client, account.password());
   }
 
-  public ApiCallResponse<ResultMessage> doSync(SeedClient client, String password) {
+  public ApiCallResponse<ResultMessage> doSync(SeedApiKey client, String password) {
     return ApiCallResponse.of(
         mockMvcTester
             .get()

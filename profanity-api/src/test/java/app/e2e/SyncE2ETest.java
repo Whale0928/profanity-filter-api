@@ -1,6 +1,6 @@
 package app.e2e;
 
-import static app.test.support.fixture.SeedClients.READ_CLIENT;
+import static app.test.support.fixture.SeedApiKeys.READ_CLIENT;
 import static app.test.support.fixture.SeedManageAccounts.ADMIN;
 import static org.assertj.core.api.Assertions.assertThat;
 

@@ -4,8 +4,8 @@
 
 | 인증 타입 | Credential | 허용 범위 |
 |---|---|---|
-| `API_KEY` | `x-api-key` | 기존 필터, 클라이언트, 단어 관리, 동기화 API |
-| `LOGIN_JWT` | `Authorization: Bearer {access_token}` | `GET /api/v1/auth/me`, `/api/v1/dashboard/**` |
+| `API_KEY` | `x-api-key` | 필터, 단어 관리, 동기화 API |
+| `LOGIN_JWT` | `Authorization: Bearer {access_token}` | `GET /api/v1/auth/me`, API Key 관리 등 `/api/v1/dashboard/**` |
 | `OAUTH2_ACCESS_TOKEN` | 미래의 Bearer access token | 아직 미지원, 외부 API에서 HTTP `401`/code `4017`로 종료 |
 
 API Key와 `Authorization`을 동시에 보내거나 같은 인증 헤더를 중복 제출하면 HTTP `400`/code `4004`로 거부합니다. 로그인 JWT를 외부 API 인증으로 재사용할 수 없으며, 외부 API Bearer를 로그인 JWT로 추정하거나 fallback하지 않습니다.
@@ -19,6 +19,8 @@ x-api-key: YOUR_SECRET_TOKEN
 ```
 
 기존 API Key의 성공, 권한, 오류 응답 계약은 유지됩니다.
+
+API Key 목록·발급·재발행·만료는 `/api/v1/dashboard/keys`에서 Login JWT로만 수행합니다. 입력 이메일은 받지 않고 로그인 사용자의 primary email로 고정하며, 원문은 발급·재발행 응답에서 한 번만 반환합니다.
 
 ### Google/GitHub SSO 로그인
 
@@ -62,8 +64,6 @@ access token 기본 계약은 다음과 같습니다.
 - `POST /api/v1/auth/exchange`
 - `GET /api/v1/auth/csrf`
 - `POST /api/v1/auth/refresh` (refresh cookie와 CSRF로 자체 검증)
-- `POST /api/v1/clients/register`
-- `GET|PUT /api/v1/clients/send-email`
 - `GET /api/v1/health`, `GET /api/v1/ping`
 - `GET /openapi.json`, `GET /overview.md`, `GET /llms.txt`, `GET /llm.txt`
 
@@ -84,6 +84,8 @@ access token 기본 계약은 다음과 같습니다.
 | `4031` | API Key에 해당하는 클라이언트 정보 없음 |
 | `4032` | API Key 유효하지 않음 |
 | `4033` | 로그인 사용자 비활성 상태 |
+| `4005` | 이미 만료된 API Key 재발행 시도 |
+| `4040` | 현재 로그인 사용자가 소유하지 않은 API Key |
 
 ### 의도적으로 미구현된 범위
 

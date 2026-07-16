@@ -33,7 +33,7 @@ public final class ProfanityOpenApi {
       summary = "비속어 필터링 요청",
       description =
           """
-          클라이언트 등록 후 발급받은 API Key로 비속어 검사를 요청합니다.
+          개발자 포털에서 발급받은 API Key로 비속어 검사를 요청합니다.
           QUICK은 원색적인 표현을 간략히 검증하고, NORMAL은 데이터베이스의 모든 비속어를 검증하며,
           FILTER는 검출된 단어를 마스킹해 반환합니다.
 

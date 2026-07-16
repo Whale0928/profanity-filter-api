@@ -12,18 +12,21 @@ type LoginTokenData = {
   user: LoginUser;
 };
 
-type ApiResponse<T> = {
+export type ApiResponse<T> = {
   data: T | null;
   status?: {
     description?: string;
+    DetailDescription?: string;
   };
 };
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? "https://api.kr-filter.com").replace(/\/$/, "");
+export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? "https://api.kr-filter.com").replace(/\/$/, "");
 
-async function readData<T>(response: Response): Promise<T> {
+export async function readData<T>(response: Response): Promise<T> {
   const body = await response.json() as ApiResponse<T>;
-  if (!response.ok || !body.data) throw new Error(body.status?.description ?? "로그인 요청을 완료하지 못했습니다.");
+  if (!response.ok || body.data === null) {
+    throw new Error(body.status?.DetailDescription || body.status?.description || "요청을 완료하지 못했습니다.");
+  }
   return body.data;
 }
 

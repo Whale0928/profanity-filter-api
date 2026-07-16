@@ -13,7 +13,7 @@ public interface RecordRepository {
 
   void delete(Records records);
 
-  Pair<Long, Long> getClientDailyUsageStatistics(String apiKey, LocalDateTime yesterday);
+  Pair<Long, Long> getApiKeyDailyUsageStatistics(String apiKeyHash, LocalDateTime yesterday);
 
   Optional<Records> findByTrackingId(UUID trackingId);
 }

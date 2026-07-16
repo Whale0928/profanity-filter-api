@@ -22,7 +22,7 @@ import app.security.filter.CustomAuthenticationFilter;
 import app.security.filter.RequestCredentialResolver;
 import app.security.login.LoginSessionProperties;
 import app.test.support.config.SecurityFakeStubConfig;
-import app.test.support.fake.FakeClientMetadataReader;
+import app.test.support.fake.FakeApiKeyMetadataReader;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Duration;
 import java.util.List;
@@ -62,7 +62,7 @@ class SecurityAuthenticationTest {
   @Test
   @DisplayName("유효한 API 키 요청시 200 OK와 함께 성공 응답을 반환한다")
   void test_200() throws Exception {
-    validApiKey = FakeClientMetadataReader.validKeys.get(0);
+    validApiKey = FakeApiKeyMetadataReader.validKeys.get(0);
     ApiRequest request = quickRequest("test text");
     mockMvc
         .perform(
@@ -148,8 +148,8 @@ class SecurityAuthenticationTest {
   @DisplayName("존재하지 않는 API 키 요청시 4040 NOT_FOUND_CLIENT 응답을 반환한다")
   void test_4040() throws Exception {
     ApiRequest request = quickRequest("test text");
-    String key = FakeClientMetadataReader.validKeys.get(0);
-    FakeClientMetadataReader.validKeys.remove(key);
+    String key = FakeApiKeyMetadataReader.validKeys.get(0);
+    FakeApiKeyMetadataReader.validKeys.remove(key);
 
     mockMvc
         .perform(
@@ -161,7 +161,7 @@ class SecurityAuthenticationTest {
         .andExpect(jsonPath("$.status.code").value(StatusCode.NOT_FOUND_CLIENT.code()))
         .andExpect(jsonPath("$.status.message").value(StatusCode.NOT_FOUND_CLIENT.status()));
 
-    FakeClientMetadataReader.validKeys.add(key);
+    FakeApiKeyMetadataReader.validKeys.add(key);
   }
 
   private static ApiRequest quickRequest(String text) {

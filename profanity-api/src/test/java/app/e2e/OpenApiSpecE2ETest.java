@@ -42,14 +42,17 @@ class OpenApiSpecE2ETest extends AbstractApiTester {
         .isEqualTo("x-api-key");
     assertThat(body.at("/components/securitySchemes/ApiKeyAuth/description").asText())
         .as("ApiKeyAuth 보안 스키마는 x-api-key 헤더 설명을 제공해야 한다")
-        .isEqualTo("클라이언트 등록 후 발급받은 API Key");
+        .isEqualTo("SSO 로그인 후 개발자 포털에서 발급받은 API Key");
     assertThat(body.at("/components/securitySchemes/LoginJwtAuth/type").asText()).isEqualTo("http");
     assertThat(body.at("/components/securitySchemes/LoginJwtAuth/scheme").asText())
         .isEqualTo("bearer");
     assertThat(body.at("/components/securitySchemes/LoginJwtAuth/bearerFormat").asText())
         .isEqualTo("JWT");
     assertThat(body.at("/paths/~1api~1v1~1filter/post").isMissingNode()).isFalse();
-    assertThat(body.at("/paths/~1api~1v1~1clients~1register/post").isMissingNode()).isFalse();
+    assertThat(body.at("/paths/~1api~1v1~1clients~1register/post").isMissingNode()).isTrue();
+    assertThat(body.at("/paths/~1api~1v1~1dashboard~1keys/get").isMissingNode()).isFalse();
+    assertThat(body.at("/paths/~1api~1v1~1dashboard~1keys/post/security/0/LoginJwtAuth").isArray())
+        .isTrue();
     assertThat(body.at("/paths/~1api~1v1~1auth~1exchange/post").isMissingNode()).isFalse();
     assertThat(body.at("/paths/~1api~1v1~1auth~1csrf/get").isMissingNode()).isFalse();
     assertThat(body.at("/paths/~1api~1v1~1auth~1refresh/post").isMissingNode()).isFalse();
@@ -123,13 +126,12 @@ class OpenApiSpecE2ETest extends AbstractApiTester {
     JsonNode body = objectMapper.readTree(response.getResponse().getContentAsString());
     for (OperationPath operationPath :
         new OperationPath[] {
-          new OperationPath("/paths/~1api~1v1~1clients/get/responses/200/content"),
-          new OperationPath("/paths/~1api~1v1~1clients/delete/responses/200/content"),
-          new OperationPath("/paths/~1api~1v1~1clients~1register/post/responses/200/content"),
-          new OperationPath("/paths/~1api~1v1~1clients~1update/post/responses/200/content"),
-          new OperationPath("/paths/~1api~1v1~1clients~1reissue/post/responses/200/content"),
-          new OperationPath("/paths/~1api~1v1~1clients~1send-email/get/responses/200/content"),
-          new OperationPath("/paths/~1api~1v1~1clients~1send-email/put/responses/200/content"),
+          new OperationPath("/paths/~1api~1v1~1dashboard~1keys/get/responses/200/content"),
+          new OperationPath("/paths/~1api~1v1~1dashboard~1keys/post/responses/200/content"),
+          new OperationPath(
+              "/paths/~1api~1v1~1dashboard~1keys~1{apiKeyId}~1reissue/post/responses/200/content"),
+          new OperationPath(
+              "/paths/~1api~1v1~1dashboard~1keys~1{apiKeyId}/delete/responses/200/content"),
           new OperationPath("/paths/~1api~1v1~1filter/post/responses/200/content"),
           new OperationPath("/paths/~1api~1v1~1filter~1advanced/post/responses/200/content"),
           new OperationPath("/paths/~1api~1v1~1auth~1exchange/post/responses/200/content"),
@@ -321,13 +323,12 @@ class OpenApiSpecE2ETest extends AbstractApiTester {
             body.at("/components/schemas/Status/properties/DetailDescription/description").asText())
         .isNotBlank();
     assertThat(
-            body.at("/components/schemas/ApiResponseClientMetadata/properties/status/description")
+            body.at("/components/schemas/ApiResponseListApiKeyView/properties/status/description")
                 .asText())
         .isNotBlank();
-    assertThat(body.at("/components/schemas/ClientMetadata/properties/email/example").asText())
+    assertThat(body.at("/components/schemas/ApiKeyView/properties/email/example").asText())
         .isEqualTo("user@example.com");
-    assertThat(
-            body.at("/components/schemas/ClientsRegistResponse/properties/apiKey/example").asText())
+    assertThat(body.at("/components/schemas/IssuedApiKey/properties/apiKey/example").asText())
         .isEqualTo("pf_sample_issued_api_key");
   }
 

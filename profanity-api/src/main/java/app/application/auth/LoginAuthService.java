@@ -15,6 +15,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,11 +31,14 @@ public class LoginAuthService implements SsoLoginCompletionService {
   private final LoginJwtService loginJwtService;
   private final LoginSessionProperties properties;
   private final Clock loginAuthClock;
+  private final ApplicationEventPublisher eventPublisher;
 
   @Override
   public String issueExchangeCode(OAuthLoginProfile profile) {
     Instant now = loginAuthClock.instant();
     UserAccount userAccount = ssoAccountService.upsert(profile, now);
+    eventPublisher.publishEvent(
+        new ApiKeyOwnershipClaimRequested(userAccount.getId(), userAccount.getPrimaryEmail()));
     OpaqueToken exchangeCode = opaqueTokenService.generate();
     exchangeCodeService.issue(
         userAccount.getId(), exchangeCode.hash(), now, properties.exchangeCodeTtl());

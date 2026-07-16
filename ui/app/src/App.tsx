@@ -1,6 +1,7 @@
 import {
   ArrowRight,
   BookOpen,
+  CaretDown,
   Check,
   Copy,
   GithubLogo,
@@ -16,14 +17,15 @@ import {
 import { useEffect, useMemo, useState } from "react";
 
 import { exchangeLoginCode, restoreLoginSession, startSocialLogin, type LoginUser } from "./auth";
+import ApiKeysPage from "./ApiKeysPage";
 import DocsPage from "./docs/DocsPage";
 
 type Theme = "light" | "dark";
-type RoutePath = "/" | "/docs" | "/login" | "/app" | "/app/credentials" | "/app/account";
+type RoutePath = "/" | "/docs" | "/login" | "/app" | "/app/credentials" | "/app/account" | "/app/keys";
 type CredentialKind = "api-key" | "oauth";
 type AuthStatus = "checking" | "anonymous" | "exchanging" | "authenticated" | "failed";
 
-const ROUTES: RoutePath[] = ["/", "/docs", "/login", "/app", "/app/credentials", "/app/account"];
+const ROUTES: RoutePath[] = ["/", "/docs", "/login", "/app", "/app/credentials", "/app/account", "/app/keys"];
 
 function currentPath(): RoutePath {
   const pathname = window.location.pathname;
@@ -44,7 +46,6 @@ export default function App() {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [authError, setAuthError] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [credentialDialog, setCredentialDialog] = useState<CredentialKind | null>(null);
   const authenticated = authStatus === "authenticated";
 
   useEffect(() => {
@@ -90,8 +91,8 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (path === "/app" || path === "/app/credentials") navigate("/");
-    if ((authStatus === "anonymous" || authStatus === "failed") && path === "/app/account") navigate("/login");
+    if (path === "/app" || path === "/app/credentials") navigate("/app/keys");
+    if ((authStatus === "anonymous" || authStatus === "failed") && (path === "/app/account" || path === "/app/keys")) navigate("/login");
     if (authenticated && path === "/login") navigate("/");
   }, [authStatus, authenticated, path]);
 
@@ -117,16 +118,18 @@ export default function App() {
         return <LoginPage error={authError} status={authStatus} />;
       case "/app/account":
         return <AccountPage onSignOut={signOut} user={loginUser} />;
+      case "/app/keys":
+        return accessToken && loginUser ? <ApiKeysPage accessToken={accessToken} user={loginUser} /> : null;
       default:
         return (
           <OverviewPage
             authenticated={authenticated}
-            onCreate={setCredentialDialog}
+            loginUser={loginUser}
             onNavigate={navigate}
           />
         );
     }
-  }, [authError, authenticated, authStatus, loginUser, path]);
+  }, [accessToken, authError, authenticated, authStatus, loginUser, path]);
 
   return (
     <div className="app-shell">
@@ -141,9 +144,6 @@ export default function App() {
         theme={theme}
       />
       <main id="main-content">{page}</main>
-      {credentialDialog ? (
-        <CredentialDialog kind={credentialDialog} onClose={() => setCredentialDialog(null)} />
-      ) : null}
     </div>
   );
 }
@@ -160,6 +160,11 @@ type NavigationProps = {
 };
 
 function GlobalHeader({ authenticated, loginUser, mobileOpen, onMenu, onNavigate, onTheme, path, theme }: NavigationProps) {
+  const [accountOpen, setAccountOpen] = useState(false);
+  const go = (next: RoutePath) => {
+    setAccountOpen(false);
+    onNavigate(next);
+  };
   return (
     <header className="global-header">
       <button className="brand" onClick={() => onNavigate("/")} type="button">
@@ -179,10 +184,19 @@ function GlobalHeader({ authenticated, loginUser, mobileOpen, onMenu, onNavigate
           <i aria-hidden="true" />
         </button>
         {authenticated ? (
-          <button className="identity" onClick={() => onNavigate("/app/account")} type="button">
-            <span className="avatar">{loginUser?.displayName.trim().slice(0, 1) || "나"}</span>
-            <span>{loginUser?.displayName || "내 계정"}</span>
-          </button>
+          <div className="identity-menu">
+            <button aria-expanded={accountOpen} aria-haspopup="menu" className="identity" onClick={() => setAccountOpen((open) => !open)} type="button">
+              <span className="avatar">{loginUser?.displayName.trim().slice(0, 1) || "나"}</span>
+              <span>{loginUser?.displayName || "내 계정"}</span>
+              <CaretDown aria-hidden="true" size={14} />
+            </button>
+            {accountOpen ? (
+              <div aria-label="사용자 메뉴" className="identity-popover" role="menu">
+                <button onClick={() => go("/app/keys")} role="menuitem" type="button"><Key size={17} />API Key 관리</button>
+                <button onClick={() => go("/app/account")} role="menuitem" type="button"><UserCircle size={17} />내 계정</button>
+              </div>
+            ) : null}
+          </div>
         ) : (
           <button className="login-link" onClick={() => onNavigate("/login")} type="button">로그인</button>
         )}
@@ -197,11 +211,11 @@ function NavButton({ active, label, onClick }: { active: boolean; label: string;
 
 function OverviewPage({
   authenticated,
-  onCreate,
+  loginUser,
   onNavigate,
 }: {
   authenticated: boolean;
-  onCreate: (kind: CredentialKind) => void;
+  loginUser: LoginUser | null;
   onNavigate: (path: RoutePath) => void;
 }) {
   const showCredentials = () => document.getElementById("credentials")?.scrollIntoView({ behavior: "smooth" });
@@ -234,7 +248,7 @@ function OverviewPage({
       <section className="overview-start page-width">
         <div>
           <p className="eyebrow">시작하기</p>
-          <h2>{authenticated ? "반갑습니다, 김개발님." : "계정으로 연동을 시작하세요."}</h2>
+          <h2>{authenticated ? `반갑습니다, ${loginUser?.displayName || "개발자"}님.` : "계정으로 연동을 시작하세요."}</h2>
           <p className="lead">
             {authenticated
               ? "연동 환경에 맞는 자격 증명을 선택하고 API 문서에서 요청 방식을 확인하세요."
@@ -249,7 +263,7 @@ function OverviewPage({
 
       <CredentialsSection
         authenticated={authenticated}
-        onCreate={onCreate}
+        onCreate={(kind) => { if (kind === "api-key") onNavigate("/app/keys"); }}
         onLogin={() => onNavigate("/login")}
       />
     </div>
@@ -376,20 +390,5 @@ function AccountPage({ onSignOut, user }: { onSignOut: () => void; user: LoginUs
       </div>
       <button className="secondary-action" onClick={onSignOut} type="button">프로토타입 세션 종료</button>
     </section>
-  );
-}
-
-function CredentialDialog({ kind, onClose }: { kind: CredentialKind; onClose: () => void }) {
-  const name = kind === "api-key" ? "API Key" : "OAuth2 Client Credentials";
-  return (
-    <div className="dialog-backdrop" onMouseDown={onClose} role="presentation">
-      <section aria-labelledby="dialog-title" aria-modal="true" className="dialog" onMouseDown={(event) => event.stopPropagation()} role="dialog">
-        <button aria-label="닫기" className="dialog-close" onClick={onClose} type="button"><X size={20} /></button>
-        <span className="dialog-icon">{kind === "api-key" ? <Key size={30} /> : <LockKey size={30} />}</span>
-        <h2 id="dialog-title">{name} 만들기</h2>
-        <p>이 화면은 발급 흐름을 확인하는 프로토타입입니다. API가 연결되기 전에는 자격 증명을 생성하거나 전송하지 않습니다.</p>
-        <button className="primary-action" onClick={onClose} type="button">확인</button>
-      </section>
-    </div>
   );
 }

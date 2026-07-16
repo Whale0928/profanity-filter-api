@@ -16,10 +16,10 @@ public interface JpaRecordRepository extends RecordRepository, JpaRepository<Rec
       """
             SELECT new app.core.data.Pair(COUNT(r.id),COUNT(case when length( r.words) > 0 then 1 else null end))
             FROM records r
-            WHERE r.apiKey = :apiKey
+            WHERE r.apiKeyHash = :apiKeyHash
             AND r.createdAt >= :yesterday
             """)
-  Pair<Long, Long> getClientDailyUsageStatistics(String apiKey, LocalDateTime yesterday);
+  Pair<Long, Long> getApiKeyDailyUsageStatistics(String apiKeyHash, LocalDateTime yesterday);
 
   @Override
   @Query("SELECT r FROM records r WHERE r.trackingId = :trackingId")

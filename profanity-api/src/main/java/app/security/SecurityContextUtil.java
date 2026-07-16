@@ -121,6 +121,11 @@ public class SecurityContextUtil {
     return apiKey;
   }
 
+  /** 현재 API Key의 저장용 SHA-256 해시를 반환합니다. */
+  public static String getCurrentApiKeyHash() {
+    return getApiKeyPrincipalWithCheck().keyHash();
+  }
+
   /**
    * 현재 인증된 사용자의 이메일을 반환합니다.
    *

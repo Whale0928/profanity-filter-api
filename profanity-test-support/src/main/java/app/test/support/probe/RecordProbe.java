@@ -1,7 +1,7 @@
 package app.test.support.probe;
 
 import app.core.data.constant.Mode;
-import app.test.support.fixture.SeedClient;
+import app.test.support.fixture.SeedApiKey;
 import app.test.support.fixture.SeedWord;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -16,7 +16,7 @@ public final class RecordProbe {
     this.dataSource = dataSource;
   }
 
-  public void assertFilterRecord(SeedClient client, String requestText, SeedWord word) {
+  public void assertFilterRecord(SeedApiKey client, String requestText, SeedWord word) {
     int count = countFilterRecords(client, requestText, word);
 
     if (count != 1) {
@@ -25,16 +25,16 @@ public final class RecordProbe {
     }
   }
 
-  public int countFilterRecords(SeedClient client, String requestText, SeedWord word) {
+  public int countFilterRecords(SeedApiKey client, String requestText, SeedWord word) {
     return countRecords(client, requestText, Mode.FILTER, word.word());
   }
 
-  public int countRecords(SeedClient client, String requestText, Mode mode, String words) {
+  public int countRecords(SeedApiKey client, String requestText, Mode mode, String words) {
     String sql =
         """
         SELECT COUNT(*)
         FROM records
-        WHERE api_key = ?
+        WHERE api_key_hash = SHA2(?, 256)
           AND request_text = ?
           AND mode = ?
           AND words = ?
@@ -56,12 +56,12 @@ public final class RecordProbe {
     }
   }
 
-  public int countRecords(SeedClient client, String requestText, Mode mode) {
+  public int countRecords(SeedApiKey client, String requestText, Mode mode) {
     String sql =
         """
         SELECT COUNT(*)
         FROM records
-        WHERE api_key = ?
+        WHERE api_key_hash = SHA2(?, 256)
           AND request_text = ?
           AND mode = ?
         """;
