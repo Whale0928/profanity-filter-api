@@ -54,8 +54,9 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!authenticated && path.startsWith("/app")) navigate("/login");
-    if (authenticated && path === "/login") navigate("/app");
+    if (path === "/app" || path === "/app/credentials") navigate("/");
+    if (!authenticated && path === "/app/account") navigate("/login");
+    if (authenticated && path === "/login") navigate("/");
   }, [authenticated, path]);
 
   function navigate(next: RoutePath) {
@@ -68,7 +69,7 @@ export default function App() {
   function signIn() {
     window.sessionStorage.setItem("pf-demo-auth", "true");
     setAuthenticated(true);
-    navigate("/app");
+    navigate("/");
   }
 
   function signOut() {
@@ -83,16 +84,18 @@ export default function App() {
         return <DocsPage theme={theme} />;
       case "/login":
         return <LoginPage onSignIn={signIn} />;
-      case "/app":
-        return <StartPage onNavigate={navigate} />;
-      case "/app/credentials":
-        return <CredentialsPage onCreate={setCredentialDialog} />;
       case "/app/account":
         return <AccountPage onSignOut={signOut} />;
       default:
-        return <IntroPage onNavigate={navigate} />;
+        return (
+          <OverviewPage
+            authenticated={authenticated}
+            onCreate={setCredentialDialog}
+            onNavigate={navigate}
+          />
+        );
     }
-  }, [path]);
+  }, [authenticated, path]);
 
   return (
     <div className="app-shell">
@@ -105,8 +108,7 @@ export default function App() {
         path={path}
         theme={theme}
       />
-      {authenticated ? <AppNavigation onNavigate={navigate} path={path} /> : null}
-      <main>{page}</main>
+      <main id="main-content">{page}</main>
       {credentialDialog ? (
         <CredentialDialog kind={credentialDialog} onClose={() => setCredentialDialog(null)} />
       ) : null}
@@ -156,36 +158,64 @@ function GlobalHeader({ authenticated, mobileOpen, onMenu, onNavigate, onTheme, 
   );
 }
 
-function AppNavigation({ onNavigate, path }: { onNavigate: (path: RoutePath) => void; path: RoutePath }) {
-  return (
-    <nav aria-label="로그인 메뉴" className="app-navigation">
-      <NavButton active={path === "/app"} label="시작" onClick={() => onNavigate("/app")} />
-      <NavButton active={path === "/app/credentials"} label="자격 증명" onClick={() => onNavigate("/app/credentials")} />
-      <NavButton active={path === "/app/account"} label="내 계정" onClick={() => onNavigate("/app/account")} />
-    </nav>
-  );
-}
-
 function NavButton({ active, label, onClick }: { active: boolean; label: string; onClick: () => void }) {
   return <button aria-current={active ? "page" : undefined} onClick={onClick} type="button">{label}</button>;
 }
 
-function IntroPage({ onNavigate }: { onNavigate: (path: RoutePath) => void }) {
+function OverviewPage({
+  authenticated,
+  onCreate,
+  onNavigate,
+}: {
+  authenticated: boolean;
+  onCreate: (kind: CredentialKind) => void;
+  onNavigate: (path: RoutePath) => void;
+}) {
+  const showCredentials = () => document.getElementById("credentials")?.scrollIntoView({ behavior: "smooth" });
+
   return (
-    <section className="intro-page page-width">
-      <p className="eyebrow">Korean profanity filter API</p>
-      <h1>사용자 입력을<br />더 안전하게 다룹니다.</h1>
-      <p className="lead">한국어 문장의 비속어를 검출하고 필요한 방식으로 마스킹하는 API입니다.</p>
-      <div className="intro-actions">
-        <button className="primary-action" onClick={() => onNavigate("/login")} type="button">로그인하여 시작 <ArrowRight size={18} /></button>
-        <button className="text-action" onClick={() => onNavigate("/docs")} type="button">API 문서 보기</button>
-      </div>
-      <div className="auth-summary">
-        <p>로그인 후 선택할 수 있습니다</p>
-        <div><Key size={24} /><span><b>API Key</b>빠르고 단순한 연동</span></div>
-        <div><LockKey size={24} /><span><b>OAuth2 Client Credentials</b>운영·서버 간 연동 권장</span></div>
-      </div>
-    </section>
+    <div className="overview-page">
+      <section className="intro-page page-width">
+        <p className="eyebrow">Korean profanity filter API</p>
+        <h1>사용자 입력을<br />더 안전하게 다룹니다.</h1>
+        <p className="lead">한국어 문장의 비속어를 검출하고 필요한 방식으로 마스킹하는 API입니다.</p>
+        <div className="intro-actions">
+          {authenticated ? (
+            <button className="primary-action" onClick={showCredentials} type="button">자격 증명 선택 <ArrowRight size={18} /></button>
+          ) : (
+            <button className="primary-action" onClick={() => onNavigate("/login")} type="button">로그인하여 시작 <ArrowRight size={18} /></button>
+          )}
+          <button className="text-action" onClick={() => onNavigate("/docs")} type="button">API 문서 보기</button>
+        </div>
+        <div className="auth-summary">
+          <p>{authenticated ? "바로 연동할 수 있습니다" : "로그인 후 선택할 수 있습니다"}</p>
+          <div><Key size={24} /><span><b>API Key</b>빠르고 단순한 연동</span></div>
+          <div><LockKey size={24} /><span><b>OAuth2 Client Credentials</b>운영·서버 간 연동 권장</span></div>
+        </div>
+      </section>
+
+      <section className="overview-start page-width">
+        <div>
+          <p className="eyebrow">시작하기</p>
+          <h2>{authenticated ? "반갑습니다, 김개발님." : "계정으로 연동을 시작하세요."}</h2>
+          <p className="lead">
+            {authenticated
+              ? "연동 환경에 맞는 자격 증명을 선택하고 API 문서에서 요청 방식을 확인하세요."
+              : "Google 또는 GitHub 계정으로 로그인한 뒤 자격 증명을 만들고 관리할 수 있습니다."}
+          </p>
+        </div>
+        <div className="next-actions">
+          <button onClick={authenticated ? showCredentials : () => onNavigate("/login")} type="button"><Key size={22} /><span><b>자격 증명 선택</b>API Key와 OAuth2 방식을 비교합니다.</span><ArrowRight size={19} /></button>
+          <button onClick={() => onNavigate("/docs")} type="button"><BookOpen size={22} /><span><b>API 문서 보기</b>인증과 요청 형식을 확인합니다.</span><ArrowRight size={19} /></button>
+        </div>
+      </section>
+
+      <CredentialsSection
+        authenticated={authenticated}
+        onCreate={onCreate}
+        onLogin={() => onNavigate("/login")}
+      />
+    </div>
   );
 }
 
@@ -206,30 +236,26 @@ function LoginPage({ onSignIn }: { onSignIn: () => void }) {
   );
 }
 
-function StartPage({ onNavigate }: { onNavigate: (path: RoutePath) => void }) {
-  return (
-    <section className="start-page page-width">
-      <p className="eyebrow">시작</p>
-      <h1>반갑습니다, 김개발님.</h1>
-      <p className="lead">연동 환경에 맞는 자격 증명을 선택하고 API 문서에서 요청 방식을 확인하세요.</p>
-      <div className="next-actions">
-        <button onClick={() => onNavigate("/app/credentials")} type="button"><Key size={22} /><span><b>자격 증명 선택</b>API Key와 OAuth2 방식을 비교합니다.</span><ArrowRight size={19} /></button>
-        <button onClick={() => onNavigate("/docs")} type="button"><BookOpen size={22} /><span><b>API 문서 보기</b>인증과 요청 형식을 확인합니다.</span><ArrowRight size={19} /></button>
-      </div>
-    </section>
-  );
-}
+function CredentialsSection({
+  authenticated,
+  onCreate,
+  onLogin,
+}: {
+  authenticated: boolean;
+  onCreate: (kind: CredentialKind) => void;
+  onLogin: () => void;
+}) {
+  const createCredential = (kind: CredentialKind) => authenticated ? onCreate(kind) : onLogin();
 
-function CredentialsPage({ onCreate }: { onCreate: (kind: CredentialKind) => void }) {
   return (
-    <section className="credentials-page page-width">
+    <section className="credentials-page page-width" id="credentials">
       <header className="page-heading">
         <h1>자격 증명</h1>
-        <p>모든 연동은 Google 또는 GitHub 계정으로 로그인해야 사용할 수 있습니다.</p>
+        <p>{authenticated ? "연동 방식에 맞는 자격 증명을 선택하세요." : "Google 또는 GitHub 계정으로 로그인한 뒤 만들 수 있습니다."}</p>
       </header>
       <div className="credential-grid">
         <CredentialMethod
-          action="API Key 만들기"
+          action={authenticated ? "API Key 만들기" : "로그인 후 API Key 만들기"}
           code={'curl -X POST https://api.kr-filter.com/api/v1/filter \\\n  -H "Content-Type: application/json" \\\n  -H "x-api-key: $API_KEY"'}
           description="발급된 키를 요청 헤더에 포함하는 가장 단순한 인증 방식입니다. 이 화면에는 키 원문을 표시하지 않습니다."
           icon={<Key size={28} />}
@@ -238,10 +264,10 @@ function CredentialsPage({ onCreate }: { onCreate: (kind: CredentialKind) => voi
           requestLabel="API 요청 예시"
           subtitle="빠르고 단순한 연동"
           title="API Key"
-          onCreate={onCreate}
+          onCreate={createCredential}
         />
         <CredentialMethod
-          action="OAuth 클라이언트 만들기"
+          action={authenticated ? "OAuth 클라이언트 만들기" : "로그인 후 OAuth 클라이언트 만들기"}
           code={'curl -X POST https://api.kr-filter.com/oauth2/token \\\n  -u "$CLIENT_ID:$CLIENT_SECRET" \\\n  -d "grant_type=client_credentials"'}
           description="클라이언트 자격 증명으로 access token을 발급받고, 그 token을 API 요청에 사용하는 서버 간 인증 흐름입니다."
           icon={<LockKey size={28} />}
@@ -251,7 +277,7 @@ function CredentialsPage({ onCreate }: { onCreate: (kind: CredentialKind) => voi
           requestLabel="Token 요청 예시"
           subtitle="운영·서버 간 연동 권장"
           title="OAuth2 Client Credentials"
-          onCreate={onCreate}
+          onCreate={createCredential}
         />
       </div>
       <div className="security-note"><ShieldCheck size={28} /><b>보안 안내</b><span>이 페이지는 요청 형식만 안내합니다. 실제 API Key, Client Secret, access token 원문은 화면에 다시 노출하지 않습니다.</span></div>
