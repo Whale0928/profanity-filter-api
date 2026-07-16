@@ -10,6 +10,7 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -88,7 +89,8 @@ public class ApiKeyManagementService {
   }
 
   private LocalDateTime now() {
-    return LocalDateTime.ofInstant(loginAuthClock.instant(), SERVICE_ZONE);
+    return LocalDateTime.ofInstant(loginAuthClock.instant(), SERVICE_ZONE)
+        .truncatedTo(ChronoUnit.MICROS);
   }
 
   private record GeneratedKey(String plaintext, String hash, String hint) {}

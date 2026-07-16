@@ -10,6 +10,7 @@ import {
   LockKey,
   Moon,
   ShieldCheck,
+  SignOut,
   Sun,
   UserCircle,
   X,
@@ -117,9 +118,9 @@ export default function App() {
       case "/login":
         return <LoginPage error={authError} status={authStatus} />;
       case "/app/account":
-        return <AccountPage onSignOut={signOut} user={loginUser} />;
+        return <AccountPage user={loginUser} />;
       case "/app/keys":
-        return accessToken && loginUser ? <ApiKeysPage accessToken={accessToken} user={loginUser} /> : null;
+        return accessToken && loginUser ? <ApiKeysPage accessToken={accessToken} /> : null;
       default:
         return (
           <OverviewPage
@@ -139,6 +140,7 @@ export default function App() {
         mobileOpen={mobileOpen}
         onMenu={() => setMobileOpen((open) => !open)}
         onNavigate={navigate}
+        onSignOut={signOut}
         onTheme={() => setTheme(theme === "dark" ? "light" : "dark")}
         path={path}
         theme={theme}
@@ -154,12 +156,13 @@ type NavigationProps = {
   mobileOpen: boolean;
   onMenu: () => void;
   onNavigate: (path: RoutePath) => void;
+  onSignOut: () => void;
   onTheme: () => void;
   path: RoutePath;
   theme: Theme;
 };
 
-function GlobalHeader({ authenticated, loginUser, mobileOpen, onMenu, onNavigate, onTheme, path, theme }: NavigationProps) {
+function GlobalHeader({ authenticated, loginUser, mobileOpen, onMenu, onNavigate, onSignOut, onTheme, path, theme }: NavigationProps) {
   const [accountOpen, setAccountOpen] = useState(false);
   const go = (next: RoutePath) => {
     setAccountOpen(false);
@@ -194,6 +197,7 @@ function GlobalHeader({ authenticated, loginUser, mobileOpen, onMenu, onNavigate
               <div aria-label="사용자 메뉴" className="identity-popover" role="menu">
                 <button onClick={() => go("/app/keys")} role="menuitem" type="button"><Key size={17} />API Key 관리</button>
                 <button onClick={() => go("/app/account")} role="menuitem" type="button"><UserCircle size={17} />내 계정</button>
+                <button className="sign-out" onClick={() => { setAccountOpen(false); onSignOut(); }} role="menuitem" type="button"><SignOut size={17} />로그아웃</button>
               </div>
             ) : null}
           </div>
@@ -380,7 +384,7 @@ function CredentialMethod(props: CredentialMethodProps) {
   );
 }
 
-function AccountPage({ onSignOut, user }: { onSignOut: () => void; user: LoginUser | null }) {
+function AccountPage({ user }: { user: LoginUser | null }) {
   return (
     <section className="account-page page-width">
       <header className="page-heading"><h1>내 계정</h1><p>SSO에서 확인한 기본 계정 정보입니다.</p></header>
@@ -388,7 +392,6 @@ function AccountPage({ onSignOut, user }: { onSignOut: () => void; user: LoginUs
         <UserCircle size={64} weight="thin" />
         <dl><div><dt>표시 이름</dt><dd>{user?.displayName ?? "-"}</dd></div><div><dt>Primary email</dt><dd>{user?.email ?? "-"}</dd></div><div><dt>로그인 상태</dt><dd><span className="status-dot" />활성</dd></div></dl>
       </div>
-      <button className="secondary-action" onClick={onSignOut} type="button">프로토타입 세션 종료</button>
     </section>
   );
 }

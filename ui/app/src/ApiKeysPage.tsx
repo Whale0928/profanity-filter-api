@@ -4,7 +4,6 @@ import {
   Copy,
   Key,
   Plus,
-  ShieldCheck,
   Trash,
   X,
 } from "@phosphor-icons/react";
@@ -19,16 +18,12 @@ import {
   type CreateApiKeyInput,
   type IssuedApiKey,
 } from "./apiKeys";
-import type { LoginUser } from "./auth";
-
 type Action = { key: ApiKeyView; type: "expire" | "reissue" } | null;
 
 export default function ApiKeysPage({
   accessToken,
-  user,
 }: {
   accessToken: string;
-  user: LoginUser;
 }) {
   const [keys, setKeys] = useState<ApiKeyView[]>([]);
   const [loading, setLoading] = useState(true);
@@ -92,7 +87,6 @@ export default function ApiKeysPage({
       <div aria-label="API Key 요약" className="keys-summary">
         <span><b>{activeCount}</b> 활성</span>
         <span><b>{keys.length - activeCount}</b> 만료</span>
-        <span><ShieldCheck size={18} /> SSO 이메일 고정</span>
       </div>
 
       {error ? <div className="keys-error" role="alert">{error}<button onClick={() => void refresh()} type="button">다시 시도</button></div> : null}
@@ -133,7 +127,7 @@ export default function ApiKeysPage({
         </div>
       ) : null}
 
-      {creating ? <CreateKeyDialog email={user.email} onClose={() => setCreating(false)} onCreated={handleCreated} token={accessToken} /> : null}
+      {creating ? <CreateKeyDialog onClose={() => setCreating(false)} onCreated={handleCreated} token={accessToken} /> : null}
       {action ? <ConfirmActionDialog action={action} onClose={() => setAction(null)} onConfirm={handleAction} /> : null}
       {issued ? <IssuedKeyDialog issued={issued} onClose={() => setIssued(null)} /> : null}
     </section>
@@ -144,7 +138,7 @@ function Status({ status }: { status: ApiKeyView["status"] }) {
   return <span className={`key-status key-status-${status.toLowerCase()}`}><i />{status === "ACTIVE" ? "활성" : "만료"}</span>;
 }
 
-function CreateKeyDialog({ email, onClose, onCreated, token }: { email: string; onClose: () => void; onCreated: (issued: IssuedApiKey) => void; token: string }) {
+function CreateKeyDialog({ onClose, onCreated, token }: { onClose: () => void; onCreated: (issued: IssuedApiKey) => void; token: string }) {
   const [form, setForm] = useState<CreateApiKeyInput>({ issuerInfo: "", name: "", note: "" });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -166,7 +160,6 @@ function CreateKeyDialog({ email, onClose, onCreated, token }: { email: string; 
       <form className="key-form" onSubmit={submit}>
         <div><p className="eyebrow">New credential</p><h2>새 API Key</h2><p>환경이나 용도를 알아볼 수 있는 이름을 사용하세요.</p></div>
         <label>이름<input autoFocus maxLength={100} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="예: 운영 서버" required value={form.name} /></label>
-        <label>SSO 이메일<input disabled value={email} /></label>
         <label>발급자 정보<input maxLength={255} onChange={(event) => setForm({ ...form, issuerInfo: event.target.value })} placeholder="예: production-api" required value={form.issuerInfo} /></label>
         <label>메모 <small>선택</small><textarea maxLength={255} onChange={(event) => setForm({ ...form, note: event.target.value })} placeholder="사용 위치나 담당자를 기록하세요." value={form.note} /></label>
         {error ? <p className="form-error" role="alert">{error}</p> : null}

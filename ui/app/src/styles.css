@@ -67,6 +67,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .identity-popover { position: absolute; top: calc(100% + 12px); right: 0; z-index: 45; min-width: 190px; display: grid; border: 1px solid var(--line-strong); border-radius: 8px; background: var(--surface); box-shadow: 0 18px 42px rgb(0 0 0 / 14%); padding: 7px; }
 .identity-popover button { min-height: 42px; display: flex; align-items: center; gap: 10px; border: 0; border-radius: 6px; background: transparent; padding: 0 10px; font-size: 13px; text-align: left; cursor: pointer; }
 .identity-popover button:hover { background: var(--surface-subtle); }
+.identity-popover .sign-out { margin-top: 4px; box-shadow: inset 0 1px var(--line); color: var(--text-muted); }
 .avatar { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 700; }
 .mobile-menu { display: none; border: 0; background: transparent; padding: 8px; }
 
@@ -146,7 +147,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .account-profile dt { color: var(--text-muted); font-size: 13px; }
 .account-profile dd { margin: 0; font-size: 14px; font-weight: 650; }
 .status-dot { width: 8px; height: 8px; display: inline-block; margin-right: 8px; border-radius: 50%; background: var(--accent); }
-.account-page .secondary-action { margin-top: 28px; }
 
 .docs-page { width: var(--content-rail); min-height: calc(100vh - 92px); display: grid; grid-template-columns: 240px minmax(0, 1fr); margin: 0 auto; border-right: 1px solid var(--line); border-left: 1px solid var(--line); }
 .docs-page aside { position: sticky; top: 0; height: calc(100vh - 92px); overflow-y: auto; scrollbar-color: color-mix(in srgb, var(--accent) 62%, var(--line-strong)) color-mix(in srgb, var(--surface-subtle) 72%, transparent); scrollbar-gutter: stable; scrollbar-width: thin; border-right: 1px solid var(--line); padding: 44px 20px 44px 28px; }
