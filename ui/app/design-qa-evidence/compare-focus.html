@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Design QA focused comparison</title>
+    <style>
+      * { box-sizing: border-box; }
+      html, body { width: 1440px; height: 640px; margin: 0; overflow: hidden; background: #080a09; }
+      main { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; }
+      figure { position: relative; width: 719px; height: 640px; margin: 0; overflow: hidden; background: #101413; }
+      img { position: absolute; max-width: none; }
+      .source { width: 1487px; height: 1058px; transform: translate(-745px, -330px); }
+      .implementation { width: 1440px; height: 1024px; transform: translate(-720px, -330px); }
+      figcaption { position: absolute; right: 0; bottom: 0; left: 0; height: 42px; display: grid; place-items: center; background: rgb(8 10 9 / 90%); color: #d6dad7; font: 600 13px system-ui, sans-serif; letter-spacing: .06em; text-transform: uppercase; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <figure><img class="source" src="./source-credentials-dark.png" alt="Source OAuth credential area" /><figcaption>Source detail</figcaption></figure>
+      <figure><img class="implementation" src="../design-audit/03-credentials-after.png" alt="Rendered OAuth credential area" /><figcaption>Implementation detail</figcaption></figure>
+    </main>
+  </body>
+</html>
