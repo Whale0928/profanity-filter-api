@@ -15,11 +15,13 @@ import {
 } from "@phosphor-icons/react";
 import { useEffect, useMemo, useState } from "react";
 
+import { exchangeLoginCode, restoreLoginSession, startSocialLogin, type LoginUser } from "./auth";
 import DocsPage from "./docs/DocsPage";
 
 type Theme = "light" | "dark";
 type RoutePath = "/" | "/docs" | "/login" | "/app" | "/app/credentials" | "/app/account";
 type CredentialKind = "api-key" | "oauth";
+type AuthStatus = "checking" | "anonymous" | "exchanging" | "authenticated" | "failed";
 
 const ROUTES: RoutePath[] = ["/", "/docs", "/login", "/app", "/app/credentials", "/app/account"];
 
@@ -37,9 +39,13 @@ function preferredTheme(): Theme {
 export default function App() {
   const [path, setPath] = useState<RoutePath>(currentPath);
   const [theme, setTheme] = useState<Theme>(preferredTheme);
-  const [authenticated, setAuthenticated] = useState(() => window.sessionStorage.getItem("pf-demo-auth") !== "false");
+  const [authStatus, setAuthStatus] = useState<AuthStatus>("checking");
+  const [loginUser, setLoginUser] = useState<LoginUser | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [authError, setAuthError] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
   const [credentialDialog, setCredentialDialog] = useState<CredentialKind | null>(null);
+  const authenticated = authStatus === "authenticated";
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -54,10 +60,40 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+    const code = window.location.pathname === "/login"
+      ? new URLSearchParams(window.location.hash.replace(/^#/, "")).get("code")
+      : null;
+
+    async function authenticate() {
+      try {
+        if (code) {
+          setAuthStatus("exchanging");
+          window.history.replaceState({}, "", "/login");
+        }
+        const session = code ? await exchangeLoginCode(code) : await restoreLoginSession();
+        if (cancelled) return;
+        setAccessToken(session.accessToken);
+        setLoginUser(session.user);
+        setAuthStatus("authenticated");
+      } catch (error) {
+        if (cancelled) return;
+        setAccessToken(null);
+        setLoginUser(null);
+        setAuthStatus(code ? "failed" : "anonymous");
+        setAuthError(code && error instanceof Error ? error.message : "");
+      }
+    }
+
+    void authenticate();
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
     if (path === "/app" || path === "/app/credentials") navigate("/");
-    if (!authenticated && path === "/app/account") navigate("/login");
+    if ((authStatus === "anonymous" || authStatus === "failed") && path === "/app/account") navigate("/login");
     if (authenticated && path === "/login") navigate("/");
-  }, [authenticated, path]);
+  }, [authStatus, authenticated, path]);
 
   function navigate(next: RoutePath) {
     if (window.location.pathname !== next) window.history.pushState({}, "", next);
@@ -66,16 +102,11 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  function signIn() {
-    window.sessionStorage.setItem("pf-demo-auth", "true");
-    setAuthenticated(true);
-    navigate("/");
-  }
-
   function signOut() {
-    window.sessionStorage.setItem("pf-demo-auth", "false");
-    setAuthenticated(false);
-    navigate("/");
+    setAccessToken(null);
+    setLoginUser(null);
+    setAuthStatus("anonymous");
+    navigate("/login");
   }
 
   const page = useMemo(() => {
@@ -83,9 +114,9 @@ export default function App() {
       case "/docs":
         return <DocsPage theme={theme} />;
       case "/login":
-        return <LoginPage onSignIn={signIn} />;
+        return <LoginPage error={authError} status={authStatus} />;
       case "/app/account":
-        return <AccountPage onSignOut={signOut} />;
+        return <AccountPage onSignOut={signOut} user={loginUser} />;
       default:
         return (
           <OverviewPage
@@ -95,12 +126,13 @@ export default function App() {
           />
         );
     }
-  }, [authenticated, path]);
+  }, [authError, authenticated, authStatus, loginUser, path]);
 
   return (
     <div className="app-shell">
       <GlobalHeader
         authenticated={authenticated}
+        loginUser={loginUser}
         mobileOpen={mobileOpen}
         onMenu={() => setMobileOpen((open) => !open)}
         onNavigate={navigate}
@@ -118,6 +150,7 @@ export default function App() {
 
 type NavigationProps = {
   authenticated: boolean;
+  loginUser: LoginUser | null;
   mobileOpen: boolean;
   onMenu: () => void;
   onNavigate: (path: RoutePath) => void;
@@ -126,7 +159,7 @@ type NavigationProps = {
   theme: Theme;
 };
 
-function GlobalHeader({ authenticated, mobileOpen, onMenu, onNavigate, onTheme, path, theme }: NavigationProps) {
+function GlobalHeader({ authenticated, loginUser, mobileOpen, onMenu, onNavigate, onTheme, path, theme }: NavigationProps) {
   return (
     <header className="global-header">
       <button className="brand" onClick={() => onNavigate("/")} type="button">
@@ -147,8 +180,8 @@ function GlobalHeader({ authenticated, mobileOpen, onMenu, onNavigate, onTheme, 
         </button>
         {authenticated ? (
           <button className="identity" onClick={() => onNavigate("/app/account")} type="button">
-            <span className="avatar">김</span>
-            <span>김개발</span>
+            <span className="avatar">{loginUser?.displayName.trim().slice(0, 1) || "나"}</span>
+            <span>{loginUser?.displayName || "내 계정"}</span>
           </button>
         ) : (
           <button className="login-link" onClick={() => onNavigate("/login")} type="button">로그인</button>
@@ -223,7 +256,8 @@ function OverviewPage({
   );
 }
 
-function LoginPage({ onSignIn }: { onSignIn: () => void }) {
+function LoginPage({ error, status }: { error: string; status: AuthStatus }) {
+  const pending = status === "checking" || status === "exchanging";
   return (
     <section className="login-page page-width">
       <div>
@@ -232,9 +266,9 @@ function LoginPage({ onSignIn }: { onSignIn: () => void }) {
         <p className="lead">자격 증명은 Google 또는 GitHub로 로그인한 사용자만 만들고 관리할 수 있습니다.</p>
       </div>
       <div className="provider-list">
-        <button onClick={onSignIn} type="button"><GithubLogo size={24} weight="fill" />GitHub로 계속</button>
-        <button onClick={onSignIn} type="button"><span className="google-mark">G</span>Google로 계속</button>
-        <p>프로토타입에서는 실제 OAuth 요청을 보내지 않습니다.</p>
+        <button disabled={pending} onClick={() => startSocialLogin("github")} type="button"><GithubLogo size={24} weight="fill" />GitHub로 계속</button>
+        <button disabled={pending} onClick={() => startSocialLogin("google")} type="button"><span className="google-mark">G</span>Google로 계속</button>
+        <p role={error ? "alert" : "status"}>{error || (pending ? "로그인 상태를 확인하고 있습니다." : "선택한 계정의 로그인 화면으로 이동합니다.")}</p>
       </div>
     </section>
   );
@@ -332,13 +366,13 @@ function CredentialMethod(props: CredentialMethodProps) {
   );
 }
 
-function AccountPage({ onSignOut }: { onSignOut: () => void }) {
+function AccountPage({ onSignOut, user }: { onSignOut: () => void; user: LoginUser | null }) {
   return (
     <section className="account-page page-width">
       <header className="page-heading"><h1>내 계정</h1><p>SSO에서 확인한 기본 계정 정보입니다.</p></header>
       <div className="account-profile">
         <UserCircle size={64} weight="thin" />
-        <dl><div><dt>표시 이름</dt><dd>김개발</dd></div><div><dt>Primary email</dt><dd>dev.kim@example.com</dd></div><div><dt>로그인 상태</dt><dd><span className="status-dot" />활성</dd></div></dl>
+        <dl><div><dt>표시 이름</dt><dd>{user?.displayName ?? "-"}</dd></div><div><dt>Primary email</dt><dd>{user?.email ?? "-"}</dd></div><div><dt>로그인 상태</dt><dd><span className="status-dot" />활성</dd></div></dl>
       </div>
       <button className="secondary-action" onClick={onSignOut} type="button">프로토타입 세션 종료</button>
     </section>
