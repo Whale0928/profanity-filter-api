@@ -1,11 +1,7 @@
 name: UI Deploy
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - ui/app/**
+  workflow_dispatch:
 
 permissions:
   contents: read
