@@ -1,13 +1,16 @@
 package app.exception;
 
+import app.application.HttpClient;
 import app.core.data.response.ApiResponse;
 import app.core.data.response.Status;
 import app.core.data.response.constant.StatusCode;
 import app.core.exception.BusinessException;
 import app.security.authentication.CredentialAuthenticationException;
 import app.security.login.LoginFlowException;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -32,10 +35,43 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(BadCredentialsException.class)
   public ResponseEntity<ApiResponse<Void>> handleBadCredentialsException(
-      BadCredentialsException ex) {
-    log.warn("인증 정보 예외 발생: {}", ex.getMessage());
+      BadCredentialsException ex, HttpServletRequest request) {
     StatusCode resolve = StatusCode.resolve(ex.getMessage());
+    log.warn(
+        "[AUTH] 인증 거절 statusCode={} httpStatus={} method={} path={} host={} clientIp={} credential={} cfRay={} exceptionType={}",
+        resolve.code(),
+        HttpStatus.OK.value(),
+        safe(request.getMethod(), 16),
+        safe(request.getRequestURI(), 256),
+        safe(request.getServerName(), 255),
+        safe(HttpClient.getClientIP(request), 64),
+        credentialState(request),
+        safe(request.getHeader("CF-Ray"), 64),
+        ex.getClass().getSimpleName());
     return ApiResponse.error(Status.of(resolve));
+  }
+
+  private static String credentialState(HttpServletRequest request) {
+    String apiKey = request.getHeader("X-API-KEY");
+    String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
+    if (apiKey != null && authorization != null) {
+      return "MULTIPLE";
+    }
+    if (apiKey != null) {
+      return apiKey.isBlank() ? "API_KEY_BLANK" : "API_KEY_PRESENT";
+    }
+    if (authorization != null) {
+      return authorization.isBlank() ? "BEARER_BLANK" : "BEARER_PRESENT";
+    }
+    return "NONE";
+  }
+
+  private static String safe(String value, int maxLength) {
+    if (value == null || value.isBlank()) {
+      return "none";
+    }
+    String sanitized = value.replaceAll("[\\r\\n\\t]", "_");
+    return sanitized.substring(0, Math.min(sanitized.length(), maxLength));
   }
 
   @ExceptionHandler(LoginFlowException.class)
