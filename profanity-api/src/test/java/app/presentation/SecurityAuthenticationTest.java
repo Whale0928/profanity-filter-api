@@ -1,5 +1,6 @@
 package app.presentation;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -28,15 +29,19 @@ import java.time.Duration;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(controllers = ProfanityController.class)
+@ExtendWith(OutputCaptureExtension.class)
 @Import({
   TestConfig.class,
   SecurityFakeStubConfig.class,
@@ -115,22 +120,37 @@ class SecurityAuthenticationTest {
 
   @Test
   @DisplayName("API 키가 비어있는 경우 4010 UNAUTHORIZED 응답을 반환한다")
-  void test_4010() throws Exception {
+  void test_4010(CapturedOutput output) throws Exception {
     ApiRequest request = quickRequest("test text");
     mockMvc
         .perform(
             post(REQUEST_URL)
                 .contentType(MediaType.APPLICATION_JSON)
                 .header("X-API-KEY", "")
+                .header("CF-Connecting-IP", "203.0.113.8")
+                .header("CF-Ray", "abc123-ICN")
                 .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.status.code").value(4010))
         .andExpect(jsonPath("$.status.message").value(StatusCode.UNAUTHORIZED.status()));
+
+    assertThat(output.getOut())
+        .contains(
+            "[AUTH] 인증 거절",
+            "statusCode=4010",
+            "httpStatus=200",
+            "method=POST",
+            "path=/api/v1/filter",
+            "host=localhost",
+            "clientIp=203.0.113.8",
+            "credential=API_KEY_BLANK",
+            "cfRay=abc123-ICN",
+            "exceptionType=BadCredentialsException");
   }
 
   @Test
   @DisplayName("잘못된 형식의 API 키 요청시 4031 INVALID_API_KEY 응답을 반환한다")
-  void test_4031() throws Exception {
+  void test_4031(CapturedOutput output) throws Exception {
     ApiRequest request = quickRequest("test text");
 
     mockMvc
@@ -142,6 +162,10 @@ class SecurityAuthenticationTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.status.code").value(StatusCode.INVALID_API_KEY.code()))
         .andExpect(jsonPath("$.status.message").value(StatusCode.INVALID_API_KEY.status()));
+
+    assertThat(output.getOut())
+        .contains("credential=API_KEY_PRESENT")
+        .doesNotContain("invalid-api-key");
   }
 
   @Test
