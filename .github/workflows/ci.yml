@@ -45,8 +45,8 @@ jobs:
       - name: verify public discovery artifacts
         run: npm run verify:discovery
 
-  test:
-    name: ci
+  backend:
+    name: backend
     runs-on: ubuntu-24.04-arm
     steps:
       - name: checkout code
