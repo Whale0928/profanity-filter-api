@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "verify:discovery": "node scripts/verify-public-discovery.mjs"
   },
   "dependencies": {
     "@fontsource-variable/noto-sans-kr": "^5.2.10",

@@ -50,13 +50,17 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 
 .app-shell { min-height: 100vh; background: var(--bg); }
 .global-header { min-height: 92px; display: flex; align-items: center; justify-content: space-between; gap: 28px; padding-inline: max(24px, calc((100vw - var(--content-rail)) / 2)); border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--bg) 95%, transparent); }
-.brand { display: flex; align-items: baseline; gap: 18px; border: 0; background: transparent; padding: 0; cursor: pointer; text-align: left; }
+.brand { display: flex; align-items: baseline; gap: 18px; border: 0; background: transparent; padding: 0; color: inherit; text-align: left; text-decoration: none; }
 .brand strong { font-size: 22px; font-weight: 820; letter-spacing: -0.04em; white-space: nowrap; }
 .brand span { color: var(--text-muted); font-size: 14px; white-space: nowrap; }
 .global-actions { display: flex; align-items: center; gap: 28px; }
 .global-actions nav { display: flex; align-items: center; gap: 8px; }
-.global-actions nav button, .login-link { min-height: 42px; border: 0; background: transparent; padding: 0 12px; font-size: 14px; font-weight: 620; cursor: pointer; }
-.global-actions nav button[aria-current="page"] { color: var(--accent); }
+.global-actions nav a, .login-link { min-height: 42px; display: inline-flex; align-items: center; border: 0; background: transparent; padding: 0 12px; color: inherit; font-size: 14px; font-weight: 620; text-decoration: none; }
+.global-actions nav a[aria-current="page"] { color: var(--accent); }
+.static-public-actions { display: flex; align-items: center; gap: 20px; }
+.static-public-actions nav { display: flex; gap: 8px; }
+.static-public-actions nav a { min-height: 42px; display: inline-flex; align-items: center; padding: 0 12px; color: inherit; font-size: 14px; font-weight: 620; text-decoration: none; }
+.static-public-actions nav a[aria-current="page"] { color: var(--accent); }
 .theme-toggle { min-width: 64px; min-height: 42px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; border: 1px solid var(--line-strong); border-radius: 999px; background: var(--surface); padding: 0 8px; cursor: pointer; }
 .theme-toggle i { position: relative; width: 32px; height: 20px; border-radius: 999px; background: var(--line-strong); }
 .theme-toggle i::after { content: ""; position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%; background: var(--surface); transition: transform 180ms ease; }
@@ -74,7 +78,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .page-width { width: var(--content-rail); margin: 0 auto; }
 .eyebrow { margin: 0 0 20px; color: var(--accent); font-size: 13px; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
 .lead { max-width: 680px; margin: 18px 0 0; color: var(--text-muted); font-size: clamp(15px, 1.25vw, 18px); line-height: 1.7; }
-.primary-action, .secondary-action, .text-action { min-height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: 10px; border-radius: 7px; padding: 0 20px; font-weight: 700; cursor: pointer; }
+.primary-action, .secondary-action, .text-action { min-height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: 10px; border-radius: 7px; padding: 0 20px; font-weight: 700; text-decoration: none; cursor: pointer; }
 .primary-action { border: 1px solid var(--accent); background: var(--accent); color: #fff; }
 :root[data-theme="dark"] .primary-action { color: #0c1710; }
 .secondary-action { border: 1px solid var(--line-strong); background: var(--surface); }
@@ -83,6 +87,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .intro-page { padding-top: clamp(72px, 10vw, 140px); padding-bottom: clamp(88px, 10vw, 132px); }
 .intro-page h1 { max-width: 820px; margin: 0; font-size: clamp(44px, 5.4vw, 72px); line-height: 1.08; letter-spacing: -0.05em; }
 .intro-actions { display: flex; gap: 12px; margin-top: 38px; }
+.static-api-links { display: flex; gap: 24px; margin-top: 34px; }
+.static-api-links a { color: var(--text-muted); font-size: 13px; font-weight: 650; }
 .auth-summary { max-width: 920px; display: grid; grid-template-columns: 180px 1fr 1.3fr; gap: 28px; align-items: center; margin-top: 100px; border-top: 1px solid var(--line); padding-top: 28px; }
 .auth-summary > p { margin: 0; color: var(--text-muted); font-size: 13px; }
 .auth-summary > div { display: flex; gap: 14px; align-items: center; }
@@ -103,7 +109,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .overview-start h2 { margin: 0; font-size: clamp(32px, 3.2vw, 44px); letter-spacing: -0.04em; }
 .overview-start .lead { max-width: 540px; }
 .next-actions { display: grid; border-top: 1px solid var(--line); }
-.next-actions button { min-height: 96px; display: grid; grid-template-columns: 32px 1fr 24px; gap: 18px; align-items: center; border: 0; border-bottom: 1px solid var(--line); background: transparent; padding: 0 8px; text-align: left; cursor: pointer; }
+.next-actions button, .next-actions a { min-height: 96px; display: grid; grid-template-columns: 32px 1fr 24px; gap: 18px; align-items: center; border: 0; border-bottom: 1px solid var(--line); background: transparent; padding: 0 8px; color: inherit; text-align: left; text-decoration: none; cursor: pointer; }
 .next-actions span, .next-actions b { display: block; }
 .next-actions span { color: var(--text-muted); line-height: 1.6; }
 .next-actions b { margin-bottom: 4px; color: var(--text); font-size: 15px; }
@@ -180,6 +186,13 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 @keyframes docs-spin { to { transform: rotate(360deg); } }
 .docs-error { border: 1px solid var(--line-strong); border-radius: 8px; background: var(--surface-subtle); padding: 24px; font-weight: 700; }
 .docs-error small { display: block; margin-top: 8px; color: var(--text-muted); font-weight: 400; }
+.static-docs-page { min-height: calc(100vh - 92px); padding-top: clamp(72px, 9vw, 120px); padding-bottom: 120px; }
+.static-docs-page h1 { max-width: 840px; margin: 0; font-size: clamp(40px, 4.8vw, 64px); line-height: 1.12; letter-spacing: -0.05em; }
+.static-docs-links { max-width: 820px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-top: 48px; }
+.static-docs-links a { display: grid; gap: 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: 24px; color: inherit; text-decoration: none; }
+.static-docs-links a:hover { border-color: var(--accent); }
+.static-docs-links strong { color: var(--accent); }
+.static-docs-links span { color: var(--text-muted); font-size: 14px; line-height: 1.6; }
 .markdown-document h1 { margin: 0 0 26px; font-size: clamp(34px, 3.5vw, 44px); letter-spacing: -0.04em; }
 .markdown-document h2 { margin: 46px 0 16px; font-size: 23px; }
 .markdown-document h3 { margin: 30px 0 10px; font-size: 18px; }
@@ -307,7 +320,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   .global-actions { display: none; position: absolute; top: 76px; right: 0; left: 0; z-index: 20; align-items: stretch; border-bottom: 1px solid var(--line); background: var(--surface); padding: 20px 24px; }
   .global-actions.open { display: grid; }
   .global-actions nav { display: grid; }
-  .global-actions nav button, .login-link { text-align: left; }
+  .global-actions nav a, .login-link { justify-content: flex-start; text-align: left; }
+  .static-public-actions nav { display: none; }
   .identity-menu { width: 100%; }
   .identity-popover { position: static; margin-top: 8px; box-shadow: none; }
   .theme-toggle { width: max-content; }
@@ -315,6 +329,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   .login-page { grid-template-columns: 1fr; gap: 48px; }
   .auth-summary { grid-template-columns: 1fr; gap: 20px; }
   .overview-start { grid-template-columns: 1fr; gap: 48px; }
+  .static-docs-links { grid-template-columns: 1fr; }
   .key-row { grid-template-columns: 1fr auto; gap: 24px; }
   .key-row dl { grid-column: 1 / -1; grid-row: 2; }
   .docs-page { width: 100%; grid-template-columns: 1fr; border-right: 0; border-left: 0; }
