@@ -16,8 +16,37 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
-    name: ci
+  ui:
+    name: ui
+    runs-on: ubuntu-24.04-arm
+    defaults:
+      run:
+        working-directory: ui/app
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v6
+
+      - name: setup node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: ui/app/package-lock.json
+
+      - name: install ui dependencies
+        run: npm ci
+
+      - name: run ui type check
+        run: npm run typecheck
+
+      - name: build ui
+        run: npm run build
+
+      - name: verify public discovery artifacts
+        run: npm run verify:discovery
+
+  backend:
+    name: backend
     runs-on: ubuntu-24.04-arm
     steps:
       - name: checkout code

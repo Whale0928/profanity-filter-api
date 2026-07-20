@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Disallow: /app
+Disallow: /login
+
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /app
+Disallow: /login
+
+User-agent: GPTBot
+Disallow: /
+
+Sitemap: https://developers.kr-filter.com/sitemap.xml

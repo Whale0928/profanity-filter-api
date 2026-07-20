@@ -15,7 +15,7 @@ import {
   UserCircle,
   X,
 } from "@phosphor-icons/react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type MouseEvent, type ReactNode } from "react";
 
 import { exchangeLoginCode, restoreLoginSession, startSocialLogin, type LoginUser } from "./auth";
 import ApiKeysPage from "./ApiKeysPage";
@@ -28,6 +28,19 @@ type AuthStatus = "checking" | "anonymous" | "exchanging" | "authenticated" | "f
 
 const ROUTES: RoutePath[] = ["/", "/docs", "/login", "/app", "/app/credentials", "/app/account", "/app/keys"];
 
+const PUBLIC_PAGE_METADATA = {
+  "/": {
+    title: "한국어 욕설·비속어 필터 API | 말조심하세욧",
+    description: "한국어 문장의 욕설과 비속어를 검출하고 QUICK, NORMAL, FILTER 모드로 확인하거나 마스킹하는 REST API입니다.",
+    canonical: "https://developers.kr-filter.com/",
+  },
+  "/docs": {
+    title: "한국어 텍스트 처리 API 문서 | 말조심하세욧",
+    description: "한국어 욕설·비속어 검출 API의 인증, 요청 형식, 처리 모드, 오류 모델과 OpenAPI 명세를 확인하세요.",
+    canonical: "https://developers.kr-filter.com/docs",
+  },
+} as const;
+
 function currentPath(): RoutePath {
   const pathname = window.location.pathname;
   return ROUTES.includes(pathname as RoutePath) ? (pathname as RoutePath) : "/";
@@ -37,6 +50,27 @@ function preferredTheme(): Theme {
   const saved = window.localStorage.getItem("pf-theme");
   if (saved === "light" || saved === "dark") return saved;
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
+function updatePageMetadata(path: RoutePath) {
+  const isPublicPage = path === "/" || path === "/docs";
+  const metadata = isPublicPage
+    ? PUBLIC_PAGE_METADATA[path]
+    : {
+        title: path === "/login" ? "로그인 | 말조심하세욧" : "개발자 포털 | 말조심하세욧",
+        description: "말조심하세욧 개발자 포털입니다.",
+        canonical: `https://developers.kr-filter.com${path}`,
+      };
+
+  document.title = metadata.title;
+  document.querySelector<HTMLMetaElement>('meta[name="description"]')?.setAttribute("content", metadata.description);
+  document.querySelector<HTMLMetaElement>('meta[name="robots"]')?.setAttribute("content", isPublicPage ? "index, follow" : "noindex, nofollow");
+  document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.setAttribute("href", metadata.canonical);
+  document.querySelector<HTMLMetaElement>('meta[property="og:title"]')?.setAttribute("content", metadata.title);
+  document.querySelector<HTMLMetaElement>('meta[property="og:description"]')?.setAttribute("content", metadata.description);
+  document.querySelector<HTMLMetaElement>('meta[property="og:url"]')?.setAttribute("content", metadata.canonical);
+  document.querySelector<HTMLMetaElement>('meta[name="twitter:title"]')?.setAttribute("content", metadata.title);
+  document.querySelector<HTMLMetaElement>('meta[name="twitter:description"]')?.setAttribute("content", metadata.description);
 }
 
 export default function App() {
@@ -54,6 +88,10 @@ export default function App() {
     document.documentElement.style.colorScheme = theme;
     window.localStorage.setItem("pf-theme", theme);
   }, [theme]);
+
+  useEffect(() => {
+    updatePageMetadata(path);
+  }, [path]);
 
   useEffect(() => {
     const onPopState = () => setPath(currentPath());
@@ -170,18 +208,27 @@ function GlobalHeader({ authenticated, loginUser, mobileOpen, onMenu, onNavigate
   };
   return (
     <header className="global-header">
-      <button className="brand" onClick={() => onNavigate("/")} type="button">
+      <InternalLink className="brand" onNavigate={onNavigate} to="/">
         <strong>말조심하세욧</strong>
         <span>한국어 욕설 필터 API</span>
-      </button>
+      </InternalLink>
       <button aria-expanded={mobileOpen} aria-label="메뉴 열기" className="mobile-menu" onClick={onMenu} type="button">
         {mobileOpen ? <X size={22} /> : <List size={22} />}
       </button>
       <div className={mobileOpen ? "global-actions open" : "global-actions"}>
         <nav aria-label="공개 메뉴">
-          <NavButton active={path === "/"} label="소개" onClick={() => onNavigate("/")} />
-          <NavButton active={path === "/docs"} label="API 문서" onClick={() => onNavigate("/docs")} />
+          <NavLink active={path === "/"} label="소개" onNavigate={onNavigate} to="/" />
+          <NavLink active={path === "/docs"} label="API 문서" onNavigate={onNavigate} to="/docs" />
         </nav>
+        <a
+          aria-label="GitHub 저장소 열기"
+          className="github-link"
+          href="https://github.com/Whale0928/profanity-filter-api"
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          <GithubLogo aria-hidden="true" size={20} weight="fill" />
+        </a>
         <button aria-label={`${theme === "dark" ? "라이트" : "다크"} 모드로 전환`} className="theme-toggle" onClick={onTheme} type="button">
           {theme === "dark" ? <Moon size={17} weight="fill" /> : <Sun size={18} weight="fill" />}
           <i aria-hidden="true" />
@@ -202,15 +249,37 @@ function GlobalHeader({ authenticated, loginUser, mobileOpen, onMenu, onNavigate
             ) : null}
           </div>
         ) : (
-          <button className="login-link" onClick={() => onNavigate("/login")} type="button">로그인</button>
+          <InternalLink className="login-link" onNavigate={onNavigate} to="/login">로그인</InternalLink>
         )}
       </div>
     </header>
   );
 }
 
-function NavButton({ active, label, onClick }: { active: boolean; label: string; onClick: () => void }) {
-  return <button aria-current={active ? "page" : undefined} onClick={onClick} type="button">{label}</button>;
+function InternalLink({
+  children,
+  className,
+  current,
+  onNavigate,
+  to,
+}: {
+  children: ReactNode;
+  className?: string;
+  current?: boolean;
+  onNavigate: (path: RoutePath) => void;
+  to: RoutePath;
+}) {
+  const navigateInternally = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    onNavigate(to);
+  };
+
+  return <a aria-current={current ? "page" : undefined} className={className} href={to} onClick={navigateInternally}>{children}</a>;
+}
+
+function NavLink({ active, label, onNavigate, to }: { active: boolean; label: string; onNavigate: (path: RoutePath) => void; to: RoutePath }) {
+  return <InternalLink current={active} onNavigate={onNavigate} to={to}>{label}</InternalLink>;
 }
 
 function OverviewPage({
@@ -228,15 +297,15 @@ function OverviewPage({
     <div className="overview-page">
       <section className="intro-page page-width">
         <p className="eyebrow">Korean profanity filter API</p>
-        <h1>사용자 입력을<br />더 안전하게 다룹니다.</h1>
-        <p className="lead">한국어 문장의 비속어를 검출하고 필요한 방식으로 마스킹하는 API입니다.</p>
+        <h1>한국어 욕설·비속어<br />필터 API</h1>
+        <p className="lead">한국어 문장의 욕설과 비속어를 검출하고 필요한 방식으로 확인하거나 마스킹하는 API입니다.</p>
         <div className="intro-actions">
           {authenticated ? (
             <button className="primary-action" onClick={showCredentials} type="button">자격 증명 선택 <ArrowRight size={18} /></button>
           ) : (
             <button className="primary-action" onClick={() => onNavigate("/login")} type="button">로그인하여 시작 <ArrowRight size={18} /></button>
           )}
-          <button className="text-action" onClick={() => onNavigate("/docs")} type="button">API 문서 보기</button>
+          <InternalLink className="text-action" onNavigate={onNavigate} to="/docs">API 문서 보기</InternalLink>
         </div>
         <div className="auth-summary">
           <p>{authenticated ? "API Key로 바로 연동할 수 있습니다" : "로그인 후 선택할 수 있습니다"}</p>
@@ -261,7 +330,7 @@ function OverviewPage({
         </div>
         <div className="next-actions">
           <button onClick={authenticated ? showCredentials : () => onNavigate("/login")} type="button"><Key size={22} /><span><b>자격 증명 선택</b>API Key와 OAuth2 방식을 비교합니다.</span><ArrowRight size={19} /></button>
-          <button onClick={() => onNavigate("/docs")} type="button"><BookOpen size={22} /><span><b>API 문서 보기</b>인증과 요청 형식을 확인합니다.</span><ArrowRight size={19} /></button>
+          <InternalLink onNavigate={onNavigate} to="/docs"><BookOpen size={22} /><span><b>API 문서 보기</b>인증과 요청 형식을 확인합니다.</span><ArrowRight size={19} /></InternalLink>
         </div>
       </section>
 

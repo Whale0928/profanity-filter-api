@@ -1,0 +1,19 @@
+# 말조심하세욧
+
+> 한국어 문장의 욕설과 비속어를 검출하고 필요한 방식으로 확인하거나 마스킹하는 REST API입니다.
+
+## Public pages
+
+- [서비스 소개](https://developers.kr-filter.com/): 현재 제공 기능과 API Key 연동 흐름
+- [API 문서](https://developers.kr-filter.com/docs): 인증, 처리 모드, 응답 정책과 API별 사용법
+
+## Machine-readable API documents
+
+- [API 개요](https://api.kr-filter.com/overview.md): 인증, 처리 모드와 오류 모델
+- [OpenAPI 명세](https://api.kr-filter.com/openapi.json): 전체 공개 API 계약
+
+## Current capabilities
+
+- API Key를 사용하는 REST API
+- QUICK, NORMAL, FILTER 처리 모드
+- 동기 처리와 callback URL 기반 비동기 처리

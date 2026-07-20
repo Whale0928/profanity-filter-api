@@ -10,6 +10,8 @@ if (!rootElement) {
   throw new Error("root element not found");
 }
 
+rootElement.replaceChildren();
+
 createRoot(rootElement).render(
   <StrictMode>
     <App />
