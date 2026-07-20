@@ -61,6 +61,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .static-public-actions nav { display: flex; gap: 8px; }
 .static-public-actions nav a { min-height: 42px; display: inline-flex; align-items: center; padding: 0 12px; color: inherit; font-size: 14px; font-weight: 620; text-decoration: none; }
 .static-public-actions nav a[aria-current="page"] { color: var(--accent); }
+.github-link { width: 42px; height: 42px; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; border: 1px solid var(--line-strong); border-radius: 50%; background: var(--surface); color: var(--text); text-decoration: none; }
+.github-link:hover { border-color: var(--accent); color: var(--accent); }
 .theme-toggle { min-width: 64px; min-height: 42px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; border: 1px solid var(--line-strong); border-radius: 999px; background: var(--surface); padding: 0 8px; cursor: pointer; }
 .theme-toggle i { position: relative; width: 32px; height: 20px; border-radius: 999px; background: var(--line-strong); }
 .theme-toggle i::after { content: ""; position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%; background: var(--surface); transition: transform 180ms ease; }

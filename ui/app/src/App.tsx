@@ -220,6 +220,15 @@ function GlobalHeader({ authenticated, loginUser, mobileOpen, onMenu, onNavigate
           <NavLink active={path === "/"} label="소개" onNavigate={onNavigate} to="/" />
           <NavLink active={path === "/docs"} label="API 문서" onNavigate={onNavigate} to="/docs" />
         </nav>
+        <a
+          aria-label="GitHub 저장소 열기"
+          className="github-link"
+          href="https://github.com/Whale0928/profanity-filter-api"
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          <GithubLogo aria-hidden="true" size={20} weight="fill" />
+        </a>
         <button aria-label={`${theme === "dark" ? "라이트" : "다크"} 모드로 전환`} className="theme-toggle" onClick={onTheme} type="button">
           {theme === "dark" ? <Moon size={17} weight="fill" /> : <Sun size={18} weight="fill" />}
           <i aria-hidden="true" />
