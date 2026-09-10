@@ -112,6 +112,15 @@ public class LoginAuthService implements SsoLoginCompletionService {
     return requireActiveUser(userId, false);
   }
 
+  @Transactional
+  public void logout(String plaintextRefreshToken) {
+    if (plaintextRefreshToken == null || plaintextRefreshToken.isBlank()) {
+      return;
+    }
+    refreshTokenService.logout(
+        opaqueTokenService.hash(plaintextRefreshToken), loginAuthClock.instant());
+  }
+
   private LoginTokenBundle bundle(
       IssuedAccessToken accessToken,
       OpaqueToken refreshToken,

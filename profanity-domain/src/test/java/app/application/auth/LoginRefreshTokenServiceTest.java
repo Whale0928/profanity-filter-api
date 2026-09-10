@@ -111,6 +111,46 @@ class LoginRefreshTokenServiceTest {
     assertThat(session.getRevokeReason()).isEqualTo(RefreshSessionRevocationReason.USER_INACTIVE);
   }
 
+  @Test
+  @DisplayName("logout하면 refresh token이 속한 세션을 폐기한다")
+  void logout_whenTokenBelongsToSession_revokesSession() {
+    LoginRefreshSessionIssue issue = createSession();
+
+    service.logout(INITIAL_HASH, NOW.plusSeconds(1));
+
+    LoginRefreshSession session = sessionRepository.find(issue.sessionId()).orElseThrow();
+    assertThat(session.isRevoked()).isTrue();
+    assertThat(session.getRevokeReason()).isEqualTo(RefreshSessionRevocationReason.USER_LOGOUT);
+  }
+
+  @Test
+  @DisplayName("존재하지 않는 refresh token으로 logout해도 예외 없이 멱등하게 처리한다")
+  void logout_whenTokenDoesNotExist_doesNothing() {
+    LoginRefreshSessionIssue issue = createSession();
+
+    service.logout(REPLACEMENT_HASH, NOW.plusSeconds(1));
+
+    LoginRefreshSession session = sessionRepository.find(issue.sessionId()).orElseThrow();
+    assertThat(session.isRevoked()).isFalse();
+  }
+
+  @Test
+  @DisplayName("이미 폐기된 세션에 logout해도 기존 폐기 사유를 덮어쓰지 않는다")
+  void logout_whenSessionAlreadyRevoked_keepsOriginalReason() {
+    LoginRefreshSessionIssue issue = createSession();
+    service.rotate(INITIAL_HASH, REPLACEMENT_HASH, NOW.plusSeconds(1), REFRESH_TTL, GRACE);
+    service.rotate(
+        INITIAL_HASH, hash('c'), NOW.plusSeconds(1).plus(GRACE).plusNanos(1), REFRESH_TTL, GRACE);
+    LoginRefreshSession revokedSession = sessionRepository.find(issue.sessionId()).orElseThrow();
+    assertThat(revokedSession.isRevoked()).isTrue();
+
+    service.logout(REPLACEMENT_HASH, NOW.plusSeconds(10));
+
+    LoginRefreshSession session = sessionRepository.find(issue.sessionId()).orElseThrow();
+    assertThat(session.getRevokeReason())
+        .isEqualTo(RefreshSessionRevocationReason.TOKEN_REUSE_DETECTED);
+  }
+
   private LoginRefreshSessionIssue createSession() {
     return service.createSession(user.getId(), INITIAL_HASH, NOW, REFRESH_TTL, ABSOLUTE_TTL);
   }

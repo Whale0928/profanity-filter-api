@@ -88,6 +88,60 @@ class AuthE2ETest extends AbstractApiTester {
   }
 
   @Test
+  @DisplayName("로그아웃하면 refresh session을 폐기하고 쿠키를 만료시킨다")
+  void logout_whenSessionExists_revokesSessionAndExpiresCookie() throws Exception {
+    MockHttpServletResponse exchange = exchange(issueExchangeCode("logout-user"));
+    Cookie refreshCookie = exchange.getCookie(REFRESH_COOKIE);
+
+    MockHttpServletResponse logout = logout(refreshCookie, csrf(refreshCookie));
+
+    assertThat(logout.getStatus()).isEqualTo(200);
+    assertThat(body(logout).at("/data/loggedOut").asBoolean()).isTrue();
+    Cookie expiredCookie = logout.getCookie(REFRESH_COOKIE);
+    assertThat(expiredCookie).isNotNull();
+    assertThat(expiredCookie.getMaxAge()).isZero();
+
+    MockHttpServletResponse reuseAttempt = refresh(refreshCookie, csrf(refreshCookie));
+    assertThat(reuseAttempt.getStatus()).isEqualTo(401);
+    assertThat(body(reuseAttempt).at("/status/code").asInt())
+        .isEqualTo(StatusCode.REFRESH_TOKEN_INVALID.code());
+  }
+
+  @Test
+  @DisplayName("로그아웃 요청에 CSRF token이 없으면 403을 반환한다")
+  void logout_whenCsrfIsMissing_returnsForbidden() throws Exception {
+    Cookie refreshCookie =
+        exchange(issueExchangeCode("logout-csrf-user")).getCookie(REFRESH_COOKIE);
+
+    MockHttpServletResponse response =
+        mockMvc
+            .perform(post("/api/v1/auth/logout").cookie(refreshCookie))
+            .andReturn()
+            .getResponse();
+
+    assertThat(response.getStatus()).isEqualTo(403);
+    assertThat(body(response).at("/status/code").asInt()).isEqualTo(StatusCode.FORBIDDEN.code());
+  }
+
+  @Test
+  @DisplayName("refresh 쿠키가 없어도 로그아웃은 멱등하게 성공한다")
+  void logout_whenRefreshCookieIsMissing_isIdempotent() throws Exception {
+    Csrf csrf = csrf(null);
+
+    MockHttpServletResponse response =
+        mockMvc
+            .perform(
+                post("/api/v1/auth/logout")
+                    .cookie(csrf.cookie())
+                    .header(csrf.headerName(), csrf.token()))
+            .andReturn()
+            .getResponse();
+
+    assertThat(response.getStatus()).isEqualTo(200);
+    assertThat(body(response).at("/data/loggedOut").asBoolean()).isTrue();
+  }
+
+  @Test
   @DisplayName("이미 소비한 로그인 교환 코드는 다시 사용할 수 없다")
   void exchange_whenCodeIsReused_returnsUnauthorized() throws Exception {
     String code = issueExchangeCode("reused-code-user");
@@ -278,8 +332,11 @@ class AuthE2ETest extends AbstractApiTester {
   }
 
   private Csrf csrf(Cookie refreshCookie) throws Exception {
-    MockHttpServletResponse response =
-        mockMvc.perform(get("/api/v1/auth/csrf").cookie(refreshCookie)).andReturn().getResponse();
+    var request = get("/api/v1/auth/csrf");
+    if (refreshCookie != null) {
+      request.cookie(refreshCookie);
+    }
+    MockHttpServletResponse response = mockMvc.perform(request).andReturn().getResponse();
     JsonNode body = body(response);
     return new Csrf(
         body.at("/data/headerName").asText(),
@@ -291,6 +348,16 @@ class AuthE2ETest extends AbstractApiTester {
     return mockMvc
         .perform(
             post("/api/v1/auth/refresh")
+                .cookie(refreshCookie, csrf.cookie())
+                .header(csrf.headerName(), csrf.token()))
+        .andReturn()
+        .getResponse();
+  }
+
+  private MockHttpServletResponse logout(Cookie refreshCookie, Csrf csrf) throws Exception {
+    return mockMvc
+        .perform(
+            post("/api/v1/auth/logout")
                 .cookie(refreshCookie, csrf.cookie())
                 .header(csrf.headerName(), csrf.token()))
         .andReturn()

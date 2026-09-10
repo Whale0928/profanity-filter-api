@@ -23,7 +23,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -42,9 +41,8 @@ public class ProfanityController {
   @ProfanityOpenApi.BasicProfanity
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<FilterApiResponse> basicProfanity(
-      HttpServletRequest httpRequest,
-      @RequestHeader(value = "x-api-key") String apiKey,
-      @RequestBody @Valid ApiRequest request) {
+      HttpServletRequest httpRequest, @RequestBody @Valid ApiRequest request) {
+    final String apiKey = SecurityContextUtil.getCurrentApiKey();
     final String clientIp = getClientIP(httpRequest);
     final String referrer = getReferrer(httpRequest);
 
@@ -79,9 +77,8 @@ public class ProfanityController {
   @Hidden
   @PostMapping(consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
   public ResponseEntity<FilterApiResponse> basicProfanityByUrlencodedValue(
-      HttpServletRequest httpRequest,
-      @RequestHeader(value = "x-api-key") String apiKey,
-      @ModelAttribute @Valid ApiRequest request) {
+      HttpServletRequest httpRequest, @ModelAttribute @Valid ApiRequest request) {
+    final String apiKey = SecurityContextUtil.getCurrentApiKey();
     String clientIp = getClientIP(httpRequest);
     String referrer = getReferrer(httpRequest);
 
@@ -108,8 +105,8 @@ public class ProfanityController {
   @Cacheable(value = "request_filter", key = "{#word}")
   @ProfanityOpenApi.AdvancedProfanity
   @PostMapping("/advanced")
-  public ResponseEntity<FilterApiResponse> advancedProfanity(
-      @RequestHeader(value = "x-api-key") String apiKey, @RequestParam("word") String word) {
+  public ResponseEntity<FilterApiResponse> advancedProfanity(@RequestParam("word") String word) {
+    final String apiKey = SecurityContextUtil.getCurrentApiKey();
     log.info("[FILTER] 요청 수신(advanced) word={} apiKey={}", word, ApiKeys.mask(apiKey));
     Objects.requireNonNull(word, "단어는 필수 입니다.");
     return ResponseEntity.ok(profanityHandler.advancedFilter(word, null));

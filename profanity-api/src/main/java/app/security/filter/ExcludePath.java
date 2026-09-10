@@ -18,6 +18,7 @@ public enum ExcludePath {
   AUTH_EXCHANGE("/api/v1/auth/exchange", "로그인 코드 교환", List.of(HttpMethod.POST), true),
   AUTH_CSRF("/api/v1/auth/csrf", "로그인 CSRF 토큰", List.of(HttpMethod.GET), true),
   AUTH_REFRESH("/api/v1/auth/refresh", "로그인 토큰 갱신", List.of(HttpMethod.POST), true),
+  AUTH_LOGOUT("/api/v1/auth/logout", "로그아웃", List.of(HttpMethod.POST), true),
   ;
 
   private final List<String> paths;

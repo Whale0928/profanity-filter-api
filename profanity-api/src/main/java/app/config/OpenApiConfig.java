@@ -5,6 +5,8 @@ import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.servers.Server;
+import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -24,6 +26,7 @@ public class OpenApiConfig {
             new Info()
                 .title("Profanity Filter API")
                 .version("v1")
-                .description("한국어와 영어 비속어를 검출하고 필터링하는 API입니다."));
+                .description("한국어와 영어 비속어를 검출하고 필터링하는 API입니다."))
+        .servers(List.of(new Server().url("https://api.kr-filter.com")));
   }
 }

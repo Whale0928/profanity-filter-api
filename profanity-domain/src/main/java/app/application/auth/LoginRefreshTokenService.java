@@ -128,6 +128,18 @@ public class LoginRefreshTokenService {
         replacementToken.getExpiresAt());
   }
 
+  @Transactional
+  public void logout(Sha256Hash tokenHash, Instant now) {
+    tokenRepository
+        .findByTokenHashForUpdate(tokenHash.value())
+        .flatMap(token -> sessionRepository.findByIdForUpdate(token.getSessionId()))
+        .ifPresent(
+            session -> {
+              session.revoke(now, RefreshSessionRevocationReason.USER_LOGOUT);
+              sessionRepository.save(session);
+            });
+  }
+
   private LoginRefreshRotationResult handleTokenReuse(
       LoginRefreshToken token,
       LoginRefreshSession session,

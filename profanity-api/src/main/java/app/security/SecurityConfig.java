@@ -17,6 +17,7 @@ import jakarta.servlet.DispatcherType;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
@@ -68,10 +69,11 @@ public class SecurityConfig {
                 .secure(loginSessionProperties.refreshCookie().secure())
                 .sameSite(loginSessionProperties.refreshCookie().sameSite()));
 
+    Set<String> csrfProtectedPaths = Set.of("/api/v1/auth/refresh", "/api/v1/auth/logout");
     RequestMatcher refreshCsrfMatcher =
         request ->
             HttpMethod.POST.matches(request.getMethod())
-                && "/api/v1/auth/refresh".equals(pathWithinApplication(request));
+                && csrfProtectedPaths.contains(pathWithinApplication(request));
 
     return http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
         .formLogin(AbstractHttpConfigurer::disable)
@@ -124,7 +126,10 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.GET, "/api/v1/auth/csrf")
                     .permitAll()
                     .requestMatchers(
-                        HttpMethod.POST, "/api/v1/auth/exchange", "/api/v1/auth/refresh")
+                        HttpMethod.POST,
+                        "/api/v1/auth/exchange",
+                        "/api/v1/auth/refresh",
+                        "/api/v1/auth/logout")
                     .permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/v1/auth/me")
                     .hasAuthority(AUTH_LOGIN_JWT)

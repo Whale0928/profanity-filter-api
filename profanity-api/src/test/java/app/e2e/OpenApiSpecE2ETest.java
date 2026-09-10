@@ -45,6 +45,9 @@ class OpenApiSpecE2ETest extends AbstractApiTester {
         .as("ApiKeyAuth 보안 스키마는 x-api-key 헤더 설명을 제공해야 한다")
         .isEqualTo("SSO 로그인 후 개발자 포털에서 발급받은 API Key");
     assertThat(body.at("/components/securitySchemes/LoginJwtAuth").isMissingNode()).isTrue();
+    assertThat(body.at("/servers/0/url").asText())
+        .as("Scalar 등 문서 도구가 curl 예제를 생성할 절대 서버 URL을 명시해야 한다")
+        .isEqualTo("https://api.kr-filter.com");
     assertThat(countOperations(body.path("paths"))).isEqualTo(5);
     assertThat(body.at("/paths/~1api~1v1~1filter/post").isMissingNode()).isFalse();
     assertThat(body.at("/paths/~1api~1v1~1clients~1register/post").isMissingNode()).isTrue();
@@ -52,6 +55,7 @@ class OpenApiSpecE2ETest extends AbstractApiTester {
     assertThat(body.at("/paths/~1api~1v1~1health/get").isMissingNode()).isFalse();
     assertThat(body.at("/paths/~1api~1v1~1ping/get").isMissingNode()).isFalse();
     assertThat(body.at("/paths/~1api~1v1~1auth~1exchange").isMissingNode()).isTrue();
+    assertThat(body.at("/paths/~1api~1v1~1auth~1logout").isMissingNode()).isTrue();
     assertThat(body.at("/paths/~1api~1v1~1sync").isMissingNode()).isTrue();
     assertThat(body.at("/paths/~1api~1v1~1word~1accept~1{requestId}").isMissingNode()).isTrue();
     assertThat(body.at("/paths/~1overview.md/get").isMissingNode()).isTrue();
@@ -181,7 +185,9 @@ class OpenApiSpecE2ETest extends AbstractApiTester {
                     "/responses/200/content/application~1json/examples/asyncAccepted/value/status/code")
                 .asInt())
         .isEqualTo(2020);
-    assertThat(operation.path("parameters").findValuesAsText("name")).doesNotContain("request");
+    assertThat(operation.path("parameters").findValuesAsText("name"))
+        .as("ApiKeyAuth security scheme과 중복되는 x-api-key 헤더 파라미터를 노출하면 안 된다")
+        .doesNotContain("request", "x-api-key");
 
     JsonNode advancedOperation = body.at("/paths/~1api~1v1~1filter~1advanced/post");
     assertThat(advancedOperation.path("summary").asText()).isEqualTo("고급 비속어 필터링 요청");
@@ -197,6 +203,9 @@ class OpenApiSpecE2ETest extends AbstractApiTester {
     assertThat(wordParameter.path("in").asText())
         .as("word는 query 파라미터로 렌더링되어야 한다")
         .isEqualTo("query");
+    assertThat(advancedParameters.findValuesAsText("name"))
+        .as("ApiKeyAuth security scheme과 중복되는 x-api-key 헤더 파라미터를 노출하면 안 된다")
+        .doesNotContain("x-api-key");
     assertThat(
             advancedOperation
                 .at("/responses/200/content/application~1json/examples/filter/value/filtered")

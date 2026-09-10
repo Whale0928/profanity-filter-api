@@ -26,6 +26,7 @@ function getDecodedHash() {
 
 export default function DocsPage({ theme }: { theme: Theme }) {
   const [activeHash, setActiveHash] = useState(getDecodedHash);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [openGroups, setOpenGroups] = useState<Set<string>>(() => new Set());
   const [pendingAnchor, setPendingAnchor] = useState<string | null>(() => getDecodedHash() || null);
   const pendingAnchorRef = useRef(pendingAnchor);
@@ -197,6 +198,7 @@ export default function DocsPage({ theme }: { theme: Theme }) {
   const navigateToAnchor = (event: MouseEvent<HTMLAnchorElement>, anchor: string) => {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     event.preventDefault();
+    setMenuOpen(false);
     pendingAnchorRef.current = anchor;
     setPendingAnchor(anchor);
     setActiveHash(anchor);
@@ -204,13 +206,13 @@ export default function DocsPage({ theme }: { theme: Theme }) {
   };
 
   const activeMarkdownAnchor = activeHash || markdownNavigation[0]?.anchor;
-  const returnToApiMenu = () => sidebarRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
+  const returnToApiMenu = () => { setMenuOpen(true); sidebarRef.current?.scrollIntoView({ block: "start", behavior: "smooth" }); };
 
   return (
     <section className="docs-page" data-section={isReference ? "reference" : "overview"}>
       <aside aria-label="API 문서 메뉴" ref={sidebarRef}>
-        <p>API 문서</p>
-        <nav className="docs-sidebar-nav">
+        <div className="docs-menu-heading"><p>API 문서</p><button className="docs-menu-toggle" aria-expanded={menuOpen} aria-controls="docs-navigation" onClick={() => setMenuOpen((open) => !open)} type="button">{menuOpen ? "목차 닫기" : "목차 열기"}<CaretRight size={16} /></button></div>
+        <nav id="docs-navigation" className={`docs-sidebar-nav${menuOpen ? " is-open" : ""}`}>
           <div className="docs-overview-navigation">
             {markdownNavigation.map((item) => (
               <a

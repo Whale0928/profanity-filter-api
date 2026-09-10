@@ -7,6 +7,7 @@ import app.dto.request.AuthCodeExchangeRequest;
 import app.dto.response.CsrfTokenResponse;
 import app.dto.response.LoginTokenResponse;
 import app.dto.response.LoginUserResponse;
+import app.dto.response.LogoutResponse;
 import app.security.SecurityContextUtil;
 import app.security.login.LoginFlowException;
 import app.security.login.LoginRefreshCookieWriter;
@@ -71,6 +72,14 @@ public class AuthController {
       }
       throw exception;
     }
+  }
+
+  @PostMapping("/logout")
+  public ResponseEntity<ApiResponse<LogoutResponse>> logout(
+      HttpServletRequest request, HttpServletResponse response) {
+    loginAuthService.logout(refreshCookie(request));
+    refreshCookieWriter.expire(response);
+    return noStore(new LogoutResponse(true));
   }
 
   @GetMapping("/me")

@@ -64,6 +64,17 @@ export async function restoreLoginSession() {
   return completeLogin(refreshResponse);
 }
 
+export async function logoutSession(): Promise<void> {
+  const csrfResponse = await fetch(`${API_BASE_URL}/api/v1/auth/csrf`, { credentials: "include" });
+  const csrf = await readData<{ headerName: string; token: string }>(csrfResponse);
+  const logoutResponse = await fetch(`${API_BASE_URL}/api/v1/auth/logout`, {
+    method: "POST",
+    credentials: "include",
+    headers: { [csrf.headerName]: csrf.token },
+  });
+  await readData<{ loggedOut: boolean }>(logoutResponse);
+}
+
 export function startSocialLogin(provider: "github" | "google") {
   window.location.assign(`${API_BASE_URL}/oauth2/authorization/${provider}`);
 }
