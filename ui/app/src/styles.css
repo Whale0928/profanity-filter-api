@@ -18,6 +18,9 @@
   --focus: #47bd78;
   --danger: #b23c36;
   --danger-soft: #f8e8e5;
+  --mark-box: #17211d;
+  --mark-bar: #f2f2eb;
+  --mark-accent: #63cf88;
   --content-rail: min(1180px, 82vw);
   color: var(--text);
   background: var(--bg);
@@ -39,6 +42,9 @@
   --focus: #77e49b;
   --danger: #ef8c83;
   --danger-soft: #311c1a;
+  --mark-box: #f2f2eb;
+  --mark-bar: #17211d;
+  --mark-accent: #2f8d57;
 }
 
 * { box-sizing: border-box; }
@@ -50,9 +56,14 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 
 .app-shell { min-height: 100vh; background: var(--bg); }
 .global-header { min-height: 92px; display: flex; align-items: center; justify-content: space-between; gap: 28px; padding-inline: max(24px, calc((100vw - var(--content-rail)) / 2)); border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--bg) 95%, transparent); }
-.brand { display: flex; align-items: baseline; gap: 18px; border: 0; background: transparent; padding: 0; color: inherit; text-align: left; text-decoration: none; }
-.brand strong { font-size: 22px; font-weight: 820; letter-spacing: -0.04em; white-space: nowrap; }
-.brand span { color: var(--text-muted); font-size: 14px; white-space: nowrap; }
+.brand { display: flex; align-items: center; gap: 14px; border: 0; background: transparent; padding: 0; color: inherit; text-align: left; text-decoration: none; }
+.brand-mark { width: 34px; height: 34px; flex: 0 0 auto; display: block; }
+.brand-mark .mark-box { fill: var(--mark-box); }
+.brand-mark .mark-bar { fill: var(--mark-bar); }
+.brand-mark .mark-accent { fill: var(--mark-accent); }
+.brand-copy { display: flex; align-items: baseline; gap: 18px; }
+.brand-copy strong { font-size: 22px; font-weight: 820; letter-spacing: -0.04em; white-space: nowrap; }
+.brand-copy span { color: var(--text-muted); font-size: 14px; white-space: nowrap; }
 .global-actions { display: flex; align-items: center; gap: 28px; }
 .global-actions nav { display: flex; align-items: center; gap: 8px; }
 .global-actions nav a, .login-link { min-height: 42px; display: inline-flex; align-items: center; border: 0; background: transparent; padding: 0 12px; color: inherit; font-size: 14px; font-weight: 620; text-decoration: none; }
@@ -200,6 +211,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .docs-source-bar code { overflow: hidden; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; text-overflow: ellipsis; white-space: nowrap; }
 .docs-mobile-context { display: none; }
 .docs-loading { min-height: 280px; display: grid; place-items: center; align-content: center; gap: 16px; color: var(--text-muted); }
+.route-loading { min-height: calc(100vh - 92px); display: grid; place-items: center; align-content: center; gap: 16px; color: var(--text-muted); }
+.route-loading span { width: 36px; height: 36px; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: docs-spin 700ms linear infinite; }
 .docs-loading span { width: 36px; height: 36px; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: docs-spin 700ms linear infinite; }
 @keyframes docs-spin { to { transform: rotate(360deg); } }
 .docs-error { border: 1px solid var(--line-strong); border-radius: 8px; background: var(--surface-subtle); padding: 24px; font-weight: 700; }
@@ -333,7 +346,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 
 @media (max-width: 900px) {
   .global-header { min-height: 76px; }
-  .brand span { display: none; }
+  .brand-copy span { display: none; }
   .mobile-menu { display: grid; place-items: center; margin-left: auto; cursor: pointer; }
   .global-actions { display: none; position: absolute; top: 76px; right: 0; left: 0; z-index: 20; align-items: stretch; border-bottom: 1px solid var(--line); background: var(--surface); padding: 20px 24px; }
   .global-actions.open { display: grid; }
@@ -360,7 +373,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 
 @media (max-width: 560px) {
   .global-header { padding: 0 20px; }
-  .brand strong { font-size: 21px; }
+  .brand-copy strong { font-size: 21px; }
   .intro-page { padding-top: 72px; }
   .intro-page h1 { font-size: 48px; }
   .intro-actions { align-items: stretch; flex-direction: column; }

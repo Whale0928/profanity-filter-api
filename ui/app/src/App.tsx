@@ -123,6 +123,20 @@ export default function App() {
   }, [path]);
 
   useEffect(() => {
+    // 유휴 시간에 라우트 청크를 미리 받아 둔다. 전환 순간에 내려받으면 화면이 비었다가 채워진다.
+    const prefetch = () => {
+      void import("./NewsPage");
+      void import("./LegalPage");
+    };
+    const idle = window.requestIdleCallback?.(prefetch, { timeout: 3000});
+    const timer = idle === undefined ? window.setTimeout(prefetch, 1200) : 0;
+    return () => {
+      if (idle !== undefined) window.cancelIdleCallback?.(idle);
+      else window.clearTimeout(timer);
+    };
+  }, []);
+
+  useEffect(() => {
     const onPopState = () => setPath(currentPath());
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
@@ -176,7 +190,7 @@ export default function App() {
     if (next === path) window.dispatchEvent(new PopStateEvent("popstate"));
     setPath(next);
     setMobileOpen(false);
-    window.scrollTo({ top: 0, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    window.scrollTo({ top: 0, behavior: "auto" });
   }
 
   async function signOut() {
@@ -241,7 +255,7 @@ export default function App() {
         theme={theme}
       />
       {previewControls}
-      <main id="main-content">{logoutError ? <p className="session-error page-width" role="alert">{logoutError}</p> : null}<Suspense fallback={<p className="page-width" role="status">문서를 불러오고 있습니다.</p>}>{page}</Suspense></main>
+      <main id="main-content">{logoutError ? <p className="session-error page-width" role="alert">{logoutError}</p> : null}<Suspense fallback={<div className="route-loading page-width" role="status"><span aria-hidden="true" /><p>불러오고 있습니다.</p></div>}>{page}</Suspense></main>
       <footer className="site-footer page-width">
         <div><strong>말조심하세욧</strong><span>한국어를 위한 필터 API</span></div>
         <nav aria-label="서비스 정책">
@@ -266,6 +280,17 @@ type NavigationProps = {
   theme: Theme;
 };
 
+function BrandMark() {
+  return (
+    <svg aria-hidden="true" className="brand-mark" height="34" viewBox="0 0 64 64" width="34">
+      <rect className="mark-box" fill="#17211d" height="48" rx="12" width="56" x="4" y="8" />
+      <rect className="mark-bar" fill="#f2f2eb" height="8" rx="4" width="32" x="12" y="16" />
+      <rect className="mark-accent" fill="#63cf88" height="8" rx="4" width="24" x="12" y="28" />
+      <rect className="mark-bar" fill="#f2f2eb" height="8" rx="4" width="40" x="12" y="40" />
+    </svg>
+  );
+}
+
 function GlobalHeader({ authenticated, loginUser, mobileOpen, onMenu, onNavigate, onSignOut, signingOut, onTheme, path, theme }: NavigationProps) {
   const [accountOpen, setAccountOpen] = useState(false);
   const go = (next: RoutePath) => {
@@ -275,8 +300,11 @@ function GlobalHeader({ authenticated, loginUser, mobileOpen, onMenu, onNavigate
   return (
     <header className="global-header">
       <InternalLink className="brand" onNavigate={onNavigate} to="/">
-        <strong>말조심하세욧</strong>
-        <span>한국어 욕설 필터 API</span>
+        <BrandMark />
+        <span className="brand-copy">
+          <strong>말조심하세욧</strong>
+          <span>한국어 욕설 필터 API</span>
+        </span>
       </InternalLink>
       <button aria-expanded={mobileOpen} aria-label="메뉴 열기" className="mobile-menu" onClick={onMenu} type="button">
         {mobileOpen ? <X size={22} /> : <List size={22} />}

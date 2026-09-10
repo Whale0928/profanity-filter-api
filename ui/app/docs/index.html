@@ -4,12 +4,33 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light dark" />
+    <script>
+      // React 가 붙기 전에 테마를 확정한다. 이 줄이 없으면 다크 사용자에게 흰 화면이 한 번 스친다.
+      (function () {
+        try {
+          var saved = window.localStorage.getItem("pf-theme");
+          var theme = saved === "light" || saved === "dark"
+            ? saved
+            : window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+          document.documentElement.dataset.theme = theme;
+          document.documentElement.style.colorScheme = theme;
+        } catch (error) {
+          document.documentElement.dataset.theme = "light";
+        }
+      })();
+    </script>
     <meta name="robots" content="index, follow" />
     <meta
       name="description"
       content="한국어 욕설·비속어 검출 API의 인증, 요청 형식, 처리 모드, 오류 모델과 OpenAPI 명세를 확인하세요."
     />
     <link rel="canonical" href="https://developers.kr-filter.com/docs" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" href="/logo.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#f7f7f3" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#101413" media="(prefers-color-scheme: dark)" />
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="ko_KR" />
     <meta property="og:site_name" content="말조심하세욧" />
@@ -19,7 +40,12 @@
       content="한국어 욕설·비속어 검출 API의 인증, 요청 형식, 처리 모드, 오류 모델과 OpenAPI 명세를 확인하세요."
     />
     <meta property="og:url" content="https://developers.kr-filter.com/docs" />
-    <meta name="twitter:card" content="summary" />
+    <meta property="og:image" content="https://developers.kr-filter.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="말조심하세욧 · 한국어 욕설·비속어 필터 API" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://developers.kr-filter.com/og-image.png" />
     <meta name="twitter:title" content="한국어 텍스트 처리 API 문서 | 말조심하세욧" />
     <meta
       name="twitter:description"
@@ -32,8 +58,16 @@
       <div class="app-shell" data-static-fallback>
         <header class="global-header">
           <a class="brand" href="/">
-            <strong>말조심하세욧</strong>
-            <span>한국어 욕설 필터 API</span>
+            <svg aria-hidden="true" class="brand-mark" height="34" viewBox="0 0 64 64" width="34">
+              <rect class="mark-box" fill="#17211d" height="48" rx="12" width="56" x="4" y="8" />
+              <rect class="mark-bar" fill="#f2f2eb" height="8" rx="4" width="32" x="12" y="16" />
+              <rect class="mark-accent" fill="#63cf88" height="8" rx="4" width="24" x="12" y="28" />
+              <rect class="mark-bar" fill="#f2f2eb" height="8" rx="4" width="40" x="12" y="40" />
+            </svg>
+            <span class="brand-copy">
+              <strong>말조심하세욧</strong>
+              <span>한국어 욕설 필터 API</span>
+            </span>
           </a>
           <div class="static-public-actions">
             <nav aria-label="공개 메뉴">
