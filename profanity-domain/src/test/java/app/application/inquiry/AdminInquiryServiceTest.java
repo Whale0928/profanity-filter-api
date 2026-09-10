@@ -68,6 +68,19 @@ class AdminInquiryServiceTest {
             Clock.fixed(NOW, ZoneOffset.UTC));
   }
 
+  @Test
+  @DisplayName("사용자 계정이 없는 과거 단어 요청도 목록과 상세를 조회한다")
+  void legacyInquiryWithoutUserCanBeRead() {
+    Inquiry inquiry =
+        inquiryRepository.save(
+            Inquiry.fromApiKey(
+                InquiryType.WORD_REQUEST, "과거 단어 요청", "접수 내용", null, UUID.randomUUID(), NOW));
+    var result = service.search(null, null, null, app.domain.support.PageQuery.of(0, 20));
+    assertThat(result.items()).hasSize(1);
+    assertThat(result.items().getFirst().requesterName()).isNull();
+    assertThat(service.findDetail(inquiry.getId()).title()).isEqualTo("과거 단어 요청");
+  }
+
   @Nested
   @DisplayName("답변을 남기면")
   class ReplyTest {

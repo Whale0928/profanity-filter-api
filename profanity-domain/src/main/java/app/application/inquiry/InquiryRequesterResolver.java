@@ -50,7 +50,8 @@ public class InquiryRequesterResolver {
   }
 
   private InquiryRequester resolveOne(Inquiry inquiry, Map<UUID, UserAccount> users) {
-    UserAccount user = users.get(inquiry.getRequesterUserId());
+    UUID requesterUserId = inquiry.getRequesterUserId();
+    UserAccount user = requesterUserId == null ? null : users.get(requesterUserId);
     if (user != null) {
       return new InquiryRequester(user.getDisplayName(), user.getPrimaryEmail());
     }

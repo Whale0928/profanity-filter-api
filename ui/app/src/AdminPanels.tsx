@@ -184,7 +184,7 @@ function InquiriesPanel({ accessToken }: { accessToken: string }) {
         <label className="updates-search"><MagnifyingGlass size={14} /><input aria-label="문의 검색" onChange={event => setQuery(event.target.value)} placeholder="제목 검색" value={query} /></label>
       </div>
       {error ? <div className="keys-error" role="alert">{error}<button onClick={() => setRetry(n => n + 1)} type="button">다시 시도</button></div> : null}
-      {loading ? <p className="updates-empty" role="status">문의 목록을 불러오고 있습니다.</p> : <>
+      {loading ? <p className="updates-empty" role="status">문의 목록을 불러오고 있습니다.</p> : !error ? <>
         <div className="mock-table-scroll"><table className="mock-table"><thead><tr><th>문의 내용</th><th>유형</th><th>상태</th><th>접수일</th><th><span className="sr-only">작업</span></th></tr></thead><tbody>
           {items.map(row => <tr key={row.id}>
             <td><button className="mock-title" onClick={() => setSelectedId(row.id)} type="button">{row.title}</button><small>{row.requesterName ?? "탈퇴한 사용자"} · {row.requesterEmail ?? "-"}</small></td>
@@ -196,7 +196,7 @@ function InquiriesPanel({ accessToken }: { accessToken: string }) {
         </tbody></table>{!items.length ? <p className="updates-empty">조건에 맞는 문의가 없습니다.</p> : null}</div>
         <p className="admin-table-note">{items.length}개 표시 중</p>
         <Pagination hasNext={hasNext} onPage={setPage} page={page} />
-      </>}
+      </> : null}
       {selectedId ? <InquiryDetailDialog accessToken={accessToken} id={selectedId} onChanged={text => { setMessage(text); setRetry(n => n + 1); }} onClose={() => setSelectedId(null)} /> : null}
     </div>
   );
