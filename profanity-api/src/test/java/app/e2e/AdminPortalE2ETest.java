@@ -123,6 +123,42 @@ class AdminPortalE2ETest extends AbstractApiTester {
   }
 
   @Test
+  @DisplayName("CLIENT는 모든 관리자 조회와 변경 경로에서 차단된다")
+  void clientCannotAccessAnyAdminOperation() throws Exception {
+    Login client = login("all-admin-paths-client", false);
+    String uuid = "00000000-0000-0000-0000-000000000001";
+    var operations =
+        java.util.List.of(
+            get("/api/v1/admin/news"),
+            post("/api/v1/admin/news"),
+            put("/api/v1/admin/news/1"),
+            delete("/api/v1/admin/news/1"),
+            get("/api/v1/admin/users"),
+            patch("/api/v1/admin/users/" + uuid + "/status"),
+            get("/api/v1/admin/keys"),
+            post("/api/v1/admin/keys/" + uuid + "/revoke"),
+            get("/api/v1/admin/words"),
+            post("/api/v1/admin/words"),
+            put("/api/v1/admin/words/1"),
+            get("/api/v1/admin/inquiries"),
+            get("/api/v1/admin/inquiries/1"),
+            patch("/api/v1/admin/inquiries/1/status"),
+            post("/api/v1/admin/inquiries/1/replies"),
+            post("/api/v1/admin/inquiries/1/word-decision"));
+    for (var operation : operations) {
+      assertThat(
+              request(
+                      operation.contentType(MediaType.APPLICATION_JSON).content("{}"),
+                      client.token())
+                  .getStatus())
+          .isEqualTo(403);
+    }
+    assertThat(count("SELECT COUNT(*) FROM admin_audit_logs")).isZero();
+    assertThat(data(request(get("/api/v1/auth/me"), client.token())).path("role").asText())
+        .isEqualTo("CLIENT");
+  }
+
+  @Test
   @DisplayName("임시 저장 소식은 공개되지 않고 게시와 비공개 전환이 실제 저장소에 반영된다")
   void news_publishAndUnpublish_preservesPublicBoundary() throws Exception {
     Login admin = login("news-admin", true);
