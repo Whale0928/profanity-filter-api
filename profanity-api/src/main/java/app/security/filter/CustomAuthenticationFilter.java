@@ -60,6 +60,10 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
     if (path.equals("/") || path.equals("/index.html")) {
       return true;
     }
+    if (HttpMethod.GET.matches(method)
+        && (path.equals("/api/v1/news") || path.startsWith("/api/v1/news/"))) {
+      return true;
+    }
     return ExcludePath.getPaths().stream()
         .anyMatch(excludePath -> excludePath.isMatch(path, method));
   }

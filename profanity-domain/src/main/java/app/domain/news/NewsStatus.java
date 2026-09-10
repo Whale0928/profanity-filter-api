@@ -1,0 +1,31 @@
+package app.domain.news;
+
+import app.core.data.response.constant.StatusCode;
+import app.core.exception.BusinessException;
+import java.util.Locale;
+
+/** 소식 공개 상태입니다. DRAFT는 비공개 임시 저장, PUBLISHED는 공개 게시입니다. */
+public enum NewsStatus {
+  DRAFT,
+  PUBLISHED;
+
+  /** 목록 필터에 쓰는 파싱입니다. null과 빈 문자열은 전체 조회를 뜻하는 null로 통일합니다. */
+  public static NewsStatus parseFilter(String value) {
+    if (value == null || value.isBlank()) {
+      return null;
+    }
+    return parse(value);
+  }
+
+  /** 쓰기 요청에 쓰는 파싱입니다. 값이 없거나 정의되지 않았으면 예외가 발생합니다. */
+  public static NewsStatus parse(String value) {
+    if (value == null || value.isBlank()) {
+      throw new BusinessException(StatusCode.BAD_REQUEST, "소식 공개 상태는 필수입니다.");
+    }
+    try {
+      return valueOf(value.trim().toUpperCase(Locale.ROOT));
+    } catch (IllegalArgumentException exception) {
+      throw new BusinessException(StatusCode.BAD_REQUEST, "올바르지 않은 소식 공개 상태입니다.");
+    }
+  }
+}

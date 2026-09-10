@@ -3,6 +3,7 @@ package app.presentation;
 import app.application.auth.LoginAuthService;
 import app.application.auth.LoginAuthService.LoginTokenBundle;
 import app.core.data.response.ApiResponse;
+import app.domain.user.UserAccount;
 import app.dto.request.AuthCodeExchangeRequest;
 import app.dto.response.CsrfTokenResponse;
 import app.dto.response.LoginTokenResponse;
@@ -108,12 +109,14 @@ public class AuthController {
         userResponse(bundle.userAccount()));
   }
 
-  private LoginUserResponse userResponse(app.domain.user.UserAccount userAccount) {
+  private LoginUserResponse userResponse(UserAccount userAccount) {
     return new LoginUserResponse(
         userAccount.getId(),
         userAccount.getDisplayName(),
         userAccount.getPrimaryEmail(),
-        userAccount.getAvatarUrl());
+        userAccount.getAvatarUrl(),
+        userAccount.getRole().name(),
+        userAccount.isAdmin());
   }
 
   private <T> ResponseEntity<ApiResponse<T>> noStore(T data) {

@@ -4,6 +4,7 @@ import app.core.data.elapsed.Elapsed;
 import app.core.data.elapsed.ElapsedStartAt;
 import app.domain.profanity.ProfanityRepository;
 import app.domain.profanity.ProfanityWord;
+import app.domain.profanity.constant.isUsedType;
 import app.dto.response.FilterResponse;
 import app.dto.response.FilterWord;
 import jakarta.annotation.PostConstruct;
@@ -32,20 +33,27 @@ public class NormalProfanityFilter implements ProfanityFilter, AhocorasickFilter
   }
 
   @Override
-  public void synchronizeProfanityTrie() {
+  public boolean synchronizeProfanityTrie() {
     ElapsedStartAt start = ElapsedStartAt.now();
+    // is_used = 'N' 단어는 관리자가 비활성화한 단어이므로 매칭 대상에서 제외한다.
     Set<String> newWords =
-        profanityRepository.findAll().stream()
+        profanityRepository.findAllByIsUsed(isUsedType.Y).stream()
             .map(ProfanityWord::getWord)
             .collect(Collectors.toSet());
     Trie newTrie = Trie.builder().ignoreOverlaps().ignoreCase().addKeywords(newWords).build();
+
+    boolean changed = !newWords.equals(this.collect);
 
     // 원자적 재할당
     this.collect = newWords;
     trie = newTrie;
 
     log.info(
-        "[AhocorasickFilter] 비속어 자료 로딩 완료 {}개 (지연 시간 : {}ms)", collect.size(), Elapsed.end(start));
+        "[AhocorasickFilter] 비속어 자료 로딩 완료 {}개 변경여부={} (지연 시간 : {}ms)",
+        collect.size(),
+        changed,
+        Elapsed.end(start));
+    return changed;
   }
 
   @Override

@@ -49,6 +49,15 @@ class OpenApiSpecE2ETest extends AbstractApiTester {
         .as("Scalar 등 문서 도구가 curl 예제를 생성할 절대 서버 URL을 명시해야 한다")
         .isEqualTo("https://api.kr-filter.com");
     assertThat(countOperations(body.path("paths"))).isEqualTo(5);
+    body.path("paths")
+        .fieldNames()
+        .forEachRemaining(
+            path ->
+                assertThat(path)
+                    .as("관리자 및 포털 전용 API는 고객용 문서에서 제외한다")
+                    .doesNotStartWith("/api/v1/admin")
+                    .doesNotStartWith("/api/v1/news")
+                    .doesNotStartWith("/api/v1/dashboard/inquiries"));
     assertThat(body.at("/paths/~1api~1v1~1filter/post").isMissingNode()).isFalse();
     assertThat(body.at("/paths/~1api~1v1~1clients~1register/post").isMissingNode()).isTrue();
     assertThat(body.at("/paths/~1api~1v1~1dashboard~1keys").isMissingNode()).isTrue();

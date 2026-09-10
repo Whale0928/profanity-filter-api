@@ -5,6 +5,7 @@ import static app.core.data.response.constant.StatusCode.OAUTH2_ACCESS_TOKEN_UNS
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import app.domain.user.UserRole;
 import app.security.filter.AuthenticationRoutePolicy;
 import app.security.filter.RequestCredential;
 import app.security.filter.RequestCredentialResolver;
@@ -106,7 +107,7 @@ class AuthenticationServiceTest {
           null,
           List.of(),
           type == AuthenticationType.LOGIN_JWT
-              ? new LoginUserPrincipal(UUID.randomUUID(), "user@example.com")
+              ? new LoginUserPrincipal(UUID.randomUUID(), "user@example.com", UserRole.CLIENT)
               : new ApiKeyPrincipal(
                   UUID.randomUUID(),
                   "client@example.com",

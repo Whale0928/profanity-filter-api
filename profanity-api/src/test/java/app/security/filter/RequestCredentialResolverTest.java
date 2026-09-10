@@ -111,6 +111,29 @@ class RequestCredentialResolverTest {
   }
 
   @Test
+  @DisplayName("관리자 API의 Bearer token을 LOGIN_JWT 타입으로 해석한다")
+  void resolve_adminWithBearer_returnsLoginJwtCredential() {
+    MockHttpServletRequest request = request("GET", "/api/v1/admin/users");
+    request.addHeader("Authorization", "Bearer login-token");
+
+    RequestCredential credential = resolver.resolve(request);
+
+    assertThat(credential.type()).isEqualTo(AuthenticationType.LOGIN_JWT);
+    assertThat(credential.value()).isEqualTo("login-token");
+  }
+
+  @Test
+  @DisplayName("관리자 API에 API Key를 제출하면 로그인 인증으로 대체하지 않는다")
+  void resolve_adminWithApiKey_throwsLoginTokenInvalid() {
+    MockHttpServletRequest request = request("POST", "/api/v1/admin/words");
+    request.addHeader(RequestCredentialResolver.API_KEY_HEADER, "test-api-key");
+
+    assertThatThrownBy(() -> resolver.resolve(request))
+        .isInstanceOf(CredentialAuthenticationException.class)
+        .hasMessage(LOGIN_TOKEN_INVALID.stringCode());
+  }
+
+  @Test
   @DisplayName("외부 API에 인증 정보가 없으면 기존 UNAUTHORIZED 코드를 유지한다")
   void resolve_externalApiWithoutCredential_throwsLegacyUnauthorized() {
     MockHttpServletRequest request = externalApiRequest();

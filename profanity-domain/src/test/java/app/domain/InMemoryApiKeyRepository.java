@@ -2,6 +2,7 @@ package app.domain;
 
 import app.domain.apikey.ApiKey;
 import app.domain.apikey.ApiKeyRepository;
+import app.domain.support.PageResult;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -34,8 +35,43 @@ public class InMemoryApiKeyRepository implements ApiKeyRepository {
   }
 
   @Override
+  public Optional<ApiKey> findById(UUID id) {
+    return Optional.ofNullable(values.get(id));
+  }
+
+  @Override
+  public Optional<ApiKey> findByIdForUpdate(UUID id) {
+    return findById(id);
+  }
+
+  @Override
+  public PageResult<ApiKey> searchForAdmin(String query, Boolean activeOnly, int page, int size) {
+    List<ApiKey> matched =
+        values.values().stream()
+            .filter(apiKey -> activeOnly == null || apiKey.isActive() == activeOnly)
+            .filter(apiKey -> query == null || matchesQuery(apiKey, query))
+            .sorted(Comparator.comparing(ApiKey::getIssuedAt).reversed())
+            .toList();
+    int from = Math.min(page * size, matched.size());
+    int to = Math.min(from + size, matched.size());
+    return PageResult.of(matched.subList(from, to), page, to < matched.size());
+  }
+
+  private static boolean matchesQuery(ApiKey apiKey, String query) {
+    String keyword = query.toLowerCase(Locale.ROOT);
+    return apiKey.getName().toLowerCase(Locale.ROOT).contains(keyword)
+        || apiKey.getEmail().toLowerCase(Locale.ROOT).contains(keyword)
+        || apiKey.getKeyHint().toLowerCase(Locale.ROOT).contains(keyword);
+  }
+
+  @Override
   public Optional<ApiKey> findByIdAndUserId(UUID id, UUID userId) {
     return Optional.ofNullable(values.get(id)).filter(apiKey -> userId.equals(apiKey.getUserId()));
+  }
+
+  @Override
+  public Optional<ApiKey> findByIdAndUserIdForUpdate(UUID id, UUID userId) {
+    return findByIdAndUserId(id, userId);
   }
 
   @Override

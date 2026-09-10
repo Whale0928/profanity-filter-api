@@ -7,8 +7,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import app.domain.InmemoryProfanityRepository;
 import app.domain.profanity.ProfanityWord;
+import app.domain.profanity.constant.WordSource;
+import app.domain.profanity.constant.isUsedType;
 import app.dto.response.FilterResponse;
 import app.dto.response.FilterWord;
+import java.time.Instant;
 import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -51,6 +54,34 @@ class NormalProfanityFilterTest {
     // then
     assertEquals(0, size1);
     assertEquals(1, list2.size());
+  }
+
+  @Test
+  @DisplayName("사용 중지된 단어는 Trie에 적재하지 않는다")
+  void synchronizeProfanityTrie_excludesUnusedWords() {
+    // given
+    ProfanityWord disabled = ProfanityWord.create("중지된단어", WordSource.ADMIN, null, Instant.EPOCH);
+    disabled.changeUsage(isUsedType.N, null, Instant.EPOCH);
+    repository.save(disabled);
+
+    // when
+    normalProfanityFilter.synchronizeProfanityTrie();
+
+    // then
+    assertFalse(normalProfanityFilter.getProfanityTrieList().contains("중지된단어"));
+    assertFalse(normalProfanityFilter.containsProfanity("이건 중지된단어 입니다"));
+  }
+
+  @Test
+  @DisplayName("적재 단어가 바뀌었는지 동기화 결과로 알려준다")
+  void synchronizeProfanityTrie_reportsWhetherWordsChanged() {
+    // 같은 사전을 다시 읽으면 변경이 없다고 알린다.
+    assertFalse(normalProfanityFilter.synchronizeProfanityTrie());
+
+    repository.save(ProfanityWord.create("추가된단어"));
+
+    assertTrue(normalProfanityFilter.synchronizeProfanityTrie());
+    assertFalse(normalProfanityFilter.synchronizeProfanityTrie());
   }
 
   @Test

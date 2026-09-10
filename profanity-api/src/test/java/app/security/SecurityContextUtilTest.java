@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import app.domain.client.PermissionsType;
+import app.domain.user.UserRole;
 import app.security.authentication.ApiKeyPrincipal;
 import app.security.authentication.AuthenticationType;
 import app.security.authentication.CustomAuthentication;
@@ -59,8 +60,8 @@ class SecurityContextUtilTest {
             null,
             List.of(
                 new SimpleGrantedAuthority("AUTH_LOGIN_JWT"),
-                new SimpleGrantedAuthority("ROLE_USER")),
-            new LoginUserPrincipal(userId, "user@example.com")));
+                new SimpleGrantedAuthority("ROLE_CLIENT")),
+            new LoginUserPrincipal(userId, "user@example.com", UserRole.CLIENT)));
 
     assertThat(SecurityContextUtil.isLoginJwtAuthentication()).isTrue();
     assertThat(SecurityContextUtil.getCurrentLoginUserId()).isEqualTo(userId);
@@ -103,6 +104,54 @@ class SecurityContextUtilTest {
                 UUID.randomUUID(), "client@example.com", "test", List.of(), "now", "key-hash"));
 
     assertThat(authentication.toString()).doesNotContain("must-not-leak");
+  }
+
+  @Test
+  @DisplayName("ADMIN 역할 로그인만 관리자 세션으로 인정한다")
+  void adminLogin_isRecognizedOnlyForAdminRole() {
+    setAuthentication(
+        new CustomAuthentication(
+            AuthenticationType.LOGIN_JWT,
+            null,
+            List.of(
+                new SimpleGrantedAuthority("AUTH_LOGIN_JWT"),
+                new SimpleGrantedAuthority("ROLE_CLIENT"),
+                new SimpleGrantedAuthority("ROLE_ADMIN")),
+            new LoginUserPrincipal(UUID.randomUUID(), "admin@example.com", UserRole.ADMIN)));
+
+    assertThat(SecurityContextUtil.isAdminLogin()).isTrue();
+    assertThat(SecurityContextUtil.getCurrentLoginUserRole()).isEqualTo(UserRole.ADMIN);
+  }
+
+  @Test
+  @DisplayName("CLIENT 로그인과 API Key 인증은 관리자 세션이 아니다")
+  void adminLogin_isFalseForClientAndApiKey() {
+    setAuthentication(
+        new CustomAuthentication(
+            AuthenticationType.LOGIN_JWT,
+            null,
+            List.of(new SimpleGrantedAuthority("AUTH_LOGIN_JWT")),
+            new LoginUserPrincipal(UUID.randomUUID(), "client@example.com", UserRole.CLIENT)));
+    assertThat(SecurityContextUtil.isAdminLogin()).isFalse();
+
+    ApiKeyPrincipal writeClient =
+        new ApiKeyPrincipal(
+            UUID.randomUUID(),
+            "write@example.com",
+            "test",
+            List.of(PermissionsType.WRITE.getValue()),
+            "2026-07-11",
+            "key-hash");
+    setAuthentication(
+        new CustomAuthentication(
+            AuthenticationType.API_KEY,
+            "redacted",
+            List.of(
+                new SimpleGrantedAuthority("AUTH_API_KEY"),
+                new SimpleGrantedAuthority("ROLE_WRITE")),
+            writeClient));
+
+    assertThat(SecurityContextUtil.isAdminLogin()).as("외부 API의 WRITE 권한은 관리자 접근 권한이 아니다").isFalse();
   }
 
   private void setAuthentication(CustomAuthentication authentication) {

@@ -10,6 +10,7 @@ import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
@@ -77,6 +78,15 @@ public class ApiKey {
   @Column(name = "request_count", nullable = false)
   private Long requestCount = 0L;
 
+  @Column(name = "last_used_at")
+  private LocalDateTime lastUsedAt;
+
+  @Column(name = "revoked_by", columnDefinition = "BINARY(16)")
+  private UUID revokedBy;
+
+  @Column(name = "revocation_reason", length = 500)
+  private String revocationReason;
+
   public static ApiKey issue(
       UUID userId,
       String name,
@@ -108,6 +118,44 @@ public class ApiKey {
     }
   }
 
+  /**
+   * 관리자가 API Key를 폐기합니다. 사용자 만료와 같은 만료 시각을 사용하되 폐기자와 사유를 함께 남깁니다.
+   *
+   * @throws IllegalStateException 이미 만료 또는 폐기된 키인 경우
+   */
+  public void revokeByAdmin(UUID actorId, String reason, LocalDateTime now) {
+    if (!isActive()) {
+      throw new IllegalStateException("Expired API key cannot be revoked again");
+    }
+    this.expiredAt = Objects.requireNonNull(now, "now must not be null");
+    this.revokedBy = Objects.requireNonNull(actorId, "actorId must not be null");
+    this.revocationReason = truncate(blankToNull(reason), 500);
+  }
+
+  /**
+   * 마지막 사용 시각을 다시 기록할 때가 되었는지 확인합니다. 상태를 바꾸지 않으므로 읽기 트랜잭션에서 호출해도 안전합니다.
+   *
+   * @param threshold 최소 기록 간격
+   */
+  public boolean isUsageRecordStale(LocalDateTime now, Duration threshold) {
+    Objects.requireNonNull(now, "now must not be null");
+    Objects.requireNonNull(threshold, "threshold must not be null");
+    return lastUsedAt == null || !lastUsedAt.plus(threshold).isAfter(now);
+  }
+
+  /**
+   * 인증에 사용된 시각을 기록합니다. 인증 경로의 쓰기 부하를 억제하기 위해 마지막 기록에서 threshold 이상 지난 경우에만 갱신합니다.
+   *
+   * @return 실제로 갱신되었으면 true
+   */
+  public boolean markUsedAt(LocalDateTime now, Duration threshold) {
+    if (!isUsageRecordStale(now, threshold)) {
+      return false;
+    }
+    this.lastUsedAt = now;
+    return true;
+  }
+
   public ApiKey reissue(String replacementHash, String replacementHint, LocalDateTime now) {
     if (!isActive()) {
       throw new IllegalStateException("Expired API key cannot be reissued");
@@ -129,5 +177,12 @@ public class ApiKey {
 
   private static String blankToNull(String value) {
     return value == null || value.isBlank() ? null : value.trim();
+  }
+
+  private static String truncate(String value, int maxLength) {
+    if (value == null) {
+      return null;
+    }
+    return value.length() <= maxLength ? value : value.substring(0, maxLength);
   }
 }

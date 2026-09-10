@@ -1,0 +1,466 @@
+diff --git a/profanity-api/src/main/java/app/dto/response/LoginUserResponse.java b/profanity-api/src/main/java/app/dto/response/LoginUserResponse.java
+index c523f4e..66deb4e 100644
+--- a/profanity-api/src/main/java/app/dto/response/LoginUserResponse.java
++++ b/profanity-api/src/main/java/app/dto/response/LoginUserResponse.java
+@@ -2,4 +2,5 @@
+ 
+ import java.util.UUID;
+ 
+-public record LoginUserResponse(UUID id, String displayName, String email, String avatarUrl) {}
++public record LoginUserResponse(
++    UUID id, String displayName, String email, String avatarUrl, boolean admin) {}
+diff --git a/profanity-api/src/main/java/app/presentation/AuthController.java b/profanity-api/src/main/java/app/presentation/AuthController.java
+index 567fea9..2df823a 100644
+--- a/profanity-api/src/main/java/app/presentation/AuthController.java
++++ b/profanity-api/src/main/java/app/presentation/AuthController.java
+@@ -113,7 +113,8 @@ private LoginUserResponse userResponse(app.domain.user.UserAccount userAccount)
+         userAccount.getId(),
+         userAccount.getDisplayName(),
+         userAccount.getPrimaryEmail(),
+-        userAccount.getAvatarUrl());
++        userAccount.getAvatarUrl(),
++        userAccount.isAdmin());
+   }
+ 
+   private <T> ResponseEntity<ApiResponse<T>> noStore(T data) {
+diff --git a/profanity-api/src/main/java/app/security/SecurityConfig.java b/profanity-api/src/main/java/app/security/SecurityConfig.java
+index 61cd633..200b9d3 100644
+--- a/profanity-api/src/main/java/app/security/SecurityConfig.java
++++ b/profanity-api/src/main/java/app/security/SecurityConfig.java
+@@ -133,6 +133,10 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+                     .permitAll()
+                     .requestMatchers(HttpMethod.GET, "/api/v1/auth/me")
+                     .hasAuthority(AUTH_LOGIN_JWT)
++                    .requestMatchers(HttpMethod.GET, "/api/v1/news", "/api/v1/news/*")
++                    .permitAll()
++                    .requestMatchers("/api/v1/dashboard/news", "/api/v1/dashboard/news/**")
++                    .hasAuthority("ROLE_ADMIN")
+                     .requestMatchers("/api/v1/dashboard/**")
+                     .hasAuthority(AUTH_LOGIN_JWT)
+                     .requestMatchers("/api/v1/filter/**", "/api/v1/word/**", "/api/v1/sync")
+diff --git a/profanity-api/src/main/java/app/security/filter/ExcludePath.java b/profanity-api/src/main/java/app/security/filter/ExcludePath.java
+index 539cdc5..5d4d23d 100644
+--- a/profanity-api/src/main/java/app/security/filter/ExcludePath.java
++++ b/profanity-api/src/main/java/app/security/filter/ExcludePath.java
+@@ -6,6 +6,7 @@
+ 
+ @Getter
+ public enum ExcludePath {
++  NEWS("/api/v1/news", "포털 소식 조회", List.of(HttpMethod.GET), true),
+   RESOURCE("resource", "리소스 관련 API", List.of(HttpMethod.GET)),
+   HEALTH("health", "헬스 체크 API", List.of(HttpMethod.GET)),
+   PING("ping", "헬스 체크 API", List.of(HttpMethod.GET)),
+@@ -65,6 +66,9 @@ public boolean isMatch(String path, String method) {
+   }
+ 
+   private boolean isPathMatch(String path) {
++    if (this == NEWS) {
++      return path.equals("/api/v1/news") || path.matches("/api/v1/news/[0-9a-fA-F-]{36}");
++    }
+     if (exactPath) {
+       return this.paths.stream().anyMatch(path::equals);
+     }
+diff --git a/profanity-api/src/main/java/app/security/jwt/LoginJwtService.java b/profanity-api/src/main/java/app/security/jwt/LoginJwtService.java
+index 8c9b6bb..949c6e3 100644
+--- a/profanity-api/src/main/java/app/security/jwt/LoginJwtService.java
++++ b/profanity-api/src/main/java/app/security/jwt/LoginJwtService.java
+@@ -115,13 +115,11 @@ public Authentication authenticate(String token) {
+ 
+     LoginUserPrincipal principal =
+         new LoginUserPrincipal(userAccount.getId(), userAccount.getPrimaryEmail());
+-    return new CustomAuthentication(
+-        AuthenticationType.LOGIN_JWT,
+-        null,
+-        List.of(
+-            new SimpleGrantedAuthority(AuthenticationType.LOGIN_JWT.authority()),
+-            new SimpleGrantedAuthority(USER_AUTHORITY)),
+-        principal);
++    var authorities = new java.util.ArrayList<SimpleGrantedAuthority>();
++    authorities.add(new SimpleGrantedAuthority(AuthenticationType.LOGIN_JWT.authority()));
++    authorities.add(new SimpleGrantedAuthority(USER_AUTHORITY));
++    if (userAccount.isAdmin()) authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
++    return new CustomAuthentication(AuthenticationType.LOGIN_JWT, null, authorities, principal);
+   }
+ 
+   @Override
+diff --git a/profanity-domain/src/main/java/app/domain/user/UserAccount.java b/profanity-domain/src/main/java/app/domain/user/UserAccount.java
+index 1a3c865..83fcd80 100644
+--- a/profanity-domain/src/main/java/app/domain/user/UserAccount.java
++++ b/profanity-domain/src/main/java/app/domain/user/UserAccount.java
+@@ -82,6 +82,15 @@ public void synchronizeProfile(
+     this.updatedAt = requiredNow;
+   }
+ 
++  @Builder.Default
++  @jakarta.persistence.Enumerated(jakarta.persistence.EnumType.STRING)
++  @Column(nullable = false, length = 20)
++  private UserRole role = UserRole.USER;
++
++  public boolean isAdmin() {
++    return role == UserRole.ADMIN;
++  }
++
+   public boolean isActive() {
+     return status == UserStatus.ACTIVE;
+   }
+diff --git a/profanity-shared/src/main/java/app/core/data/response/constant/StatusCode.java b/profanity-shared/src/main/java/app/core/data/response/constant/StatusCode.java
+index 2a2cec0..5c9daec 100644
+--- a/profanity-shared/src/main/java/app/core/data/response/constant/StatusCode.java
++++ b/profanity-shared/src/main/java/app/core/data/response/constant/StatusCode.java
+@@ -27,6 +27,7 @@ public enum StatusCode {
+   INVALID_CALLBACK_URL(4001, "콜백 URL 형식이 올바르지 않습니다. 콜백 URL을 확인해 주세요."),
+   AMBIGUOUS_CREDENTIALS(4004, "하나의 요청에는 하나의 인증 정보만 전달할 수 있습니다."),
+   API_KEY_ALREADY_EXPIRED(4005, "이미 만료된 API Key입니다."),
++  NEWS_NOT_FOUND(4041, "게시글을 찾을 수 없습니다."),
+   API_KEY_NOT_FOUND(4040, "API Key를 찾을 수 없습니다."),
+   INTERNAL_SERVER_ERROR(5000, "서버 내부 오류가 발생 했습니다., 재시도 시 문제가 지속 되는 경우 관리자에게 문의 바랍니다."),
+   SERVICE_UNAVAILABLE(5030, "현재 서비스가 점검중이므로 서비스 응답할 수 없는 경우 발생합니다."),
+--- /dev/null
++++ b/profanity-api/src/main/java/app/dto/request/NewsPostRequest.java
+@@ -0,0 +1,11 @@
++package app.dto.request;
++
++import app.domain.news.NewsCategory;
++import jakarta.validation.constraints.NotBlank;
++import jakarta.validation.constraints.NotNull;
++import jakarta.validation.constraints.Size;
++
++public record NewsPostRequest(
++    @NotNull NewsCategory category,
++    @NotBlank @Size(max = 160) String title,
++    @NotBlank @Size(max = 50000) String content) {}
+--- /dev/null
++++ b/profanity-api/src/main/java/app/presentation/NewsAdminController.java
+@@ -0,0 +1,44 @@
++package app.presentation;
++
++import app.application.news.NewsService;
++import app.application.news.NewsService.NewsDetail;
++import app.core.data.response.ApiResponse;
++import app.dto.request.NewsPostRequest;
++import app.security.SecurityContextUtil;
++import io.swagger.v3.oas.annotations.Hidden;
++import jakarta.validation.Valid;
++import java.util.UUID;
++import lombok.RequiredArgsConstructor;
++import org.springframework.http.ResponseEntity;
++import org.springframework.web.bind.annotation.*;
++
++@RestController
++@Hidden
++@RequiredArgsConstructor
++@RequestMapping("/api/v1/dashboard/news")
++public class NewsAdminController {
++  private final NewsService service;
++
++  @PostMapping
++  public ResponseEntity<ApiResponse<NewsDetail>> publish(
++      @Valid @RequestBody NewsPostRequest request) {
++    return ApiResponse.ok(
++        service.publish(
++            SecurityContextUtil.getCurrentLoginUserId(),
++            request.category(),
++            request.title(),
++            request.content()));
++  }
++
++  @PutMapping("/{id}")
++  public ResponseEntity<ApiResponse<NewsDetail>> edit(
++      @PathVariable UUID id, @Valid @RequestBody NewsPostRequest request) {
++    return ApiResponse.ok(service.edit(id, request.category(), request.title(), request.content()));
++  }
++
++  @DeleteMapping("/{id}")
++  public ResponseEntity<ApiResponse<Boolean>> delete(@PathVariable UUID id) {
++    service.delete(id);
++    return ApiResponse.ok(true);
++  }
++}
+--- /dev/null
++++ b/profanity-api/src/main/java/app/presentation/NewsController.java
+@@ -0,0 +1,32 @@
++package app.presentation;
++
++import app.application.news.NewsService;
++import app.application.news.NewsService.NewsDetail;
++import app.application.news.NewsService.NewsPage;
++import app.core.data.response.ApiResponse;
++import app.domain.news.NewsCategory;
++import io.swagger.v3.oas.annotations.Hidden;
++import java.util.UUID;
++import lombok.RequiredArgsConstructor;
++import org.springframework.http.ResponseEntity;
++import org.springframework.web.bind.annotation.*;
++
++@RestController
++@Hidden
++@RequiredArgsConstructor
++@RequestMapping("/api/v1/news")
++public class NewsController {
++  private final NewsService service;
++
++  @GetMapping
++  public ResponseEntity<ApiResponse<NewsPage>> list(
++      @RequestParam(required = false) NewsCategory category,
++      @RequestParam(defaultValue = "0") int page) {
++    return ApiResponse.ok(service.list(category, page));
++  }
++
++  @GetMapping("/{id}")
++  public ResponseEntity<ApiResponse<NewsDetail>> get(@PathVariable UUID id) {
++    return ApiResponse.ok(service.get(id));
++  }
++}
+--- /dev/null
++++ b/profanity-domain/src/main/java/app/application/news/NewsService.java
+@@ -0,0 +1,87 @@
++package app.application.news;
++
++import app.core.data.response.constant.StatusCode;
++import app.core.exception.BusinessException;
++import app.domain.news.*;
++import java.time.Clock;
++import java.time.Instant;
++import java.util.List;
++import java.util.UUID;
++import lombok.RequiredArgsConstructor;
++import org.springframework.stereotype.Service;
++import org.springframework.transaction.annotation.Transactional;
++
++@Service
++@RequiredArgsConstructor
++@Transactional(readOnly = true)
++public class NewsService {
++  private static final int PAGE_SIZE = 20;
++  private final NewsPostRepository repository;
++  private final Clock loginAuthClock;
++
++  public NewsPage list(NewsCategory category, int page) {
++    if (page < 0 || page > 10000) throw new BusinessException(StatusCode.BAD_REQUEST);
++    List<NewsPost> posts = repository.findPage(category, page * PAGE_SIZE, PAGE_SIZE + 1);
++    return new NewsPage(
++        posts.stream().limit(PAGE_SIZE).map(NewsSummary::from).toList(),
++        page,
++        posts.size() > PAGE_SIZE);
++  }
++
++  public NewsDetail get(UUID id) {
++    return NewsDetail.from(require(id));
++  }
++
++  @Transactional
++  public NewsDetail publish(UUID authorId, NewsCategory category, String title, String content) {
++    return NewsDetail.from(
++        repository.save(
++            NewsPost.publish(authorId, category, title, content, loginAuthClock.instant())));
++  }
++
++  @Transactional
++  public NewsDetail edit(UUID id, NewsCategory category, String title, String content) {
++    NewsPost post = require(id);
++    post.edit(category, title, content, loginAuthClock.instant());
++    return NewsDetail.from(repository.save(post));
++  }
++
++  @Transactional
++  public void delete(UUID id) {
++    repository.delete(require(id));
++  }
++
++  private NewsPost require(UUID id) {
++    return repository
++        .findById(id)
++        .orElseThrow(() -> new BusinessException(StatusCode.NEWS_NOT_FOUND));
++  }
++
++  public record NewsPage(List<NewsSummary> items, int page, boolean hasNext) {}
++
++  public record NewsSummary(
++      UUID id, NewsCategory category, String title, Instant createdAt, Instant updatedAt) {
++    static NewsSummary from(NewsPost p) {
++      return new NewsSummary(
++          p.getId(), p.getCategory(), p.getTitle(), p.getCreatedAt(), p.getUpdatedAt());
++    }
++  }
++
++  public record NewsDetail(
++      UUID id,
++      NewsCategory category,
++      String title,
++      String content,
++      Instant createdAt,
++      Instant updatedAt) {
++    static NewsDetail from(NewsPost p) {
++      return new NewsDetail(
++          p.getId(),
++          p.getCategory(),
++          p.getTitle(),
++          p.getContent(),
++          p.getCreatedAt(),
++          p.getUpdatedAt());
++    }
++  }
++}
+--- /dev/null
++++ b/profanity-domain/src/main/java/app/domain/news/NewsCategory.java
+@@ -0,0 +1,8 @@
++package app.domain.news;
++
++public enum NewsCategory {
++  NOTICE,
++  CHANGELOG,
++  MAINTENANCE,
++  ISSUE
++}
+--- /dev/null
++++ b/profanity-domain/src/main/java/app/domain/news/NewsPost.java
+@@ -0,0 +1,63 @@
++package app.domain.news;
++
++import jakarta.persistence.*;
++import java.time.Instant;
++import java.util.UUID;
++import lombok.AccessLevel;
++import lombok.Getter;
++import lombok.NoArgsConstructor;
++
++@Getter
++@Entity
++@Table(name = "news_posts")
++@NoArgsConstructor(access = AccessLevel.PROTECTED)
++public class NewsPost {
++  @Id
++  @Column(columnDefinition = "BINARY(16)")
++  private UUID id;
++
++  @Enumerated(EnumType.STRING)
++  @Column(nullable = false, length = 20)
++  private NewsCategory category;
++
++  @Column(nullable = false, length = 160)
++  private String title;
++
++  @Column(nullable = false, columnDefinition = "mediumtext")
++  private String content;
++
++  @Column(name = "author_id", nullable = false, columnDefinition = "BINARY(16)")
++  private UUID authorId;
++
++  @Column(name = "created_at", nullable = false, updatable = false)
++  private Instant createdAt;
++
++  @Column(name = "updated_at", nullable = false)
++  private Instant updatedAt;
++
++  public static NewsPost publish(
++      UUID authorId, NewsCategory category, String title, String content, Instant now) {
++    NewsPost post = new NewsPost();
++    post.id = UUID.randomUUID();
++    post.authorId = java.util.Objects.requireNonNull(authorId);
++    post.createdAt = now;
++    post.edit(category, title, content, now);
++    return post;
++  }
++
++  public void edit(NewsCategory category, String title, String content, Instant now) {
++    if (category == null
++        || title == null
++        || title.isBlank()
++        || title.length() > 160
++        || content == null
++        || content.isBlank()
++        || content.length() > 50000) {
++      throw new IllegalArgumentException("Invalid news post");
++    }
++    this.category = category;
++    this.title = title.strip();
++    this.content = content;
++    this.updatedAt = java.util.Objects.requireNonNull(now);
++  }
++}
+--- /dev/null
++++ b/profanity-domain/src/main/java/app/domain/news/NewsPostRepository.java
+@@ -0,0 +1,15 @@
++package app.domain.news;
++
++import java.util.List;
++import java.util.Optional;
++import java.util.UUID;
++
++public interface NewsPostRepository {
++  List<NewsPost> findPage(NewsCategory category, int offset, int limit);
++
++  Optional<NewsPost> findById(UUID id);
++
++  NewsPost save(NewsPost post);
++
++  void delete(NewsPost post);
++}
+--- /dev/null
++++ b/profanity-domain/src/main/java/app/domain/user/UserRole.java
+@@ -0,0 +1,6 @@
++package app.domain.user;
++
++public enum UserRole {
++  USER,
++  ADMIN
++}
+--- /dev/null
++++ b/profanity-storage/rdb/src/main/java/app/storage/rds/JpaNewsPostRepository.java
+@@ -0,0 +1,38 @@
++package app.storage.rds;
++
++import app.domain.news.*;
++import jakarta.persistence.EntityManager;
++import java.util.List;
++import java.util.Optional;
++import java.util.UUID;
++import lombok.RequiredArgsConstructor;
++import org.springframework.stereotype.Repository;
++
++@Repository
++@RequiredArgsConstructor
++public class JpaNewsPostRepository implements NewsPostRepository {
++  private final EntityManager entityManager;
++
++  public List<NewsPost> findPage(NewsCategory category, int offset, int limit) {
++    var query =
++        entityManager.createQuery(
++            "select n from NewsPost n"
++                + (category == null ? "" : " where n.category = :category")
++                + " order by n.createdAt desc, n.id desc",
++            NewsPost.class);
++    if (category != null) query.setParameter("category", category);
++    return query.setFirstResult(offset).setMaxResults(limit).getResultList();
++  }
++
++  public Optional<NewsPost> findById(UUID id) {
++    return Optional.ofNullable(entityManager.find(NewsPost.class, id));
++  }
++
++  public NewsPost save(NewsPost post) {
++    return entityManager.merge(post);
++  }
++
++  public void delete(NewsPost post) {
++    entityManager.remove(post);
++  }
++}
+--- /dev/null
++++ b/profanity-storage/rdb/src/main/resources/db/migration/V5__news_posts.sql
+@@ -0,0 +1,15 @@
++ALTER TABLE users ADD COLUMN role varchar(20) NOT NULL DEFAULT 'USER';
++
++CREATE TABLE news_posts (
++    id binary(16) NOT NULL,
++    category varchar(20) NOT NULL,
++    title varchar(160) NOT NULL,
++    content mediumtext NOT NULL,
++    author_id binary(16) NOT NULL,
++    created_at datetime(6) NOT NULL,
++    updated_at datetime(6) NOT NULL,
++    PRIMARY KEY (id),
++    KEY idx_news_created (created_at, id),
++    KEY idx_news_category_created (category, created_at, id),
++    CONSTRAINT fk_news_author FOREIGN KEY (author_id) REFERENCES users (id)
++) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

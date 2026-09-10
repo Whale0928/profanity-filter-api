@@ -8,8 +8,10 @@ import app.core.exception.BusinessException;
 import app.security.authentication.CredentialAuthenticationException;
 import app.security.login.LoginFlowException;
 import jakarta.servlet.http.HttpServletRequest;
+import java.sql.SQLException;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +28,20 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+  @ExceptionHandler(DataIntegrityViolationException.class)
+  public ResponseEntity<ApiResponse<Void>> handleDataIntegrityException(
+      DataIntegrityViolationException exception) {
+    for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
+      if (cause instanceof SQLException sql
+          && sql.getErrorCode() == 1062
+          && sql.getMessage() != null
+          && sql.getMessage().contains("uk_profanity_word_word")) {
+        return ApiResponse.error(HttpStatus.CONFLICT, Status.of(StatusCode.WORD_ALREADY_EXISTS));
+      }
+    }
+    return handleException(exception);
+  }
 
   @ExceptionHandler(BusinessException.class)
   public ResponseEntity<ApiResponse<Void>> handleBusinessException(BusinessException ex) {

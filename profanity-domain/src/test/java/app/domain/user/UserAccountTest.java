@@ -38,4 +38,39 @@ class UserAccountTest {
     assertThat(user.getDisplayName()).isEqualTo("Tester");
     assertThat(user.getPrimaryEmail()).isEqualTo("tester@example.com");
   }
+
+  @Test
+  @DisplayName("새로 만든 사용자는 CLIENT 역할이며 관리자가 아니다")
+  void create_assignsClientRoleByDefault() {
+    UserAccount user = UserAccount.create("Tester", "tester@example.com", null, NOW);
+
+    assertThat(user.getRole()).isEqualTo(UserRole.CLIENT);
+    assertThat(user.isAdmin()).isFalse();
+    assertThat(user.getLastLoginAt()).isNull();
+  }
+
+  @Test
+  @DisplayName("로그인 시각을 기록하면 수정 시각도 함께 갱신한다")
+  void recordLogin_updatesLastLoginAndUpdatedAt() {
+    UserAccount user = UserAccount.create("Tester", "tester@example.com", null, NOW);
+    Instant loginAt = NOW.plusSeconds(3600);
+
+    user.recordLogin(loginAt);
+
+    assertThat(user.getLastLoginAt()).isEqualTo(loginAt);
+    assertThat(user.getUpdatedAt()).isEqualTo(loginAt);
+  }
+
+  @Test
+  @DisplayName("비활성화한 계정을 다시 활성화할 수 있다")
+  void activate_restoresActiveStatus() {
+    UserAccount user = UserAccount.create("Tester", "tester@example.com", null, NOW);
+    user.disable(NOW.plusSeconds(1));
+
+    user.activate(NOW.plusSeconds(2));
+
+    assertThat(user.isActive()).isTrue();
+    assertThat(user.getStatus()).isEqualTo(UserStatus.ACTIVE);
+    assertThat(user.getUpdatedAt()).isEqualTo(NOW.plusSeconds(2));
+  }
 }

@@ -10,6 +10,7 @@ import app.core.exception.BusinessException;
 import app.domain.InMemoryApiKeyRepository;
 import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -92,6 +93,37 @@ class ApiKeyManagementServiceTest {
         .isInstanceOf(BusinessException.class)
         .extracting("status.code")
         .isEqualTo(StatusCode.API_KEY_NOT_FOUND.code());
+  }
+
+  @Test
+  @DisplayName("관리자가 폐기한 키에서는 새 유효 키가 파생되지 않는다")
+  void reissue_afterAdminRevocation_isRejected() {
+    var issued = issue("운영");
+    UUID adminId = UUID.fromString("30000000-0000-0000-0000-000000000003");
+    repository
+        .findById(issued.key().id())
+        .orElseThrow()
+        .revokeByAdmin(adminId, "관리자 폐기", LocalDateTime.ofInstant(NOW, ZoneOffset.UTC));
+
+    assertThatThrownBy(() -> service.reissue(USER_ID, issued.key().id()))
+        .isInstanceOf(BusinessException.class)
+        .extracting("status.code")
+        .isEqualTo(StatusCode.API_KEY_ALREADY_EXPIRED.code());
+    assertThat(service.findAll(USER_ID)).allMatch(key -> key.status().equals("EXPIRED"));
+  }
+
+  @Test
+  @DisplayName("폐기된 키는 소유자가 다시 만료해도 폐기 정보를 잃지 않는다")
+  void expire_afterAdminRevocation_keepsRevocationMetadata() {
+    var issued = issue("운영");
+    UUID adminId = UUID.fromString("30000000-0000-0000-0000-000000000003");
+    var stored = repository.findById(issued.key().id()).orElseThrow();
+    stored.revokeByAdmin(adminId, "관리자 폐기", LocalDateTime.ofInstant(NOW, ZoneOffset.UTC));
+
+    service.expire(USER_ID, issued.key().id());
+
+    assertThat(stored.getRevokedBy()).isEqualTo(adminId);
+    assertThat(stored.getRevocationReason()).isEqualTo("관리자 폐기");
   }
 
   private ApiKeyManagementService.IssuedApiKey issue(String name) {

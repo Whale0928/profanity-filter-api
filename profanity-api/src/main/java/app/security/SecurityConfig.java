@@ -25,6 +25,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authorization.AuthorityAuthorizationManager;
+import org.springframework.security.authorization.AuthorizationManagers;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -46,6 +48,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 public class SecurityConfig {
   private static final String AUTH_API_KEY = "AUTH_API_KEY";
   private static final String AUTH_LOGIN_JWT = "AUTH_LOGIN_JWT";
+  private static final String ROLE_ADMIN = "ROLE_ADMIN";
 
   private final AuthenticationService authenticationService;
   private final RequestCredentialResolver requestCredentialResolver;
@@ -131,10 +134,19 @@ public class SecurityConfig {
                         "/api/v1/auth/refresh",
                         "/api/v1/auth/logout")
                     .permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/v1/news", "/api/v1/news/*")
+                    .permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/v1/auth/me")
                     .hasAuthority(AUTH_LOGIN_JWT)
                     .requestMatchers("/api/v1/dashboard/**")
                     .hasAuthority(AUTH_LOGIN_JWT)
+                    // 관리자 API는 로그인 JWT와 ADMIN 역할을 함께 요구한다.
+                    // API Key는 AUTH_LOGIN_JWT를 얻을 수 없으므로 WRITE 권한이 있어도 통과하지 못한다.
+                    .requestMatchers("/api/v1/admin/**")
+                    .access(
+                        AuthorizationManagers.allOf(
+                            AuthorityAuthorizationManager.hasAuthority(AUTH_LOGIN_JWT),
+                            AuthorityAuthorizationManager.hasAuthority(ROLE_ADMIN)))
                     .requestMatchers("/api/v1/filter/**", "/api/v1/word/**", "/api/v1/sync")
                     .hasAuthority(AUTH_API_KEY)
                     .anyRequest()
@@ -179,7 +191,9 @@ public class SecurityConfig {
   private static boolean isLoginBrowserPath(String path) {
     return path.startsWith("/api/v1/auth/")
         || path.equals("/api/v1/dashboard")
-        || path.startsWith("/api/v1/dashboard/");
+        || path.startsWith("/api/v1/dashboard/")
+        || path.equals("/api/v1/admin")
+        || path.startsWith("/api/v1/admin/");
   }
 
   private static String pathWithinApplication(HttpServletRequest request) {

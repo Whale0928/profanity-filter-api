@@ -3,15 +3,20 @@ package app.application.auth;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import app.domain.support.PageResult;
 import app.domain.user.OAuthAccount;
 import app.domain.user.OAuthAccountRepository;
 import app.domain.user.OAuthLoginProfile;
 import app.domain.user.OAuthProvider;
 import app.domain.user.UserAccount;
 import app.domain.user.UserAccountRepository;
+import app.domain.user.UserRole;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -212,6 +217,39 @@ class SsoAccountTransactionServiceTest {
                     .isEqualTo(LoginAccountUnavailableException.Reason.VERIFIED_EMAIL_REQUIRED));
   }
 
+  @Test
+  @DisplayName("최초 가입과 재로그인 모두 마지막 로그인 시각을 기록한다")
+  void upsertInNewTransaction_recordsLastLoginAt() {
+    OAuthLoginProfile loginProfile =
+        profile(OAuthProvider.GITHUB, "login-user", "login@example.com", "Login");
+
+    UserAccount created = service.upsertInNewTransaction(loginProfile, FIRST_LOGIN_AT);
+    assertThat(created.getLastLoginAt()).isEqualTo(FIRST_LOGIN_AT);
+    assertThat(created.getRole()).isEqualTo(UserRole.CLIENT);
+
+    Instant secondLoginAt = FIRST_LOGIN_AT.plusSeconds(3600);
+    UserAccount relogged = service.upsertInNewTransaction(loginProfile, secondLoginAt);
+
+    assertThat(relogged.getId()).isEqualTo(created.getId());
+    assertThat(relogged.getLastLoginAt()).isEqualTo(secondLoginAt);
+  }
+
+  @Test
+  @DisplayName("검증된 이메일로 기존 사용자에 연결할 때도 로그인 시각을 기록한다")
+  void upsertInNewTransaction_whenLinkingExistingUser_recordsLastLoginAt() {
+    service.upsertInNewTransaction(
+        profile(OAuthProvider.GITHUB, "github-linked", "linked@example.com", "Linked"),
+        FIRST_LOGIN_AT);
+    Instant googleLoginAt = FIRST_LOGIN_AT.plusSeconds(120);
+
+    UserAccount linked =
+        service.upsertInNewTransaction(
+            profile(OAuthProvider.GOOGLE, "google-linked", "linked@example.com", "Linked"),
+            googleLoginAt);
+
+    assertThat(linked.getLastLoginAt()).isEqualTo(googleLoginAt);
+  }
+
   private static OAuthLoginProfile profile(
       OAuthProvider provider, String providerUserId, String email, String displayName) {
     return new OAuthLoginProfile(
@@ -242,6 +280,27 @@ class SsoAccountTransactionServiceTest {
     public UserAccount save(UserAccount userAccount) {
       values.put(userAccount.getId(), userAccount);
       return userAccount;
+    }
+
+    @Override
+    public List<UserAccount> findAllByIdIn(Collection<UUID> ids) {
+      return ids.stream().map(values::get).filter(Objects::nonNull).toList();
+    }
+
+    @Override
+    public PageResult<UserAccount> searchForAdmin(String query, UserRole role, int page, int size) {
+      List<UserAccount> matched =
+          values.values().stream()
+              .filter(user -> role == null || user.getRole() == role)
+              .filter(
+                  user ->
+                      query == null
+                          || user.getDisplayName().contains(query)
+                          || user.getPrimaryEmail().contains(query))
+              .toList();
+      int from = Math.min(page * size, matched.size());
+      int to = Math.min(from + size, matched.size());
+      return PageResult.of(matched.subList(from, to), page, to < matched.size());
     }
 
     int size() {

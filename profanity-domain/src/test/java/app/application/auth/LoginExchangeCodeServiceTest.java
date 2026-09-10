@@ -5,12 +5,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 import app.domain.auth.LoginExchangeCode;
 import app.domain.auth.LoginExchangeCodeRepository;
 import app.domain.auth.Sha256Hash;
+import app.domain.support.PageResult;
 import app.domain.user.UserAccount;
 import app.domain.user.UserAccountRepository;
+import app.domain.user.UserRole;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -112,6 +117,27 @@ class LoginExchangeCodeServiceTest {
     public UserAccount save(UserAccount userAccount) {
       values.put(userAccount.getId(), userAccount);
       return userAccount;
+    }
+
+    @Override
+    public List<UserAccount> findAllByIdIn(Collection<UUID> ids) {
+      return ids.stream().map(values::get).filter(Objects::nonNull).toList();
+    }
+
+    @Override
+    public PageResult<UserAccount> searchForAdmin(String query, UserRole role, int page, int size) {
+      List<UserAccount> matched =
+          values.values().stream()
+              .filter(user -> role == null || user.getRole() == role)
+              .filter(
+                  user ->
+                      query == null
+                          || user.getDisplayName().contains(query)
+                          || user.getPrimaryEmail().contains(query))
+              .toList();
+      int from = Math.min(page * size, matched.size());
+      int to = Math.min(from + size, matched.size());
+      return PageResult.of(matched.subList(from, to), page, to < matched.size());
     }
   }
 }

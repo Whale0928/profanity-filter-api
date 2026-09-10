@@ -1,6 +1,7 @@
 package app.security;
 
 import app.domain.client.PermissionsType;
+import app.domain.user.UserRole;
 import app.security.authentication.ApiKeyPrincipal;
 import app.security.authentication.AuthenticationType;
 import app.security.authentication.LoginUserPrincipal;
@@ -100,6 +101,22 @@ public class SecurityContextUtil {
   /** 현재 로그인 사용자의 ID를 반환합니다. */
   public static UUID getCurrentLoginUserId() {
     return getLoginUserPrincipalWithCheck().id();
+  }
+
+  /** 현재 로그인 사용자의 역할을 반환합니다. */
+  public static UserRole getCurrentLoginUserRole() {
+    return getLoginUserPrincipalWithCheck().role();
+  }
+
+  /**
+   * 현재 요청이 관리자 로그인 세션인지 확인합니다.
+   *
+   * <p>API Key 인증은 로그인 사용자 주체가 아니므로 어떤 권한을 가지고 있어도 false입니다.
+   */
+  public static boolean isAdminLogin() {
+    ServicePrincipal principal = getAuthentication();
+    return principal instanceof LoginUserPrincipal loginUserPrincipal
+        && loginUserPrincipal.isAdmin();
   }
 
   /**

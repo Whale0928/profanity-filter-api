@@ -7,23 +7,27 @@ import {
   List,
   Moon,
   SignOut,
+  ShieldCheck,
   Sun,
   UserCircle,
   X,
 } from "@phosphor-icons/react";
-import { lazy, Suspense, useEffect, useMemo, useState, type MouseEvent, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from "react";
 
 import { exchangeLoginCode, logoutSession, restoreLoginSession, startSocialLogin, type LoginUser } from "./auth";
 import ApiKeysPage from "./ApiKeysPage";
 import DocsPage from "./docs/DocsPage";
 import FilterExample from "./FilterExample";
+const AdminPage = lazy(() => import("./AdminPage"));
+const NewsPage = lazy(() => import("./NewsPage"));
 const LegalPage = lazy(() => import("./LegalPage"));
+const DashboardInquiries = lazy(() => import("./DashboardInquiries"));
 
 type Theme = "light" | "dark";
-type RoutePath = "/" | "/docs" | "/login" | "/app" | "/app/credentials" | "/app/account" | "/app/keys" | "/privacy" | "/terms";
+type RoutePath = "/" | "/admin" | "/news" | "/docs" | "/login" | "/app" | "/app/credentials" | "/app/account" | "/app/keys" | "/privacy" | "/terms";
 type AuthStatus = "checking" | "anonymous" | "exchanging" | "authenticated" | "failed";
 
-const ROUTES: RoutePath[] = ["/", "/docs", "/login", "/app", "/app/credentials", "/app/account", "/app/keys", "/privacy", "/terms"];
+const ROUTES: RoutePath[] = ["/", "/admin", "/news", "/docs", "/login", "/app", "/app/credentials", "/app/account", "/app/keys", "/privacy", "/terms"];
 
 const PUBLIC_PAGE_METADATA = {
   "/": {
@@ -43,6 +47,12 @@ function currentPath(): RoutePath {
   return ROUTES.includes(pathname as RoutePath) ? (pathname as RoutePath) : "/";
 }
 
+function readPreviewParam(): "visitor" | "user" | "admin" | null {
+  if (!import.meta.env.DEV) return null;
+  const role = new URLSearchParams(window.location.search).get("preview");
+  return role === "admin" || role === "user" || role === "visitor" ? role : null;
+}
+
 function preferredTheme(): Theme {
   const saved = window.localStorage.getItem("pf-theme");
   if (saved === "light" || saved === "dark") return saved;
@@ -54,7 +64,7 @@ function updatePageMetadata(path: RoutePath) {
   const metadata = isPublicPage
     ? PUBLIC_PAGE_METADATA[path]
     : {
-        title: `${path === "/privacy" ? "개인정보 처리방침" : path === "/terms" ? "이용약관" : path === "/login" ? "로그인" : "개발자 포털"} | 말조심하세욧`,
+        title: `${path === "/admin" ? "관리자" : path === "/news" ? "소식" : path === "/privacy" ? "개인정보 처리방침" : path === "/terms" ? "이용약관" : path === "/login" ? "로그인" : "개발자 포털"} | 말조심하세욧`,
         description: "말조심하세욧 개발자 포털입니다.",
         canonical: `https://developers.kr-filter.com${path}`,
       };
@@ -77,10 +87,30 @@ export default function App() {
   const [loginUser, setLoginUser] = useState<LoginUser | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [authError, setAuthError] = useState("");
+  const initialAuth = useRef<{ exchanging: boolean; session: ReturnType<typeof exchangeLoginCode> } | null>(null);
   const [signingOut, setSigningOut] = useState(false);
   const [logoutError, setLogoutError] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
   const authenticated = authStatus === "authenticated";
+  const [previewRole, setPreviewRole] = useState<"visitor" | "user" | "admin">(() => readPreviewParam() ?? "visitor");
+  const [previewActive, setPreviewActive] = useState(() => import.meta.env.DEV && readPreviewParam() !== null);
+  const previewing = previewActive && (path === "/news" || path === "/admin");
+  const shownAuthenticated = previewing ? previewRole !== "visitor" : authenticated;
+  const shownUser = previewing ? (previewRole === "visitor" ? null : { id: "ui-preview", displayName: previewRole === "admin" ? "관리자" : "일반 회원", email: "preview@example.test", avatarUrl: null, admin: previewRole === "admin" }) : loginUser;
+  const shownAdmin = shownAuthenticated && shownUser?.admin === true;
+  function changePreview(role: "visitor" | "user" | "admin") {
+    setPreviewRole(role);
+    setPreviewActive(true);
+    const params = new URLSearchParams(window.location.search);
+    params.set("preview", role);
+    window.history.replaceState({}, "", `${path}?${params}`);
+  }
+  function exitPreview() {
+    setPreviewActive(false);
+    const params = new URLSearchParams(window.location.search);
+    params.delete("preview");
+    window.history.replaceState({}, "", `${path}${params.size ? `?${params}` : ""}`);
+  }
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -100,17 +130,23 @@ export default function App() {
 
   useEffect(() => {
     let cancelled = false;
-    const code = window.location.pathname === "/login"
-      ? new URLSearchParams(window.location.hash.replace(/^#/, "")).get("code")
-      : null;
+    // StrictMode가 effect를 다시 구독해도 일회용 코드 교환과 refresh는 한 번만 수행한다.
+    if (!initialAuth.current) {
+      const code = window.location.pathname === "/login"
+        ? new URLSearchParams(window.location.hash.replace(/^#/, "")).get("code")
+        : null;
+      if (code) window.history.replaceState({}, "", "/login");
+      initialAuth.current = {
+        exchanging: Boolean(code),
+        session: code ? exchangeLoginCode(code) : restoreLoginSession(),
+      };
+    }
+    const task = initialAuth.current;
+    if (task.exchanging) setAuthStatus("exchanging");
 
     async function authenticate() {
       try {
-        if (code) {
-          setAuthStatus("exchanging");
-          window.history.replaceState({}, "", "/login");
-        }
-        const session = code ? await exchangeLoginCode(code) : await restoreLoginSession();
+        const session = await task.session;
         if (cancelled) return;
         setAccessToken(session.accessToken);
         setLoginUser(session.user);
@@ -119,8 +155,8 @@ export default function App() {
         if (cancelled) return;
         setAccessToken(null);
         setLoginUser(null);
-        setAuthStatus(code ? "failed" : "anonymous");
-        setAuthError(code && error instanceof Error ? error.message : "");
+        setAuthStatus(task.exchanging ? "failed" : "anonymous");
+        setAuthError(task.exchanging && error instanceof Error ? error.message : "");
       }
     }
 
@@ -135,7 +171,9 @@ export default function App() {
   }, [authStatus, authenticated, path]);
 
   function navigate(next: RoutePath) {
-    if (window.location.pathname !== next) window.history.pushState({}, "", next);
+    const nextUrl = previewActive && (next === "/news" || next === "/admin") ? `${next}?preview=${previewRole}` : next;
+    if (window.location.pathname + window.location.search !== nextUrl) window.history.pushState({}, "", nextUrl);
+    if (next === path) window.dispatchEvent(new PopStateEvent("popstate"));
     setPath(next);
     setMobileOpen(false);
     window.scrollTo({ top: 0, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
@@ -158,8 +196,14 @@ export default function App() {
     }
   }
 
+  const previewControls = previewing ? <div className="prototype-bar"><div><span className="prototype-dot" /><strong>UI 목업</strong><span>예시 데이터 · 실제 서비스에 반영되지 않습니다.</span></div><div className="prototype-roles" role="group" aria-label="목업 사용자 상태">{([ ["visitor", "방문자"], ["user", "일반 회원"], ["admin", "관리자"] ] as const).map(([role, label]) => <button type="button" key={role} aria-pressed={previewRole === role} onClick={() => changePreview(role)}>{label}</button>)}<button type="button" onClick={exitPreview}>미리보기 종료</button></div></div> : null;
+
   const page = useMemo(() => {
     switch (path) {
+      case "/news":
+        return <NewsPage onManage={shownAdmin ? () => navigate("/admin") : undefined} preview={previewing} />;
+      case "/admin":
+        return <AdminPage accessToken={accessToken} allowed={shownAdmin} currentUserId={loginUser?.id ?? null} onPublic={() => navigate("/news")} preview={previewing} />;
       case "/docs":
         return <DocsPage theme={theme} />;
       case "/privacy":
@@ -168,7 +212,7 @@ export default function App() {
       case "/login":
         return <LoginPage error={authError} status={authStatus} />;
       case "/app/account":
-        return <AccountPage user={loginUser} />;
+        return <AccountPage accessToken={accessToken} user={loginUser} />;
       case "/app/keys":
         return accessToken && loginUser ? <ApiKeysPage accessToken={accessToken} /> : null;
       default:
@@ -180,22 +224,23 @@ export default function App() {
           />
         );
     }
-  }, [accessToken, authError, authenticated, authStatus, loginUser, path, theme]);
+  }, [accessToken, authError, authenticated, authStatus, loginUser, path, theme, shownAdmin, previewRole, previewing]);
 
   return (
     <div className="app-shell">
       <GlobalHeader
-        authenticated={authenticated}
-        loginUser={loginUser}
+        authenticated={shownAuthenticated}
+        loginUser={shownUser}
         mobileOpen={mobileOpen}
         onMenu={() => setMobileOpen((open) => !open)}
         onNavigate={navigate}
-        onSignOut={() => void signOut()}
+        onSignOut={() => { if (previewing) changePreview("visitor"); else void signOut(); }}
         signingOut={signingOut}
         onTheme={() => setTheme(theme === "dark" ? "light" : "dark")}
         path={path}
         theme={theme}
       />
+      {previewControls}
       <main id="main-content">{logoutError ? <p className="session-error page-width" role="alert">{logoutError}</p> : null}<Suspense fallback={<p className="page-width" role="status">문서를 불러오고 있습니다.</p>}>{page}</Suspense></main>
       <footer className="site-footer page-width">
         <div><strong>말조심하세욧</strong><span>한국어를 위한 필터 API</span></div>
@@ -239,7 +284,9 @@ function GlobalHeader({ authenticated, loginUser, mobileOpen, onMenu, onNavigate
       <div className={mobileOpen ? "global-actions open" : "global-actions"}>
         <nav aria-label="공개 메뉴">
           <NavLink active={path === "/"} label="소개" onNavigate={onNavigate} to="/" />
+          <NavLink active={path === "/news"} label="소식" onNavigate={onNavigate} to="/news" />
           <NavLink active={path === "/docs"} label="API 문서" onNavigate={onNavigate} to="/docs" />
+          {authenticated && loginUser?.admin ? <NavLink active={path === "/admin"} label="관리자" onNavigate={onNavigate} to="/admin" /> : null}
         </nav>
         <a
           aria-label="GitHub 저장소 열기"
@@ -264,6 +311,7 @@ function GlobalHeader({ authenticated, loginUser, mobileOpen, onMenu, onNavigate
             {accountOpen ? (
               <div aria-label="사용자 메뉴" className="identity-popover" role="menu">
                 <button onClick={() => go("/app/keys")} role="menuitem" type="button"><Key size={17} />API Key 관리</button>
+                {loginUser?.admin ? <button onClick={() => go("/admin")} role="menuitem" type="button"><ShieldCheck size={17} />관리자 페이지</button> : null}
                 <button onClick={() => go("/app/account")} role="menuitem" type="button"><UserCircle size={17} />내 계정</button>
                 <button className="sign-out" disabled={signingOut} onClick={onSignOut} role="menuitem" type="button"><SignOut size={17} />{signingOut ? "로그아웃 중" : "로그아웃"}</button>
               </div>
@@ -389,7 +437,7 @@ function LoginPage({ error, status }: { error: string; status: AuthStatus }) {
   );
 }
 
-function AccountPage({ user }: { user: LoginUser | null }) {
+function AccountPage({ accessToken, user }: { accessToken: string | null; user: LoginUser | null }) {
   return (
     <section className="account-page page-width">
       <header className="page-heading"><h1>내 계정</h1><p>SSO에서 확인한 기본 계정 정보입니다.</p></header>
@@ -397,6 +445,7 @@ function AccountPage({ user }: { user: LoginUser | null }) {
         <UserCircle size={64} weight="thin" />
         <dl><div><dt>표시 이름</dt><dd>{user?.displayName ?? "-"}</dd></div><div><dt>Primary email</dt><dd>{user?.email ?? "-"}</dd></div><div><dt>로그인 상태</dt><dd><span className="status-dot" />활성</dd></div></dl>
       </div>
+      {accessToken ? <DashboardInquiries accessToken={accessToken} /> : null}
     </section>
   );
 }

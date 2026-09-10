@@ -4,6 +4,7 @@ import static app.core.data.response.constant.StatusCode.LOGIN_TOKEN_INVALID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import app.domain.user.UserRole;
 import app.security.authentication.AuthenticationService;
 import app.security.authentication.AuthenticationType;
 import app.security.authentication.CredentialAuthenticationException;
@@ -89,7 +90,7 @@ class CustomAuthenticationFilterTest {
                 AuthenticationType.LOGIN_JWT,
                 null,
                 List.of(new SimpleGrantedAuthority("AUTH_LOGIN_JWT")),
-                new LoginUserPrincipal(userId, "user@example.com"));
+                new LoginUserPrincipal(userId, "user@example.com", UserRole.CLIENT));
           }
         };
     AuthenticationService authenticationService =
@@ -125,6 +126,18 @@ class CustomAuthenticationFilterTest {
     assertThat(filter.shouldNotFilter(request("GET", "/api/v1/auth/me"))).isFalse();
     assertThat(filter.shouldNotFilter(request("POST", "/api/v1/auth/exchange-extra"))).isFalse();
     assertThat(filter.shouldNotFilter(request("GET", "/api/v1/auth/refresh"))).isFalse();
+  }
+
+  @Test
+  @DisplayName("공개 소식 GET만 인증을 생략하고 관리자와 유사 경로는 보호한다")
+  void shouldNotFilter_news_excludesOnlyPublicReads() {
+    CustomAuthenticationFilter filter = new CustomAuthenticationFilter(null, null);
+
+    assertThat(filter.shouldNotFilter(request("GET", "/api/v1/news"))).isTrue();
+    assertThat(filter.shouldNotFilter(request("GET", "/api/v1/news/1"))).isTrue();
+    assertThat(filter.shouldNotFilter(request("POST", "/api/v1/news"))).isFalse();
+    assertThat(filter.shouldNotFilter(request("GET", "/api/v1/admin/news"))).isFalse();
+    assertThat(filter.shouldNotFilter(request("GET", "/api/v1/news-extra"))).isFalse();
   }
 
   @Test

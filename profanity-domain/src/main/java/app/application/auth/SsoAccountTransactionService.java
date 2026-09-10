@@ -48,6 +48,7 @@ public class SsoAccountTransactionService {
               UserAccount userAccount = findRequiredUser(oauthAccount);
               userAccount.synchronizeProfile(
                   profile.displayName(), primaryEmail, profile.avatarUrl(), now);
+              userAccount.recordLogin(now);
               oauthAccount.synchronizeProfile(profile);
               userAccountRepository.save(userAccount);
               oauthAccountRepository.save(oauthAccount);
@@ -63,6 +64,7 @@ public class SsoAccountTransactionService {
             userAccount -> {
               userAccount.synchronizeProfile(
                   profile.displayName(), primaryEmail, profile.avatarUrl(), now);
+              userAccount.recordLogin(now);
               userAccountRepository.save(userAccount);
               oauthAccountRepository.save(OAuthAccount.link(userAccount.getId(), profile, now));
               return userAccount;
@@ -72,6 +74,7 @@ public class SsoAccountTransactionService {
   private UserAccount createAccount(OAuthLoginProfile profile, String primaryEmail, Instant now) {
     UserAccount userAccount =
         UserAccount.create(profile.displayName(), primaryEmail, profile.avatarUrl(), now);
+    userAccount.recordLogin(now);
     userAccountRepository.save(userAccount);
     oauthAccountRepository.save(OAuthAccount.link(userAccount.getId(), profile, now));
     return userAccount;

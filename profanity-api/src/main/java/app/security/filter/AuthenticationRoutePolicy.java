@@ -9,12 +9,15 @@ import org.springframework.stereotype.Component;
 public class AuthenticationRoutePolicy {
   private static final String AUTH_ME_PATH = "/api/v1/auth/me";
   private static final String DASHBOARD_ROOT = "/api/v1/dashboard";
+  private static final String ADMIN_ROOT = "/api/v1/admin";
 
   public Route route(HttpServletRequest request) {
     String path = pathWithinApplication(request);
     if (AUTH_ME_PATH.equals(path)
         || DASHBOARD_ROOT.equals(path)
-        || path.startsWith(DASHBOARD_ROOT + "/")) {
+        || path.startsWith(DASHBOARD_ROOT + "/")
+        || ADMIN_ROOT.equals(path)
+        || path.startsWith(ADMIN_ROOT + "/")) {
       return Route.LOGIN_USER;
     }
     return Route.EXTERNAL_API;

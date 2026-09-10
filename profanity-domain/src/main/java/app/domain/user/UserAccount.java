@@ -21,7 +21,7 @@ import lombok.ToString;
 
 @Getter
 @Builder(access = PRIVATE)
-@ToString(of = {"id", "displayName", "status"})
+@ToString(of = {"id", "displayName", "status", "role"})
 @EqualsAndHashCode(of = "id")
 @AllArgsConstructor(access = PRIVATE)
 @NoArgsConstructor(access = PROTECTED)
@@ -47,6 +47,14 @@ public class UserAccount {
   @Convert(converter = UserStatusConverter.class)
   @Column(nullable = false, length = 30)
   private UserStatus status = UserStatus.ACTIVE;
+
+  @Builder.Default
+  @Convert(converter = UserRoleConverter.class)
+  @Column(nullable = false, length = 30)
+  private UserRole role = UserRole.defaultRole();
+
+  @Column(name = "last_login_at")
+  private Instant lastLoginAt;
 
   @Column(name = "created_at", nullable = false, updatable = false)
   private Instant createdAt;
@@ -86,9 +94,25 @@ public class UserAccount {
     return status == UserStatus.ACTIVE;
   }
 
+  public boolean isAdmin() {
+    return role == UserRole.ADMIN;
+  }
+
   public void disable(Instant now) {
     this.status = UserStatus.DISABLED;
     this.updatedAt = Objects.requireNonNull(now, "now must not be null");
+  }
+
+  public void activate(Instant now) {
+    this.status = UserStatus.ACTIVE;
+    this.updatedAt = Objects.requireNonNull(now, "now must not be null");
+  }
+
+  /** 로그인 성공 시각을 기록합니다. updatedAt은 프로필 동기화와 구분하기 위해 함께 갱신합니다. */
+  public void recordLogin(Instant now) {
+    Instant requiredNow = Objects.requireNonNull(now, "now must not be null");
+    this.lastLoginAt = requiredNow;
+    this.updatedAt = requiredNow;
   }
 
   private static String requireDisplayName(String value) {

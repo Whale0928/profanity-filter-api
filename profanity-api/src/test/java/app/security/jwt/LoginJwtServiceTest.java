@@ -6,8 +6,10 @@ import static app.core.data.response.constant.StatusCode.USER_INACTIVE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import app.domain.support.PageResult;
 import app.domain.user.UserAccount;
 import app.domain.user.UserAccountRepository;
+import app.domain.user.UserRole;
 import app.security.authentication.AuthenticationType;
 import app.security.authentication.CredentialAuthenticationException;
 import app.security.authentication.CustomAuthentication;
@@ -21,9 +23,11 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -106,7 +110,7 @@ class LoginJwtServiceTest {
     assertThat(((LoginUserPrincipal) authentication.getPrincipal()).id()).isEqualTo(user.getId());
     assertThat(authentication.getAuthorities())
         .extracting("authority")
-        .containsExactly("AUTH_LOGIN_JWT", "ROLE_USER");
+        .containsExactly("AUTH_LOGIN_JWT", "ROLE_CLIENT");
     assertThat(authentication.getCredentials()).isNull();
     assertThat(authentication.toString()).doesNotContain(token);
   }
@@ -240,6 +244,49 @@ class LoginJwtServiceTest {
         .hasMessage(statusCode);
   }
 
+  @Test
+  @DisplayName("역할은 토큰이 아니라 인증 시점의 DB 값을 사용한다")
+  void authenticate_usesCurrentDatabaseRole() {
+    UserAccount user = userAccountRepository.save(activeUser());
+    String token = loginJwtService.issue(user).token();
+
+    promoteToAdmin(user);
+    Authentication promoted = loginJwtService.authenticate(token);
+
+    assertThat(promoted.getAuthorities())
+        .extracting("authority")
+        .containsExactly("AUTH_LOGIN_JWT", "ROLE_ADMIN");
+    assertThat(((LoginUserPrincipal) promoted.getPrincipal()).isAdmin()).isTrue();
+
+    demoteToClient(user);
+    Authentication demoted = loginJwtService.authenticate(token);
+
+    assertThat(demoted.getAuthorities())
+        .as("역할을 회수하면 같은 토큰으로도 관리자 권한을 얻지 못한다")
+        .extracting("authority")
+        .containsExactly("AUTH_LOGIN_JWT", "ROLE_CLIENT");
+    assertThat(((LoginUserPrincipal) demoted.getPrincipal()).isAdmin()).isFalse();
+  }
+
+  private static void promoteToAdmin(UserAccount user) {
+    setRole(user, UserRole.ADMIN);
+  }
+
+  private static void demoteToClient(UserAccount user) {
+    setRole(user, UserRole.CLIENT);
+  }
+
+  /** 역할 변경 API를 만들지 않는 계약을 지키려고 운영 코드에 승격 수단을 두지 않았으므로 테스트에서 직접 값을 바꾼다. */
+  private static void setRole(UserAccount user, UserRole role) {
+    try {
+      var field = UserAccount.class.getDeclaredField("role");
+      field.setAccessible(true);
+      field.set(user, role);
+    } catch (ReflectiveOperationException exception) {
+      throw new IllegalStateException(exception);
+    }
+  }
+
   private UserAccount activeUser() {
     return UserAccount.create("Tester", "tester@example.com", null, NOW);
   }
@@ -268,6 +315,27 @@ class LoginJwtServiceTest {
     public UserAccount save(UserAccount userAccount) {
       users.put(userAccount.getId(), userAccount);
       return userAccount;
+    }
+
+    @Override
+    public List<UserAccount> findAllByIdIn(Collection<UUID> ids) {
+      return ids.stream().map(users::get).filter(Objects::nonNull).toList();
+    }
+
+    @Override
+    public PageResult<UserAccount> searchForAdmin(String query, UserRole role, int page, int size) {
+      List<UserAccount> matched =
+          users.values().stream()
+              .filter(user -> role == null || user.getRole() == role)
+              .filter(
+                  user ->
+                      query == null
+                          || user.getDisplayName().contains(query)
+                          || user.getPrimaryEmail().contains(query))
+              .toList();
+      int from = Math.min(page * size, matched.size());
+      int to = Math.min(from + size, matched.size());
+      return PageResult.of(matched.subList(from, to), page, to < matched.size());
     }
   }
 }

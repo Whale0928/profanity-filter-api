@@ -1,6 +1,7 @@
 package app.e2e;
 
 import app.ProfanityFilterApplication;
+import app.application.filter.AhocorasickFilter;
 import app.test.support.container.MySqlTestContainer;
 import app.test.support.probe.RecordProbe;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -35,6 +36,8 @@ abstract class AbstractApiTester {
 
   @Autowired private CacheManager cacheManager;
 
+  @Autowired private AhocorasickFilter dictionaryFilter;
+
   protected RecordProbe recordProbe;
 
   @DynamicPropertySource
@@ -52,6 +55,7 @@ abstract class AbstractApiTester {
   @BeforeEach
   void setUpApiTester() {
     MySqlTestContainer.resetSeedData(MYSQL);
+    dictionaryFilter.synchronizeProfanityTrie();
     cacheManager
         .getCacheNames()
         .forEach(

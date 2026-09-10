@@ -1,8 +1,12 @@
+export type UserRole = "CLIENT" | "ADMIN";
+
 export type LoginUser = {
+  admin?: boolean;
   avatarUrl: string | null;
   displayName: string;
   email: string;
   id: string;
+  role?: UserRole;
 };
 
 type LoginTokenData = {
@@ -15,6 +19,7 @@ type LoginTokenData = {
 export type ApiResponse<T> = {
   data: T | null;
   status?: {
+    code?: number;
     description?: string;
     DetailDescription?: string;
   };
@@ -24,7 +29,7 @@ export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? "https://api.k
 
 export async function readData<T>(response: Response): Promise<T> {
   const body = await response.json() as ApiResponse<T>;
-  if (!response.ok || body.data === null) {
+  if (!response.ok || body.data == null || (body.status?.code !== undefined && (body.status.code < 2000 || body.status.code >= 3000))) {
     throw new Error(body.status?.DetailDescription || body.status?.description || "요청을 완료하지 못했습니다.");
   }
   return body.data;

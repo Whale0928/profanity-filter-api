@@ -69,9 +69,14 @@ public class ApiKeyManagementService {
     return ApiKeyView.from(apiKeyRepository.save(apiKey));
   }
 
+  /**
+   * 소유한 API Key를 변경 목적으로 조회합니다.
+   *
+   * <p>관리자 폐기와 겹쳐도 폐기된 키에서 새 유효 키가 파생되지 않도록 행을 잠급니다.
+   */
   private ApiKey requireOwned(UUID apiKeyId, UUID userId) {
     return apiKeyRepository
-        .findByIdAndUserId(apiKeyId, userId)
+        .findByIdAndUserIdForUpdate(apiKeyId, userId)
         .orElseThrow(() -> new BusinessException(StatusCode.API_KEY_NOT_FOUND));
   }
 

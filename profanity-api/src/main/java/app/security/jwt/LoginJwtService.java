@@ -41,7 +41,6 @@ public class LoginJwtService implements RequestAuthenticator {
   private static final String TOKEN_USE_CLAIM = "token_use";
   private static final String AUTH_TYPE_CLAIM = "auth_type";
   private static final String ACCESS_TOKEN_USE = "access";
-  private static final String USER_AUTHORITY = "ROLE_USER";
   private static final String RS256 = "RS256";
 
   private final JwtEncoder jwtEncoder;
@@ -113,14 +112,16 @@ public class LoginJwtService implements RequestAuthenticator {
                         HttpStatus.UNAUTHORIZED, LOGIN_TOKEN_INVALID));
     requireActive(userAccount);
 
+    // 역할은 토큰이 아니라 인증마다 조회한 DB 값을 사용한다. 관리자 회수가 즉시 반영되어야 하기 때문이다.
     LoginUserPrincipal principal =
-        new LoginUserPrincipal(userAccount.getId(), userAccount.getPrimaryEmail());
+        new LoginUserPrincipal(
+            userAccount.getId(), userAccount.getPrimaryEmail(), userAccount.getRole());
     return new CustomAuthentication(
         AuthenticationType.LOGIN_JWT,
         null,
         List.of(
             new SimpleGrantedAuthority(AuthenticationType.LOGIN_JWT.authority()),
-            new SimpleGrantedAuthority(USER_AUTHORITY)),
+            new SimpleGrantedAuthority(userAccount.getRole().authority())),
         principal);
   }
 

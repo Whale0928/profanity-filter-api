@@ -89,12 +89,23 @@ function parseMarkdown(content: string): ReactNode[] {
       continue;
     }
 
+    if (line.startsWith("> ")) {
+      nodes.push(<blockquote key={`quote-${index}`}>{renderInline(line.slice(2))}</blockquote>);
+      index += 1;
+      continue;
+    }
+    // A standalone pipe is text, not a table; always advance the parser.
+    if (line.startsWith("|")) {
+      nodes.push(<p key={`pipe-${index}`}>{renderInline(line)}</p>);
+      index += 1;
+      continue;
+    }
     const paragraph: string[] = [];
     while (
       index < lines.length && lines[index].trim() &&
       !/^(#{1,4})\s+/.test(lines[index]) && !/^[-*]\s+/.test(lines[index]) &&
       !/^\d+\.\s+/.test(lines[index]) && !lines[index].startsWith("```") &&
-      !lines[index].startsWith("|") && !/^\s{0,3}(?:-{3,}|\*{3,}|_{3,})\s*$/.test(lines[index])
+      !lines[index].startsWith("|") && !lines[index].startsWith("> ") && !/^\s{0,3}(?:-{3,}|\*{3,}|_{3,})\s*$/.test(lines[index])
     ) {
       paragraph.push(lines[index].trim());
       index += 1;
@@ -130,9 +141,13 @@ function renderTable(lines: string[], key: string) {
 }
 
 function renderInline(text: string): ReactNode[] {
-  return text.split(/(`[^`]+`|\*\*[^*]+\*\*)/g).filter(Boolean).map((part, index) => {
+  return text.split(/(`[^`]+`|\*\*[^*]+\*\*|\[[^\]]+\]\([^\s)]+\))/g).filter(Boolean).map((part, index) => {
     if (part.startsWith("`") && part.endsWith("`")) return <code key={`${part}-${index}`}>{part.slice(1, -1)}</code>;
     if (part.startsWith("**") && part.endsWith("**")) return <strong key={`${part}-${index}`}>{part.slice(2, -2)}</strong>;
+    const link = /^\[([^\]]+)\]\(([^\s)]+)\)$/.exec(part);
+    if (link && !link[2].includes("\\") && /^(https?:\/\/|mailto:|\/(?!\/))/i.test(link[2])) {
+      return <a key={`${part}-${index}`} href={link[2]} rel="noreferrer noopener">{link[1]}</a>;
+    }
     return <Fragment key={`${part}-${index}`}>{part}</Fragment>;
   });
 }
