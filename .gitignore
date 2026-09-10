@@ -61,3 +61,6 @@ application-prod.yml
 /.env
 .DS_Store
 /.playwright-mcp/
+
+# task 런타임 산출물 (pid/log)
+/.task-run/

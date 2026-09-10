@@ -1,0 +1,229 @@
+version: "3"
+
+silent: true
+
+vars:
+  RUN_DIR: .task-run
+  UI_PORT: '{{.UI_PORT | default "5173"}}'
+
+tasks:
+  default:
+    desc: 사용 가능한 태스크 목록
+    cmds:
+      - |
+        cat <<'EOF'
+
+        기동
+          task api           백엔드 (포그라운드, Ctrl+C 로 중단)
+          task ui:up         UI 개발 서버 (백그라운드)
+
+        UI 제어
+          task ui:down       종료
+          task ui:restart    재기동
+          task ui:status     상태 확인
+          task ui:logs       로그 추적
+
+        기타
+          task submodule:update   서브모듈을 원격 최신으로 갱신
+          task --list-all         전체 태스크 목록
+
+        EOF
+
+  api:
+    desc: 백엔드 기동 (포그라운드)
+    # dotenv 는 먼저 나열한 파일의 값이 이긴다. 로컬 오버라이드를 앞에 두어야
+    # 공용 .env 의 원격 DB/Redis 주소를 덮어쓴다.
+    dotenv:
+      - module.secrets/project/profanity-filter/backend/local.env
+      - module.secrets/project/profanity-filter/backend/.env
+    cmds:
+      - ./gradlew :profanity-api:bootRun
+
+  submodule:update:
+    desc: 서브모듈을 원격 최신으로 갱신
+    cmds:
+      - |
+        bash -uo pipefail <<'BASH'
+        git submodule update --init --remote --recursive || exit 1
+        echo
+        git submodule status
+        echo
+        if git status --porcelain -- module.platform module.secrets | grep -q .; then
+          echo "서브모듈 포인터가 변경되었습니다. 반영하려면:"
+          echo "  git add module.platform module.secrets && git commit -m 'chore: 서브모듈을 원격 최신으로 갱신'"
+        else
+          echo "이미 최신입니다."
+        fi
+        BASH
+
+  ui:up:
+    desc: UI 개발 서버 기동 (백그라운드)
+    cmds:
+      - task: _up
+        vars:
+          NAME: ui
+          PORT: "{{.UI_PORT}}"
+          PORT_VAR: UI_PORT
+          HEALTH: "http://127.0.0.1:{{.UI_PORT}}/"
+          TIMEOUT: "60"
+          CMD: 'npm --prefix ui/app run dev -- --port {{.UI_PORT}} --strictPort'
+
+  ui:down:
+    desc: UI 개발 서버 종료
+    cmds:
+      - task: _down
+        vars: { NAME: ui, PORT: "{{.UI_PORT}}" }
+
+  ui:restart:
+    desc: UI 개발 서버 재기동
+    cmds:
+      - task: ui:down
+      - task: ui:up
+
+  ui:status:
+    desc: UI 개발 서버 상태 확인
+    cmds:
+      - task: _status
+        vars: { NAME: ui, PORT: "{{.UI_PORT}}" }
+
+  ui:logs:
+    desc: UI 로그 추적
+    cmds:
+      - tail -f {{.RUN_DIR}}/ui.log
+
+  # ----------------------------------------------------------------- 내부 구현
+  # owners(): 포트를 점유한 프로세스의 명령줄에 이 워크트리 경로가 들어 있으면
+  # 우리가 띄운 것으로 본다. 개발 서버가 자식 프로세스를 따로 띄우기 때문에
+  # PID 파일만으로는 종료 대상을 특정할 수 없다.
+
+  _up:
+    internal: true
+    cmds:
+      - |
+        bash -uo pipefail <<'BASH'
+        root="$PWD"
+        owners() {
+          for p in $(lsof -ti tcp:"$1" -sTCP:LISTEN 2>/dev/null); do
+            ps -ww -p "$p" -o command= 2>/dev/null | grep -qF "$root" && echo "$p"
+          done
+        }
+
+        mkdir -p {{.RUN_DIR}}
+        pidfile="{{.RUN_DIR}}/{{.NAME}}.pid"
+        logfile="{{.RUN_DIR}}/{{.NAME}}.log"
+
+        running="$(owners {{.PORT}} | tr '\n' ' ')"
+        if [ -n "${running// /}" ]; then
+          echo "[{{.NAME}}] 이미 실행 중 (pid ${running% }, port {{.PORT}})"
+          echo "       재기동하려면 task {{.NAME}}:restart"
+          exit 0
+        fi
+
+        blocker="$(lsof -ti tcp:{{.PORT}} -sTCP:LISTEN 2>/dev/null | head -1)"
+        if [ -n "$blocker" ]; then
+          echo "[{{.NAME}}] port {{.PORT}} 를 이 워크트리 밖의 프로세스가 점유하고 있습니다."
+          ps -ww -p "$blocker" -o pid=,command= | sed 's/^/       /'
+          echo "       다른 포트로 띄우려면 {{.PORT_VAR}}=<포트> task {{.NAME}}:up"
+          exit 1
+        fi
+
+        : > "$logfile"
+        {{.CMD}} >>"$logfile" 2>&1 &
+        pid=$!
+        echo "$pid" > "$pidfile"
+        echo "[{{.NAME}}] 기동 중 (pid $pid), 로그: $logfile"
+
+        for ((i = 0; i < {{.TIMEOUT}}; i++)); do
+          if curl -sf -o /dev/null --max-time 2 "{{.HEALTH}}"; then
+            echo "[{{.NAME}}] 준비 완료 -> {{.HEALTH}}"
+            exit 0
+          fi
+          if ! kill -0 "$pid" 2>/dev/null && [ -z "$(owners {{.PORT}})" ]; then
+            echo "[{{.NAME}}] 기동 실패. 로그 마지막 20줄:"
+            tail -20 "$logfile" | sed 's/^/       /'
+            exit 1
+          fi
+          sleep 1
+        done
+
+        echo "[{{.NAME}}] {{.TIMEOUT}}초 안에 응답하지 않았습니다. 로그를 확인하세요: $logfile"
+        exit 1
+        BASH
+
+  _down:
+    internal: true
+    cmds:
+      - |
+        bash -uo pipefail <<'BASH'
+        root="$PWD"
+        owners() {
+          for p in $(lsof -ti tcp:"$1" -sTCP:LISTEN 2>/dev/null); do
+            ps -ww -p "$p" -o command= 2>/dev/null | grep -qF "$root" && echo "$p"
+          done
+        }
+
+        pidfile="{{.RUN_DIR}}/{{.NAME}}.pid"
+        targets="$(owners {{.PORT}})"
+        if [ -f "$pidfile" ]; then
+          p="$(cat "$pidfile")"
+          kill -0 "$p" 2>/dev/null && targets="$targets $p"
+          rm -f "$pidfile"
+        fi
+        targets="$(echo "$targets" | tr ' ' '\n' | sort -u | grep -v '^$')"
+
+        if [ -z "$targets" ]; then
+          echo "[{{.NAME}}] 실행 중이 아닙니다."
+          exit 0
+        fi
+
+        for p in $targets; do
+          pkill -TERM -P "$p" 2>/dev/null
+          kill -TERM "$p" 2>/dev/null
+        done
+
+        for ((i = 0; i < 15; i++)); do
+          alive=""
+          for p in $targets; do kill -0 "$p" 2>/dev/null && alive="$alive $p"; done
+          [ -z "$alive" ] && break
+          sleep 1
+        done
+
+        for p in $targets; do
+          if kill -0 "$p" 2>/dev/null; then
+            echo "[{{.NAME}}] pid $p 강제 종료"
+            kill -KILL "$p" 2>/dev/null
+          fi
+        done
+        echo "[{{.NAME}}] 종료 (pid $(echo "$targets" | tr '\n' ' '))"
+
+        leftover="$(lsof -ti tcp:{{.PORT}} -sTCP:LISTEN 2>/dev/null | head -1)"
+        if [ -n "$leftover" ]; then
+          echo "[{{.NAME}}] 다만 port {{.PORT}} 는 아직 아래 프로세스가 쓰고 있습니다."
+          ps -ww -p "$leftover" -o pid=,command= | sed 's/^/       /'
+        fi
+        BASH
+
+  _status:
+    internal: true
+    cmds:
+      - |
+        bash -uo pipefail <<'BASH'
+        root="$PWD"
+        owners() {
+          for p in $(lsof -ti tcp:"$1" -sTCP:LISTEN 2>/dev/null); do
+            ps -ww -p "$p" -o command= 2>/dev/null | grep -qF "$root" && echo "$p"
+          done
+        }
+
+        running="$(owners {{.PORT}} | tr '\n' ' ')"
+        if [ -n "${running// /}" ]; then
+          echo "[{{.NAME}}] 실행 중 (pid ${running% }, port {{.PORT}})"
+          exit 0
+        fi
+        blocker="$(lsof -ti tcp:{{.PORT}} -sTCP:LISTEN 2>/dev/null | head -1)"
+        if [ -n "$blocker" ]; then
+          echo "[{{.NAME}}] 정지. 단 port {{.PORT}} 는 외부 프로세스가 점유 중 (pid $blocker)"
+        else
+          echo "[{{.NAME}}] 정지 (port {{.PORT}} 비어 있음)"
+        fi
+        BASH
