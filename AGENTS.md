@@ -236,5 +236,5 @@ API와 UI는 **별도 이미지·별도 Deployment**다. 화면이 바뀌는 변
 4. **CORS**: `SecurityConfig`가 경로별로 나눔. `/api/v1/auth/**`·`/dashboard/**`·`/admin/**`은 설정된 origin만 허용(credentials 허용), 그 밖의 외부 API는 `allowedOrigins(List.of("*"))`에 credentials 비허용
 5. **`SyncScheduler` ShedLock 미적용**: 다중 인스턴스(replicas 2) 환경에서 중복 동기화 가능 (코드에 주석으로 인지됨)
 6. **`NormalProfanityFilter.collect`**: `HashSet`이며 동기화 메서드 내 원자적 재할당으로만 수정됨
-7. `@Cacheable` 캐시(Caffeine `request_filter`)에 명시적 TTL/무효화 전략 없음
+7. `@Cacheable` 캐시(Caffeine `request_filter`)는 TTL 24시간·최대 1,000건이고 키는 `문장 + 모드`뿐. 사전이 바뀌면 `FilterResultCacheEvictor`가 인스턴스별로 비움. 키에 고객 정보가 없으므로 고객마다 결과가 달라지는 기능을 넣을 때는 캐시부터 확인
 8. 시크릿 파일(`.env`, `.secrets`, `*.enc.yaml`, `*.sops.yaml`, `module.secrets/`)의 값은 읽거나 출력하지 말 것
