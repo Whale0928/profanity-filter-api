@@ -1,7 +1,7 @@
 # 4. 공통 테스트 지원을 위한 test support 모듈 구성
 
 ## Status
-제안 (2026.06.20)
+승인 (2026.06.22)
 
 ## Context
 현재 테스트 지원 코드는 각 모듈의 `src/test/java` 아래에 흩어져 있다. API 테스트는 `FakeProfanityHandler`, `FakeClientMetadataReader`, `SecurityFakeStubConfig` 같은 fixture를 사용하고, 도메인 테스트는 `InmemoryClientsRepository`, `InmemoryProfanityRepository`, `ClientTestFixture` 같은 테스트 더블을 직접 가진다.

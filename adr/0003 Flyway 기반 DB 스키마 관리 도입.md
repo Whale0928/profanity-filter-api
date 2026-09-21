@@ -1,7 +1,7 @@
 # 3. Flyway 기반 DB 스키마 관리 도입
 
 ## Status
-제안 (2026.06.20)
+승인 (2026.06.22)
 
 ## Context
 현재 RDB 설정은 `spring.jpa.hibernate.ddl-auto=validate`로 되어 있어 애플리케이션 기동 시 엔티티와 실제 DB 스키마의 정합성만 검증한다. 그러나 레포지토리 안에는 Flyway, Liquibase, `schema.sql`, `data.sql` 같은 스키마 생성·변경 이력이 없다.

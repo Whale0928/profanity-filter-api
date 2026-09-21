@@ -50,7 +50,6 @@ application-prod.yml
 /logs/info/**
 /logs/warn/**
 /.env.redis
-/docs/index.html
 /data/**
 /sso/sso.env
 /profanity-api/src/main/resources/application-sso.local.yaml
