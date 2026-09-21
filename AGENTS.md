@@ -79,6 +79,7 @@ profanity-shared (Common)
 - Stateless Spring Security에서 `API_KEY`, `LOGIN_JWT`, 미래 확장용 `OAUTH2_ACCESS_TOKEN`을 명시적으로 분리
 - `CustomAuthenticationFilter` → `RequestCredentialResolver` → 타입별 authenticator가 정확히 하나의 `Authentication`만 새 `SecurityContext`에 설정
 - 기존 외부 API는 `X-API-KEY`와 `AUTH_API_KEY`; `/api/v1/auth/me`, `/api/v1/dashboard/**`는 RS256 로그인 JWT와 `AUTH_LOGIN_JWT`/`ROLE_USER` 사용
+- `api_keys`가 API Key 인증의 유일한 원장이며 원문 대신 SHA-256 hash만 저장
 - OAuth2 Client Credentials access token은 의도적으로 미구현. 외부 API Bearer는 `OAUTH2_ACCESS_TOKEN` 경계에서 HTTP 401/code 4017로 fail-closed
 - SSO 성공은 일회용 교환 코드 → `/api/v1/auth/exchange`; access token 15분, opaque refresh 14일/절대 세션 30일, MySQL hash 저장과 rotation 사용
 - refresh replay는 5초 grace 안에서 loser 요청만 실패하고 family를 유지하며, grace 이후 재사용은 session family 전체 폐기

@@ -63,3 +63,6 @@ application-prod.yml
 
 # task 런타임 산출물 (pid/log)
 /.task-run/
+
+# AGENTS.md가 원본이다. Claude Code가 읽도록 로컬에서만 심볼릭 링크를 둔다.
+/CLAUDE.md
