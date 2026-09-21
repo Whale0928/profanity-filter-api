@@ -39,8 +39,13 @@ spec:
               value: "8080"
             - name: SPRING_PROFILES_ACTIVE
               value: "prod"
+            # JDBC URL이 serverTimezone=Asia/Seoul이라 드라이버는 LocalDateTime을 JVM 시간대에서
+            # 서비스 시간대로 변환해 보낸다. JVM이 UTC이면 이미 KST로 만든 시각에 9시간이 더 얹히므로
+            # JVM 시간대를 서비스 시간대에 맞춰 고정해 변환량을 0으로 만든다.
+            - name: TZ
+              value: "Asia/Seoul"
             - name: JAVA_TOOL_OPTIONS
-              value: "-XX:MaxRAMPercentage=75.0"
+              value: "-XX:MaxRAMPercentage=75.0 -Duser.timezone=Asia/Seoul"
           envFrom:
             - secretRef:
                 name: profanity-secrets
