@@ -198,3 +198,67 @@
   .console-shell .admin-post-title { font-size:12px; }
   .admin-title-cell { gap:4px; }
 }
+
+/* 통계 개요: 요약 카드와 막대는 사이트 색상 토큰만 사용한다. */
+.stats-panel { display:flex; flex-direction:column; gap:18px; }
+.stats-header { display:flex; justify-content:space-between; align-items:flex-end; gap:16px; flex-wrap:wrap; margin-bottom:0; }
+.stats-header-actions { display:flex; align-items:center; gap:10px; }
+.stats-badge { display:inline-flex; align-items:center; height:24px; padding:0 8px; border:1px solid var(--line); border-radius:5px; background:var(--code-bg); font:500 11px/1 ui-monospace,monospace; color:var(--text-muted); }
+.stats-period { margin:0; font:12px ui-monospace,monospace; color:var(--text-muted); }
+
+.stats-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; }
+.stats-card { display:flex; flex-direction:column; gap:7px; padding:15px 17px; border:1px solid var(--line); border-radius:10px; background:var(--surface); }
+.stats-card-label { font-size:12px; color:var(--text-muted); }
+.stats-card-value { display:flex; align-items:baseline; gap:7px; font:600 28px/1.05 ui-monospace,monospace; letter-spacing:-.03em; }
+.stats-card-value small { font:500 13px ui-monospace,monospace; color:var(--text-muted); }
+.stats-card-value.is-accent, .stats-card-value.is-accent small { color:var(--accent-strong); }
+.stats-card-note { font-size:11px; color:var(--text-muted); }
+
+.stats-block { display:flex; flex-direction:column; gap:16px; padding:18px 20px 20px; border:1px solid var(--line); border-radius:10px; background:var(--surface); }
+.stats-block-head { display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; }
+.stats-block-head h2 { display:flex; align-items:center; gap:8px; margin:0; font-size:14px; font-weight:600; }
+.stats-block-head h2 > span { border:1px solid var(--line); border-radius:4px; padding:2px 6px; font:11px/1.4 ui-monospace,monospace; color:var(--text-muted); }
+.stats-legend { display:flex; gap:16px; }
+.stats-legend span { display:inline-flex; align-items:center; gap:6px; font-size:12px; }
+.stats-legend i { width:11px; height:11px; border-radius:3px; background:var(--accent-soft); box-shadow:inset 0 0 0 1px var(--line); }
+.stats-legend i.is-detected { background:var(--accent); box-shadow:none; }
+
+.stats-chart { display:flex; align-items:flex-end; gap:14px; }
+.stats-bar-column { flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; gap:7px; }
+.stats-bar-total { font:500 12px ui-monospace,monospace; }
+.stats-bar-track { width:100%; max-width:58px; height:180px; display:flex; flex-direction:column; justify-content:flex-end; }
+.stats-bar { width:100%; display:flex; flex-direction:column; justify-content:flex-end; border-radius:4px 4px 0 0; background:var(--accent-soft); overflow:hidden; }
+.stats-bar-detected { width:100%; background:var(--accent); }
+.stats-bar-date { font-size:12px; color:var(--text-muted); }
+.stats-bar-detected-value { font:500 11px ui-monospace,monospace; color:var(--accent-strong); }
+
+.stats-columns { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:14px; }
+.stats-modes { display:flex; flex-direction:column; gap:14px; }
+.stats-mode { display:flex; flex-direction:column; gap:7px; }
+.stats-mode-head { display:flex; justify-content:space-between; align-items:baseline; gap:12px; }
+.stats-mode-name { display:flex; align-items:baseline; gap:7px; font-size:13px; font-weight:500; }
+.stats-mode-name small { font-size:11px; font-weight:400; color:var(--text-muted); }
+.stats-mode-value { font:500 12px ui-monospace,monospace; color:var(--text-muted); }
+.stats-track { height:10px; border-radius:5px; background:var(--code-bg); }
+.stats-track-fill { height:10px; border-radius:5px; background:var(--accent); }
+
+.stats-tiles { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.stats-tile { display:flex; flex-direction:column; gap:5px; padding:13px 14px; border-radius:8px; background:var(--bg); }
+.stats-tile span { font-size:12px; color:var(--text-muted); }
+.stats-tile strong { font:600 22px/1.1 ui-monospace,monospace; }
+.stats-tile small { font:10px ui-monospace,monospace; color:var(--text-muted); }
+
+.stats-panel .admin-table th.is-numeric, .stats-panel .admin-table td.is-numeric { text-align:right; }
+.stats-panel .admin-table td { padding:11px 14px; font-size:13px; }
+.stats-panel .admin-table td.is-numeric { font:500 12px ui-monospace,monospace; }
+.stats-hint { margin-left:7px; font:11px ui-monospace,monospace; color:var(--text-muted); }
+.stats-owner { color:var(--text-muted); }
+.stats-rate { color:var(--accent-strong); }
+.stats-last-used { color:var(--text-muted); font:11px ui-monospace,monospace !important; }
+.stats-unknown { color:var(--text-muted); }
+
+@media (max-width:720px) {
+  .stats-chart { gap:8px; }
+  .stats-bar-total, .stats-bar-detected-value { font-size:10px; }
+  .stats-tiles { grid-template-columns:minmax(0,1fr); }
+}

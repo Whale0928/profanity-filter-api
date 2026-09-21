@@ -318,6 +318,11 @@ class LoginJwtServiceTest {
     }
 
     @Override
+    public long countCreatedSince(Instant from) {
+      return users.values().stream().filter(user -> !user.getCreatedAt().isBefore(from)).count();
+    }
+
+    @Override
     public List<UserAccount> findAllByIdIn(Collection<UUID> ids) {
       return ids.stream().map(users::get).filter(Objects::nonNull).toList();
     }

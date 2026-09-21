@@ -5,6 +5,7 @@ import app.domain.user.UserAccount;
 import app.domain.user.UserAccountRepository;
 import app.domain.user.UserRole;
 import java.lang.reflect.Field;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -33,6 +34,11 @@ public class InMemoryUserAccountRepository implements UserAccountRepository {
     return values.values().stream()
         .filter(user -> user.getPrimaryEmail().equalsIgnoreCase(primaryEmail.trim()))
         .findFirst();
+  }
+
+  @Override
+  public long countCreatedSince(Instant from) {
+    return values.values().stream().filter(user -> !user.getCreatedAt().isBefore(from)).count();
   }
 
   @Override

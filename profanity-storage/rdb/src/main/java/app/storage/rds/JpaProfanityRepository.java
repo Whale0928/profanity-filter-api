@@ -22,6 +22,11 @@ public interface JpaProfanityRepository
   long countAll();
 
   @Override
+  @Query(
+      "SELECT COUNT(p) FROM profanity_word p WHERE p.isUsed = app.domain.profanity.constant.isUsedType.Y")
+  long countUsedWords();
+
+  @Override
   @Lock(LockModeType.PESSIMISTIC_WRITE)
   @Query("select p from profanity_word p where p.id = :id")
   Optional<ProfanityWord> findByIdForUpdate(@Param("id") Long id);

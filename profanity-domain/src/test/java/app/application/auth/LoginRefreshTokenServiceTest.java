@@ -191,6 +191,11 @@ class LoginRefreshTokenServiceTest {
     }
 
     @Override
+    public long countCreatedSince(Instant from) {
+      return values.values().stream().filter(user -> !user.getCreatedAt().isBefore(from)).count();
+    }
+
+    @Override
     public List<UserAccount> findAllByIdIn(Collection<UUID> ids) {
       return ids.stream().map(values::get).filter(Objects::nonNull).toList();
     }

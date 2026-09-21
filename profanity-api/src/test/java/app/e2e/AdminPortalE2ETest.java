@@ -5,10 +5,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 
 import app.application.auth.LoginAuthService;
 import app.application.manage.SyncHandler;
+import app.core.data.constant.Mode;
+import app.core.data.response.constant.StatusCode;
 import app.domain.user.OAuthLoginProfile;
 import app.domain.user.OAuthProvider;
 import app.test.support.fixture.SeedApiKeys;
 import com.fasterxml.jackson.databind.JsonNode;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
@@ -381,6 +384,56 @@ class AdminPortalE2ETest extends AbstractApiTester {
     String id = token.at("/user/id").asText();
     if (admin) setRole(id, "ADMIN");
     return new Login(id, token.path("accessToken").asText());
+  }
+
+  @Test
+  @DisplayName("통계 개요는 기간 내 기록을 집계하고 허용하지 않는 기간은 거절한다")
+  void statistics_aggregateRecordsAndRejectUnsupportedPeriod() throws Exception {
+    Login admin = login("statistics-admin", true);
+
+    JsonNode before = data(request(get("/api/v1/admin/statistics"), admin.token()));
+    long totalBefore = before.at("/summary/totalRequests").asLong();
+    long detectedBefore = before.at("/summary/detectedRequests").asLong();
+
+    insertRecord("통계집계검증1", Mode.NORMAL, "바보");
+    insertRecord("통계집계검증2", Mode.FILTER, "");
+    insertRecord("통계집계검증3", Mode.NORMAL, "멍청이");
+
+    JsonNode after = data(request(get("/api/v1/admin/statistics"), admin.token()));
+
+    assertThat(after.at("/summary/totalRequests").asLong() - totalBefore).isEqualTo(3);
+    assertThat(after.at("/summary/detectedRequests").asLong() - detectedBefore).isEqualTo(2);
+    assertThat(after.at("/period/days").asInt()).isEqualTo(7);
+    assertThat(after.path("daily")).hasSize(7);
+    assertThat(after.path("modes")).hasSize(3);
+    // 기록에 남긴 해시는 시드 API Key의 것이라 키 이름까지 이어 붙는다.
+    assertThat(after.path("topApiKeys")).isNotEmpty();
+    assertThat(after.at("/topApiKeys/0/name").asText()).isNotBlank();
+
+    JsonNode rejected =
+        body(request(get("/api/v1/admin/statistics").param("days", "14"), admin.token()));
+    assertThat(rejected.at("/status/code").asInt()).isEqualTo(StatusCode.BAD_REQUEST.code());
+  }
+
+  /**
+   * 기록을 직접 넣습니다. created_at은 서비스가 조회 경계를 만들 때와 같은 JVM 기본 시간대의 벽시계여야 하므로 SQL의 NOW()가 아니라 자바에서 계산한 값을
+   * 넘깁니다.
+   */
+  private void insertRecord(String requestText, Mode mode, String words) throws Exception {
+    try (var connection = dataSource.getConnection();
+        var statement =
+            connection.prepareStatement(
+                """
+                INSERT INTO records(tracking_id, api_key_hash, request_text, mode, words, created_at)
+                VALUES (UNHEX(REPLACE(UUID(),'-','')), SHA2(?,256), ?, ?, ?, ?)
+                """)) {
+      statement.setString(1, SeedApiKeys.READ_CLIENT.apiKey());
+      statement.setString(2, requestText);
+      statement.setString(3, mode.name());
+      statement.setString(4, words);
+      statement.setObject(5, LocalDateTime.now());
+      assertThat(statement.executeUpdate()).isEqualTo(1);
+    }
   }
 
   private void setRole(String id, String role) throws Exception {

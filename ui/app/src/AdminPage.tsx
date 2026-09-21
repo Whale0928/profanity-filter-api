@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, ArrowUpRight, Check, MagnifyingGlass, PencilSimple, Plus, ShieldCheck, Trash, X, CaretLeft, CaretRight, NotePencil, BookOpen, ChatCircleText, Users, Key } from "@phosphor-icons/react";
+import { ArrowLeft, ArrowUpRight, Check, MagnifyingGlass, PencilSimple, Plus, ShieldCheck, Trash, X, CaretLeft, CaretRight, ChartBar, NotePencil, BookOpen, ChatCircleText, Users, Key } from "@phosphor-icons/react";
 import "./AdminPage.css";
 import AdminMockPanels from "./AdminMockPanels";
 import AdminPanels from "./AdminPanels";
-const menus = [{ id: "news", label: "소식 관리", icon: NotePencil }, { id: "dictionary", label: "필터 사전", icon: BookOpen }, { id: "inquiries", label: "문의", icon: ChatCircleText }, { id: "users", label: "사용자 관리", icon: Users }, { id: "keys", label: "API Key 관리", icon: Key }] as const;
+import AdminStatistics from "./AdminStatistics";
+const menus = [{ id: "statistics", label: "통계", icon: ChartBar }, { id: "news", label: "소식 관리", icon: NotePencil }, { id: "dictionary", label: "필터 사전", icon: BookOpen }, { id: "inquiries", label: "문의", icon: ChatCircleText }, { id: "users", label: "사용자 관리", icon: Users }, { id: "keys", label: "API Key 관리", icon: Key }] as const;
 type Menu = typeof menus[number]["id"];
 import MarkdownDocument from "./docs/MarkdownDocument";
 import { createNews, deleteNews, listAdminNews, updateNews, NEWS_CATEGORIES, type NewsCategory, type NewsPost, type NewsStatus } from "./news";
@@ -27,7 +28,7 @@ export default function AdminPage({
   preview: boolean;
 }) {
   const posts = useMockPosts();
-  const [menu, setMenu] = useState<Menu>("news");
+  const [menu, setMenu] = useState<Menu>("statistics");
   const [collapsed, setCollapsed] = useState(() => window.localStorage.getItem("pf-admin-sidebar-collapsed") === "true");
   useEffect(() => { window.localStorage.setItem("pf-admin-sidebar-collapsed", String(collapsed)); }, [collapsed]);
   const [filter, setFilter] = useState<"all" | MockPost["state"]>("all");
@@ -144,7 +145,9 @@ export default function AdminPage({
     <div className="console-workspace">
       <header className="console-topbar"><div><h1>{draft ? (editingId ? "소식 수정" : "새 소식 작성") : menus.find(item => item.id === menu)?.label}</h1></div>{menu === "news" && !draft && <button className="compact-button filled" type="button" onClick={() => edit()}><Plus size={14} />새 소식</button>}</header>
       <div className="admin-main">
-      {menu !== "news" ? (
+      {menu === "statistics" ? (
+        <AdminStatistics accessToken={accessToken} preview={preview} />
+      ) : menu !== "news" ? (
         preview
           ? <AdminMockPanels key={menu} menu={menu} />
           : accessToken ? <AdminPanels accessToken={accessToken} currentUserId={currentUserId} key={menu} menu={menu} /> : null

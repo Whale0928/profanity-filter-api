@@ -20,6 +20,11 @@ public interface JpaWordManagementRepository
   @Query("UPDATE word_management SET status = 'OK' WHERE id = :id")
   Boolean activateWord(Long id);
 
+  /** 대기 상태는 WordManagementRequest.STATUS_REQUEST 하나이며 레거시 승인값 OK는 여기에 들지 않습니다. */
+  @Override
+  @Query("SELECT COUNT(w) FROM word_management w WHERE w.status = 'REQUEST'")
+  long countPendingRequests();
+
   @Override
   @Lock(LockModeType.PESSIMISTIC_WRITE)
   @Query("SELECT w FROM word_management w WHERE w.inquiryId = :inquiryId")

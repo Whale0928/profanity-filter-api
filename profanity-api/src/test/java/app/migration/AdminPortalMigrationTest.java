@@ -39,7 +39,7 @@ class AdminPortalMigrationTest {
       }
 
       var migrated = flyway(container, null).migrate();
-      assertThat(migrated.migrationsExecuted).isEqualTo(1);
+      assertThat(migrated.migrationsExecuted).isEqualTo(2);
       assertThat(flyway(container, null).migrate().migrationsExecuted).isZero();
       assertThat(flyway(container, null).validateWithResult().validationSuccessful).isTrue();
 
@@ -115,11 +115,11 @@ class AdminPortalMigrationTest {
   }
 
   @Test
-  @DisplayName("빈 DB에도 V1부터 V5까지 순서대로 적용되고 재실행은 변경을 만들지 않는다")
-  void migrateFreshDatabase_appliesAllFiveOnce() throws Exception {
+  @DisplayName("빈 DB에도 V1부터 V6까지 순서대로 적용되고 재실행은 변경을 만들지 않는다")
+  void migrateFreshDatabase_appliesEveryMigrationOnce() throws Exception {
     try (MySQLContainer container = MySqlTestContainer.create()) {
       container.start();
-      assertThat(flyway(container, null).migrate().migrationsExecuted).isEqualTo(5);
+      assertThat(flyway(container, null).migrate().migrationsExecuted).isEqualTo(6);
       assertThat(flyway(container, null).migrate().migrationsExecuted).isZero();
       assertThat(flyway(container, null).validateWithResult().validationSuccessful).isTrue();
       try (Connection connection = connection(container)) {
@@ -129,6 +129,17 @@ class AdminPortalMigrationTest {
             connection,
             "INSERT INTO users(id,display_name,primary_email,status,created_at,updated_at) VALUES (UNHEX(LPAD('55',32,'0')),'new','new@example.test','ACTIVE',CURRENT_TIMESTAMP(6),CURRENT_TIMESTAMP(6))");
         assertThat(rows(connection, "SELECT role FROM users")).containsExactly(List.of("CLIENT"));
+        // V6이 만든 기간 조회용 인덱스입니다. 관리자 통계가 기간만으로 records를 조회할 때 사용합니다.
+        assertThat(
+                rows(
+                    connection,
+                    """
+                    SELECT column_name FROM information_schema.statistics
+                    WHERE table_schema = DATABASE() AND table_name = 'records'
+                      AND index_name = 'idx_records_created'
+                    ORDER BY seq_in_index
+                    """))
+            .containsExactly(List.of("created_at"), List.of("id"));
       }
     }
   }

@@ -40,6 +40,11 @@ public class InMemoryInquiryRepository implements InquiryRepository {
   }
 
   @Override
+  public long countByStatus(InquiryStatus status) {
+    return values.values().stream().filter(inquiry -> inquiry.getStatus() == status).count();
+  }
+
+  @Override
   public PageResult<Inquiry> searchForAdmin(
       InquiryType type, InquiryStatus status, String query, int page, int size) {
     List<Inquiry> matched =

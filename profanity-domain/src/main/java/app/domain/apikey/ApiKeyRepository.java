@@ -1,6 +1,7 @@
 package app.domain.apikey;
 
 import app.domain.support.PageResult;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -33,6 +34,15 @@ public interface ApiKeyRepository {
    * @param activeOnly true면 유효한 키만, false면 만료된 키만, null이면 전체입니다.
    */
   PageResult<ApiKey> searchForAdmin(String query, Boolean activeOnly, int page, int size);
+
+  /** 발급된 전체 API Key 수입니다. 만료된 키를 포함합니다. */
+  long countApiKeys();
+
+  /** 아직 만료되지 않은 API Key 수입니다. */
+  long countActiveApiKeys();
+
+  /** 해시 목록으로 API Key를 조회합니다. 통계에서 집계한 해시에 이름과 소유자를 붙일 때 사용합니다. */
+  List<ApiKey> findAllByKeyHashIn(Collection<String> keyHashes);
 
   Optional<ApiKey> findByKeyHash(String keyHash);
 

@@ -18,5 +18,8 @@ public interface WordManagementRepository {
 
   List<WordManagementRequest> findAllByInquiryIdIn(Collection<Long> inquiryIds);
 
+  /** 아직 승인도 거절도 되지 않은 단어 요청 수입니다. */
+  long countPendingRequests();
+
   Boolean activateWord(Long id);
 }

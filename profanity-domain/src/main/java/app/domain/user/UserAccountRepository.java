@@ -1,6 +1,7 @@
 package app.domain.user;
 
 import app.domain.support.PageResult;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -16,6 +17,9 @@ public interface UserAccountRepository {
   UserAccount save(UserAccount userAccount);
 
   List<UserAccount> findAllByIdIn(Collection<UUID> ids);
+
+  /** 지정한 시각 이후에 가입한 사용자 수입니다. */
+  long countCreatedSince(Instant from);
 
   /**
    * 관리자 사용자 목록을 조회합니다.

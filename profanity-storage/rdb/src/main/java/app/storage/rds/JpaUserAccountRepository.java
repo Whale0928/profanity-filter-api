@@ -5,6 +5,7 @@ import app.domain.user.UserAccount;
 import app.domain.user.UserAccountRepository;
 import app.domain.user.UserRole;
 import jakarta.persistence.LockModeType;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Pageable;
@@ -19,6 +20,10 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface JpaUserAccountRepository
     extends UserAccountRepository, JpaRepository<UserAccount, UUID> {
+
+  @Override
+  @Query("select count(u) from users u where u.createdAt >= :from")
+  long countCreatedSince(@Param("from") Instant from);
 
   @Override
   @Lock(LockModeType.PESSIMISTIC_WRITE)

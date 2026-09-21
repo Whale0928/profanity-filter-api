@@ -75,6 +75,15 @@ public interface JpaApiKeyRepository extends ApiKeyRepository, JpaRepository<Api
   Slice<ApiKey> searchExpiredSlice(@Param("query") String query, Pageable pageable);
 
   @Override
+  default long countApiKeys() {
+    return count();
+  }
+
+  @Override
+  @Query("select count(k) from api_keys k where k.expiredAt is null")
+  long countActiveApiKeys();
+
+  @Override
   @Modifying
   @Query(
       """

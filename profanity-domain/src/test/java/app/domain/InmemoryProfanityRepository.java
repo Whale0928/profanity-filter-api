@@ -64,6 +64,11 @@ public class InmemoryProfanityRepository implements ProfanityRepository {
   }
 
   @Override
+  public long countUsedWords() {
+    return repository.values().stream().filter(ProfanityWord::isUsed).count();
+  }
+
+  @Override
   public PageResult<ProfanityWord> searchForAdmin(
       String query, isUsedType isUsed, int page, int size) {
     List<ProfanityWord> matched =

@@ -4,6 +4,7 @@ import app.domain.apikey.ApiKey;
 import app.domain.apikey.ApiKeyRepository;
 import app.domain.support.PageResult;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -72,6 +73,23 @@ public class InMemoryApiKeyRepository implements ApiKeyRepository {
   @Override
   public Optional<ApiKey> findByIdAndUserIdForUpdate(UUID id, UUID userId) {
     return findByIdAndUserId(id, userId);
+  }
+
+  @Override
+  public long countApiKeys() {
+    return values.size();
+  }
+
+  @Override
+  public long countActiveApiKeys() {
+    return values.values().stream().filter(ApiKey::isActive).count();
+  }
+
+  @Override
+  public List<ApiKey> findAllByKeyHashIn(Collection<String> keyHashes) {
+    return values.values().stream()
+        .filter(apiKey -> keyHashes.contains(apiKey.getKeyHash()))
+        .toList();
   }
 
   @Override

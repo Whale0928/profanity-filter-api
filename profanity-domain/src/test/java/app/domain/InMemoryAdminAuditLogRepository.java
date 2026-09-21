@@ -3,6 +3,7 @@ package app.domain;
 import app.domain.audit.AdminAuditLog;
 import app.domain.audit.AdminAuditLogRepository;
 import java.lang.reflect.Field;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -21,6 +22,11 @@ public class InMemoryAdminAuditLogRepository implements AdminAuditLogRepository 
     }
     values.add(auditLog);
     return auditLog;
+  }
+
+  @Override
+  public long countCreatedSince(Instant from) {
+    return values.stream().filter(log -> !log.getCreatedAt().isBefore(from)).count();
   }
 
   @Override

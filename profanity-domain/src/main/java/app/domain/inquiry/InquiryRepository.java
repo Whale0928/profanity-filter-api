@@ -12,6 +12,9 @@ public interface InquiryRepository {
   /** 문의 상태와 단어 승인을 동시에 처리하지 못하도록 대상 행을 잠근 채 조회합니다. */
   Optional<Inquiry> findByIdForUpdate(Long id);
 
+  /** 지정한 상태의 문의 수입니다. */
+  long countByStatus(InquiryStatus status);
+
   /**
    * 관리자 문의 목록을 조회합니다.
    *

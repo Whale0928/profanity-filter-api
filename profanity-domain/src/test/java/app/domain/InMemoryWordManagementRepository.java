@@ -32,6 +32,11 @@ public class InMemoryWordManagementRepository implements WordManagementRepositor
   }
 
   @Override
+  public long countPendingRequests() {
+    return values.values().stream().filter(WordManagementRequest::isPending).count();
+  }
+
+  @Override
   public List<WordManagementRequest> findAll() {
     return new ArrayList<>(values.values());
   }
