@@ -3,7 +3,7 @@ import {
   CaretDown,
   Copy,
   GithubLogo,
-  Key,
+  Key, ListChecks,
   List,
   Moon,
   SignOut,
@@ -16,6 +16,7 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState, type MouseEvent, 
 
 import { exchangeLoginCode, logoutSession, restoreLoginSession, startSocialLogin, type LoginUser } from "./auth";
 import ApiKeysPage from "./ApiKeysPage";
+import WhitelistsPage from "./WhitelistsPage";
 import DocsPage from "./docs/DocsPage";
 import FilterExample from "./FilterExample";
 const AdminPage = lazy(() => import("./AdminPage"));
@@ -24,10 +25,10 @@ const LegalPage = lazy(() => import("./LegalPage"));
 const DashboardInquiries = lazy(() => import("./DashboardInquiries"));
 
 type Theme = "light" | "dark";
-type RoutePath = "/" | "/admin" | "/news" | "/docs" | "/login" | "/app" | "/app/credentials" | "/app/account" | "/app/keys" | "/privacy" | "/terms";
+type RoutePath = "/" | "/admin" | "/news" | "/docs" | "/login" | "/app" | "/app/credentials" | "/app/account" | "/app/keys" | "/app/whitelists" | "/privacy" | "/terms";
 type AuthStatus = "checking" | "anonymous" | "exchanging" | "authenticated" | "failed";
 
-const ROUTES: RoutePath[] = ["/", "/admin", "/news", "/docs", "/login", "/app", "/app/credentials", "/app/account", "/app/keys", "/privacy", "/terms"];
+const ROUTES: RoutePath[] = ["/", "/admin", "/news", "/docs", "/login", "/app", "/app/credentials", "/app/account", "/app/keys", "/app/whitelists", "/privacy", "/terms"];
 
 const PUBLIC_PAGE_METADATA = {
   "/": {
@@ -180,7 +181,7 @@ export default function App() {
 
   useEffect(() => {
     if (path === "/app" || path === "/app/credentials") navigate("/app/keys");
-    if ((authStatus === "anonymous" || authStatus === "failed") && (path === "/app/account" || path === "/app/keys")) navigate("/login");
+    if ((authStatus === "anonymous" || authStatus === "failed") && (path === "/app/account" || path === "/app/keys" || path === "/app/whitelists")) navigate("/login");
     if (authenticated && path === "/login") navigate("/");
   }, [authStatus, authenticated, path]);
 
@@ -229,6 +230,8 @@ export default function App() {
         return <AccountPage accessToken={accessToken} user={loginUser} />;
       case "/app/keys":
         return accessToken && loginUser ? <ApiKeysPage accessToken={accessToken} /> : null;
+      case "/app/whitelists":
+        return accessToken && loginUser ? <WhitelistsPage accessToken={accessToken} /> : null;
       default:
         return (
           <OverviewPage
@@ -339,6 +342,7 @@ function GlobalHeader({ authenticated, loginUser, mobileOpen, onMenu, onNavigate
             {accountOpen ? (
               <div aria-label="사용자 메뉴" className="identity-popover" role="menu">
                 <button onClick={() => go("/app/keys")} role="menuitem" type="button"><Key size={17} />API Key 관리</button>
+                <button onClick={() => go("/app/whitelists")} role="menuitem" type="button"><ListChecks size={17} />허용 단어 그룹</button>
                 {loginUser?.admin ? <button onClick={() => go("/admin")} role="menuitem" type="button"><ShieldCheck size={17} />관리자 페이지</button> : null}
                 <button onClick={() => go("/app/account")} role="menuitem" type="button"><UserCircle size={17} />내 계정</button>
                 <button className="sign-out" disabled={signingOut} onClick={onSignOut} role="menuitem" type="button"><SignOut size={17} />{signingOut ? "로그아웃 중" : "로그아웃"}</button>

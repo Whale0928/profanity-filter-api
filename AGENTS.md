@@ -40,6 +40,7 @@ profanity-domain (Business Logic, 라이브러리)   ── shared 를 api() 로
   ├─ application/admin/     관리자 사전·사용자·API Key 관리, 감사 기록, 통계
   ├─ application/inquiry/   문의 등록·답변, 단어 요청 승인·거절
   ├─ application/news/      소식 작성·게시
+  ├─ application/whitelist/ 계정별 허용 단어 그룹 관리와 필터 요청의 그룹 검증
   └─ domain/                엔티티(ApiKey, User/OAuthAccount, LoginSession, ProfanityWord, Records, Inquiry, NewsPost, AdminAuditLog 등) + Repository 포트
 
 profanity-storage:rdb (Data Access - RDB)
@@ -105,6 +106,13 @@ Gradle 모듈 밖에는 `ui/`(프런트엔드), `adr/`(아키텍처 결정 기�
 - `SyncScheduler`: `@Scheduled(fixedDelay = 60000)` — 1분마다 DB 단어 수 비교, 변경 시에만 Trie 재동기화. (`@SchedulerLock`은 주석 처리되어 미적용)
 - `DailyReportScheduler`: 매일 01:00에 `api_keys.request_count`와 `client_reports`를 집계한다. 두 경로는 수집 중단 검토 대상으로 `@Deprecated(forRemoval = true)`이며 서로 다른 ShedLock을 사용한다.
 
+### 허용 단어 그룹 (`profanity-domain/.../application/whitelist`, ADR 0009)
+- 계정(`users`)이 그룹을 최대 10개, 그룹당 단어 200개까지 소유. 필터 요청의 `whitelistIds`(최대 5개)로 지정한 그룹의 단어만 그 요청의 검출과 마스킹에서 빠짐. 지정하지 않으면 기존과 동일
+- 검출은 사전 단어로 일어나고 응답에는 원문 조각(`바-보`)이 나가므로, 허용 단어와 사전 단어를 `ProfanityText.comparisonKey`로 똑같이 정리해 비교. 이 규칙을 필터의 정리 규칙과 따로 두지 말 것
+- `QUICK`은 첫 검출만 돌려주므로 결과를 뒤에서 걸러 내면 안 됨. 허용 단어가 아닌 첫 검출을 찾도록 구현돼 있음
+- `WhitelistResolver`가 접수 시점에 검증. 없는 그룹과 남의 그룹은 같은 코드(`4090`)로 거절하고, 소유 계정이 없는 API Key는 `4092`. 조용히 무시하지 않음
+- 그룹 본문은 `whitelist_words` 캐시(1분)에 그룹 ID 단위로 둠. 수정한 인스턴스는 즉시 비우고 다른 인스턴스는 만료로 수렴
+
 ### 관리자 통계 (`profanity-domain/.../application/admin/AdminStatisticsService`)
 - `GET /api/v1/admin/statistics?days=7|30|90` 하나로 요약·일별 추이·모드별 분포·운영 현황·API Key 상위 5를 반환. 그 밖의 `days`는 `BAD_REQUEST`로 거절
 - 원본은 `records`. 수집 중단 예정인 `client_reports`와 `api_keys.request_count`에는 의존하지 않음
@@ -138,6 +146,7 @@ Gradle 모듈 밖에는 `ui/`(프런트엔드), `adr/`(아키텍처 결정 기�
 | GET | `/api/v1/auth/me` | LOGIN_JWT 사용자 조회 |
 | POST | `/api/v1/auth/logout` | 로그아웃 |
 | GET·POST | `/api/v1/dashboard/inquiries`, GET `/{inquiryId}` | 로그인 사용자의 문의 조회·등록 |
+| GET·POST·PUT·DELETE | `/api/v1/dashboard/whitelists`, `/{whitelistId}` | 로그인 사용자의 허용 단어 그룹 관리 |
 | GET | `/api/v1/news`, `/api/v1/news/{id}` | 공개 소식 조회 |
 | GET·POST·PUT | `/api/v1/admin/words`, PUT `/{wordId}` | 관리자 사전 조회·등록·수정 |
 | GET·PATCH·POST | `/api/v1/admin/inquiries`, `/{inquiryId}`, `/{inquiryId}/status`·`/replies`·`/word-decision` | 관리자 문의 처리와 단어 요청 승인·거절 |
@@ -236,5 +245,5 @@ API와 UI는 **별도 이미지·별도 Deployment**다. 화면이 바뀌는 변
 4. **CORS**: `SecurityConfig`가 경로별로 나눔. `/api/v1/auth/**`·`/dashboard/**`·`/admin/**`은 설정된 origin만 허용(credentials 허용), 그 밖의 외부 API는 `allowedOrigins(List.of("*"))`에 credentials 비허용
 5. **`SyncScheduler` ShedLock 미적용**: 다중 인스턴스(replicas 2) 환경에서 중복 동기화 가능 (코드에 주석으로 인지됨)
 6. **`NormalProfanityFilter.collect`**: `HashSet`이며 동기화 메서드 내 원자적 재할당으로만 수정됨
-7. `@Cacheable` 캐시(Caffeine `request_filter`)는 TTL 24시간·최대 1,000건이고 키는 `문장 + 모드`뿐. 사전이 바뀌면 `FilterResultCacheEvictor`가 인스턴스별로 비움. 키에 고객 정보가 없으므로 고객마다 결과가 달라지는 기능을 넣을 때는 캐시부터 확인
+7. `@Cacheable` 캐시(Caffeine `request_filter`)는 TTL 24시간·최대 1,000건이고 키는 `문장 + 모드`뿐. 사전이 바뀌면 `FilterResultCacheEvictor`가 인스턴스별로 비움. 키에 고객 정보가 없으므로 고객마다 결과가 달라지는 기능을 넣을 때는 캐시부터 확인. 허용 단어 그룹을 지정한 요청은 `condition`으로 이 캐시에서 제외돼 있음
 8. 시크릿 파일(`.env`, `.secrets`, `*.enc.yaml`, `*.sops.yaml`, `module.secrets/`)의 값은 읽거나 출력하지 말 것

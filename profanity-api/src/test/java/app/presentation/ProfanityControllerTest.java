@@ -292,14 +292,14 @@ class ProfanityControllerTest {
   }
 
   private static ApiRequest quickRequest(String text) {
-    return new ApiRequest(text, Mode.QUICK, null);
+    return new ApiRequest(text, Mode.QUICK, null, null);
   }
 
   private static ApiRequest normalRequest(String text) {
-    return new ApiRequest(text, Mode.NORMAL, null);
+    return new ApiRequest(text, Mode.NORMAL, null, null);
   }
 
   private static ApiRequest sanitizeRequest(String text) {
-    return new ApiRequest(text, Mode.FILTER, null);
+    return new ApiRequest(text, Mode.FILTER, null, null);
   }
 }

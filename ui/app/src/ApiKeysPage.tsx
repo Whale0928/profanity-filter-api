@@ -206,7 +206,7 @@ function IssuedKeyDialog({ issued, onClose }: { issued: IssuedApiKey; onClose: (
   );
 }
 
-function Modal({ children, label, onClose }: { children: ReactNode; label: string; onClose: () => void }) {
+export function Modal({ children, label, onClose }: { children: ReactNode; label: string; onClose: () => void }) {
   const modalRef = useRef<HTMLElement>(null);
   useEffect(() => {
     const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
