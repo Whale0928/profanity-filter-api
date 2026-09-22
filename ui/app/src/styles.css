@@ -68,6 +68,22 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .global-actions nav { display: flex; align-items: center; gap: 8px; }
 .global-actions nav a, .login-link { min-height: 42px; display: inline-flex; align-items: center; border: 0; background: transparent; padding: 0 12px; color: inherit; font-size: 14px; font-weight: 620; text-decoration: none; }
 .global-actions nav a[aria-current="page"] { color: var(--accent); }
+
+/* 로그인 사용자용 커스텀 메뉴: 상단에서는 버튼 아래로 펼쳐지는 패널, 모바일 메뉴 안에서는 목록으로 펼쳐진다. */
+.custom-menu { position: relative; }
+.custom-menu-toggle { min-height: 42px; display: inline-flex; align-items: center; gap: 5px; border: 0; border-radius: 6px; background: transparent; padding: 0 12px; color: inherit; font: inherit; font-size: 14px; font-weight: 620; cursor: pointer; }
+.custom-menu-toggle svg { transition: transform 140ms ease; }
+.custom-menu.open .custom-menu-toggle svg { transform: rotate(180deg); }
+.custom-menu-toggle.is-active, .custom-menu.open .custom-menu-toggle { color: var(--accent); }
+.custom-menu-panel { position: absolute; top: calc(100% + 10px); left: 0; z-index: 45; min-width: 260px; display: grid; gap: 2px; border: 1px solid var(--line-strong); border-radius: 8px; background: var(--surface); box-shadow: 0 18px 42px rgb(0 0 0 / 14%); padding: 7px; }
+.custom-menu-panel button { display: grid; grid-template-columns: 16px minmax(0, 1fr); column-gap: 10px; align-items: center; border: 0; border-radius: 6px; background: transparent; padding: 9px 10px; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.custom-menu-panel button svg { grid-row: span 2; color: var(--accent); }
+.custom-menu-panel button span { font-size: 13px; font-weight: 650; }
+.custom-menu-panel button small { color: var(--text-muted); font-size: 11.5px; }
+.custom-menu-panel button:hover:not(:disabled) { background: var(--surface-subtle); }
+.custom-menu-panel button[aria-current="page"] span { color: var(--accent); }
+.custom-menu-panel button:disabled { cursor: default; opacity: .5; }
+.custom-menu-panel button:disabled svg { color: var(--text-muted); }
 .static-public-actions { display: flex; align-items: center; gap: 20px; }
 .static-public-actions nav { display: flex; gap: 8px; }
 .static-public-actions nav a { min-height: 42px; display: inline-flex; align-items: center; padding: 0 12px; color: inherit; font-size: 14px; font-weight: 620; text-decoration: none; }
@@ -355,6 +371,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   .static-public-actions nav { display: none; }
   .identity-menu { width: 100%; }
   .identity-popover { position: static; margin-top: 8px; box-shadow: none; }
+  .custom-menu-toggle { width: 100%; justify-content: space-between; }
+  .custom-menu-panel { position: static; margin: 4px 0 6px; box-shadow: none; }
   .theme-toggle { width: max-content; }
   :root { --content-rail: min(760px, calc(100vw - 40px)); }
   .login-page { grid-template-columns: 1fr; gap: 48px; }
@@ -686,3 +704,59 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 }
 .admin-dialog { color:var(--text); }
 .admin-dialog::backdrop { background:#0007; }
+
+/* 허용 단어 그룹: 목록은 API Key 화면의 행 구조를 그대로 쓰고 단어 칩과 편집 폼만 더한다. */
+.whitelist-row { min-height: 0; grid-template-columns: minmax(240px, 1.05fr) minmax(0, 1fr) auto; }
+.whitelist-name { border: 0; background: transparent; padding: 0; color: inherit; font: inherit; letter-spacing: inherit; text-align: left; cursor: pointer; }
+.whitelist-name:hover { color: var(--accent-strong); }
+.whitelist-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+.whitelist-chip { display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); padding: 5px 10px; font-size: 13px; }
+.whitelist-chip.is-removable { padding: 0 2px 0 11px; font-size: 14px; }
+.whitelist-chip button { width: 32px; height: 36px; display: grid; place-items: center; border: 0; background: transparent; color: var(--text-muted); cursor: pointer; }
+.whitelist-chip button:hover { color: var(--danger); }
+.whitelist-more { padding: 5px 4px; color: var(--text-muted); font-size: 13px; }
+.whitelist-usage { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 40px; align-items: start; margin-top: 44px; }
+.whitelist-usage h2 { margin: 0 0 12px; font-size: 20px; letter-spacing: -.03em; }
+.whitelist-usage p { margin: 0 0 8px; color: var(--text-muted); font-size: 14px; line-height: 1.75; }
+.whitelist-usage pre, .whitelist-guide pre { margin: 0; border-radius: 10px; background: #17211d; color: #f2f2eb; padding: 20px 22px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; line-height: 1.75; overflow-x: auto; }
+.whitelist-editor .keys-heading h1 { font-size: clamp(28px, 3.2vw, 38px); }
+.whitelist-back { min-height: 44px; display: inline-flex; align-items: center; gap: 6px; border: 0; background: transparent; padding: 0; color: var(--accent-strong); font-size: 13px; font-weight: 700; cursor: pointer; }
+.whitelist-editor-actions { display: flex; align-items: center; gap: 10px; }
+.whitelist-editor-actions .danger-text { min-height: 48px; display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line-strong); border-radius: 7px; background: transparent; padding: 0 18px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.whitelist-editor-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 44px; align-items: start; margin-top: 40px; }
+.whitelist-fields { display: grid; gap: 30px; }
+.whitelist-field { display: grid; gap: 9px; }
+.whitelist-field > span, .whitelist-field-head label { font-size: 13px; font-weight: 700; }
+.whitelist-field-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+.whitelist-field-head span { font: 500 12px ui-monospace, monospace; color: var(--text-muted); }
+.whitelist-field input { width: 100%; height: 48px; border: 1px solid var(--line-strong); border-radius: 7px; background: var(--surface); color: var(--text); padding: 0 14px; font: inherit; font-size: 15px; }
+.whitelist-field small { color: var(--text-muted); font-size: 12px; }
+.whitelist-inline { display: flex; align-items: center; gap: 8px; }
+.whitelist-inline code { flex: 1; min-width: 0; height: 48px; display: flex; align-items: center; border: 1px solid var(--line); border-radius: 7px; background: var(--code-bg); padding: 0 14px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; overflow-x: auto; }
+.whitelist-inline button { min-height: 48px; border: 1px solid var(--line-strong); border-radius: 7px; background: transparent; color: var(--text); padding: 0 16px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.whitelist-inline .whitelist-add { border-color: var(--text); background: var(--text); color: var(--bg); font-weight: 700; }
+.whitelist-inline button:disabled { opacity: .45; cursor: default; }
+.whitelist-box { min-height: 72px; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 8px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-subtle); padding: 16px; }
+.whitelist-box p { margin: 0; color: var(--text-muted); font-size: 13px; }
+.whitelist-guide { display: grid; gap: 0; }
+.whitelist-guide h2 { margin: 0 0 18px; font-size: 18px; letter-spacing: -.02em; }
+.whitelist-guide h2 + h2, .whitelist-before-after + h2 { margin-top: 28px; }
+.whitelist-before-after { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.whitelist-before-after > div { display: grid; gap: 6px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); padding: 14px 15px; }
+.whitelist-before-after span { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); }
+.whitelist-before-after > div:last-child span { color: var(--accent-strong); }
+.whitelist-before-after p { margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; line-height: 1.6; word-break: break-all; }
+.whitelist-before-after small { color: var(--text-muted); font-size: 11.5px; }
+.whitelist-before-after small b { color: var(--accent-strong); }
+.whitelist-guide p code { border: 1px solid var(--line); border-radius: 4px; background: var(--code-bg); padding: 1px 5px; font-size: 12px; }
+.whitelist-guide pre { margin-bottom: 18px; }
+.whitelist-guide p { margin: 0; border-bottom: 1px solid var(--line); padding: 14px 0; font-size: 13px; }
+.whitelist-guide p:first-of-type { border-top: 1px solid var(--line); }
+.whitelist-guide .whitelist-guide-note { margin-bottom: 18px; border: 1px dashed var(--line-strong); border-radius: 10px; padding: 18px 20px; color: var(--text-muted); font-size: 13px; line-height: 1.7; }
+.whitelist-guide .whitelist-guide-note + p { border-top: 1px solid var(--line); }
+.whitelist-word-error { margin: 0; color: var(--danger); font-size: 12.5px; }
+.whitelist-create { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.whitelist-create small { color: var(--text-muted); font-size: 12px; }
+@media (max-width: 860px) {
+  .whitelist-row, .whitelist-usage, .whitelist-editor-grid { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+}

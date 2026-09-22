@@ -41,6 +41,9 @@ public enum StatusCode {
   WORD_DECISION_ALREADY_APPLIED(4084, "이미 승인 또는 거절된 단어 요청입니다."),
   WORD_MODIFY_TARGET_REQUIRED(4085, "수정 요청은 변경 대상 표현이 없어 사전에 자동 반영할 수 없습니다."),
   WORD_NOT_IN_DICTIONARY(4086, "사전에 없는 단어라 제외 처리를 적용할 수 없습니다."),
+  WHITELIST_NOT_FOUND(4090, "허용 단어 그룹을 찾을 수 없습니다."),
+  WHITELIST_LIMIT_EXCEEDED(4091, "허용 단어 그룹의 상한을 넘었습니다."),
+  WHITELIST_OWNER_REQUIRED(4092, "계정에 연결된 API Key만 허용 단어 그룹을 사용할 수 있습니다."),
   INTERNAL_SERVER_ERROR(5000, "서버 내부 오류가 발생 했습니다., 재시도 시 문제가 지속 되는 경우 관리자에게 문의 바랍니다."),
   SERVICE_UNAVAILABLE(5030, "현재 서비스가 점검중이므로 서비스 응답할 수 없는 경우 발생합니다."),
   ;

@@ -3,7 +3,7 @@ import {
   CaretDown,
   Copy,
   GithubLogo,
-  Key,
+  Funnel, Key, ListChecks,
   List,
   Moon,
   SignOut,
@@ -16,6 +16,7 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState, type MouseEvent, 
 
 import { exchangeLoginCode, logoutSession, restoreLoginSession, startSocialLogin, type LoginUser } from "./auth";
 import ApiKeysPage from "./ApiKeysPage";
+import WhitelistsPage from "./WhitelistsPage";
 import DocsPage from "./docs/DocsPage";
 import FilterExample from "./FilterExample";
 const AdminPage = lazy(() => import("./AdminPage"));
@@ -24,10 +25,10 @@ const LegalPage = lazy(() => import("./LegalPage"));
 const DashboardInquiries = lazy(() => import("./DashboardInquiries"));
 
 type Theme = "light" | "dark";
-type RoutePath = "/" | "/admin" | "/news" | "/docs" | "/login" | "/app" | "/app/credentials" | "/app/account" | "/app/keys" | "/privacy" | "/terms";
+type RoutePath = "/" | "/admin" | "/news" | "/docs" | "/login" | "/app" | "/app/credentials" | "/app/account" | "/app/keys" | "/app/whitelists" | "/privacy" | "/terms";
 type AuthStatus = "checking" | "anonymous" | "exchanging" | "authenticated" | "failed";
 
-const ROUTES: RoutePath[] = ["/", "/admin", "/news", "/docs", "/login", "/app", "/app/credentials", "/app/account", "/app/keys", "/privacy", "/terms"];
+const ROUTES: RoutePath[] = ["/", "/admin", "/news", "/docs", "/login", "/app", "/app/credentials", "/app/account", "/app/keys", "/app/whitelists", "/privacy", "/terms"];
 
 const PUBLIC_PAGE_METADATA = {
   "/": {
@@ -180,7 +181,7 @@ export default function App() {
 
   useEffect(() => {
     if (path === "/app" || path === "/app/credentials") navigate("/app/keys");
-    if ((authStatus === "anonymous" || authStatus === "failed") && (path === "/app/account" || path === "/app/keys")) navigate("/login");
+    if ((authStatus === "anonymous" || authStatus === "failed") && (path === "/app/account" || path === "/app/keys" || path === "/app/whitelists")) navigate("/login");
     if (authenticated && path === "/login") navigate("/");
   }, [authStatus, authenticated, path]);
 
@@ -229,6 +230,8 @@ export default function App() {
         return <AccountPage accessToken={accessToken} user={loginUser} />;
       case "/app/keys":
         return accessToken && loginUser ? <ApiKeysPage accessToken={accessToken} /> : null;
+      case "/app/whitelists":
+        return accessToken && loginUser ? <WhitelistsPage accessToken={accessToken} /> : null;
       default:
         return (
           <OverviewPage
@@ -314,6 +317,7 @@ function GlobalHeader({ authenticated, loginUser, mobileOpen, onMenu, onNavigate
           <NavLink active={path === "/"} label="소개" onNavigate={onNavigate} to="/" />
           <NavLink active={path === "/news"} label="소식" onNavigate={onNavigate} to="/news" />
           <NavLink active={path === "/docs"} label="API 문서" onNavigate={onNavigate} to="/docs" />
+          {authenticated ? <CustomMenu onNavigate={onNavigate} path={path} /> : null}
           {authenticated && loginUser?.admin ? <NavLink active={path === "/admin"} label="관리자" onNavigate={onNavigate} to="/admin" /> : null}
         </nav>
         <a
@@ -339,6 +343,7 @@ function GlobalHeader({ authenticated, loginUser, mobileOpen, onMenu, onNavigate
             {accountOpen ? (
               <div aria-label="사용자 메뉴" className="identity-popover" role="menu">
                 <button onClick={() => go("/app/keys")} role="menuitem" type="button"><Key size={17} />API Key 관리</button>
+                <button onClick={() => go("/app/whitelists")} role="menuitem" type="button"><ListChecks size={17} />허용 단어 그룹</button>
                 {loginUser?.admin ? <button onClick={() => go("/admin")} role="menuitem" type="button"><ShieldCheck size={17} />관리자 페이지</button> : null}
                 <button onClick={() => go("/app/account")} role="menuitem" type="button"><UserCircle size={17} />내 계정</button>
                 <button className="sign-out" disabled={signingOut} onClick={onSignOut} role="menuitem" type="button"><SignOut size={17} />{signingOut ? "로그아웃 중" : "로그아웃"}</button>
@@ -373,6 +378,38 @@ function InternalLink({
   };
 
   return <a aria-current={current ? "page" : undefined} className={className} href={to} onClick={navigateInternally}>{children}</a>;
+}
+
+/**
+ * 로그인 사용자에게만 보이는 상단 메뉴입니다. 누르면 아래로 펼쳐지고, 바깥을 누르거나 Escape로 닫힙니다.
+ * 커스텀 필터링 그룹은 아직 없는 기능이라 항목만 보여 주고 비활성으로 둡니다.
+ */
+function CustomMenu({ onNavigate, path }: { onNavigate: (path: RoutePath) => void; path: RoutePath }) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const active = path === "/app/whitelists";
+  useEffect(() => {
+    if (!open) return;
+    const onPointer = (event: PointerEvent) => { if (!rootRef.current?.contains(event.target as Node)) setOpen(false); };
+    const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") setOpen(false); };
+    document.addEventListener("pointerdown", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("pointerdown", onPointer); document.removeEventListener("keydown", onKey); };
+  }, [open]);
+  const go = (next: RoutePath) => { setOpen(false); onNavigate(next); };
+  return (
+    <div className={open ? "custom-menu open" : "custom-menu"} ref={rootRef}>
+      <button aria-controls="custom-menu-panel" aria-current={active && !open ? "page" : undefined} aria-expanded={open} className={active ? "custom-menu-toggle is-active" : "custom-menu-toggle"} onClick={() => setOpen((value) => !value)} type="button">
+        커스텀<CaretDown aria-hidden="true" size={13} />
+      </button>
+      {open ? (
+        <div className="custom-menu-panel" id="custom-menu-panel">
+          <button aria-current={active ? "page" : undefined} onClick={() => go("/app/whitelists")} type="button"><ListChecks size={16} /><span>허용 단어 그룹</span><small>검출에서 뺄 단어를 용도별로 관리</small></button>
+          <button aria-disabled="true" disabled type="button"><Funnel size={16} /><span>커스텀 필터링 그룹</span><small>준비 중</small></button>
+        </div>
+      ) : null}
+    </div>
+  );
 }
 
 function NavLink({ active, label, onNavigate, to }: { active: boolean; label: string; onNavigate: (path: RoutePath) => void; to: RoutePath }) {
