@@ -722,6 +722,15 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .whitelist-box p { margin: 0; color: var(--text-muted); font-size: 13px; }
 .whitelist-guide { display: grid; gap: 0; }
 .whitelist-guide h2 { margin: 0 0 18px; font-size: 18px; letter-spacing: -.02em; }
+.whitelist-guide h2 + h2, .whitelist-before-after + h2 { margin-top: 28px; }
+.whitelist-before-after { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.whitelist-before-after > div { display: grid; gap: 6px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); padding: 14px 15px; }
+.whitelist-before-after span { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); }
+.whitelist-before-after > div:last-child span { color: var(--accent-strong); }
+.whitelist-before-after p { margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; line-height: 1.6; word-break: break-all; }
+.whitelist-before-after small { color: var(--text-muted); font-size: 11.5px; }
+.whitelist-before-after small b { color: var(--accent-strong); }
+.whitelist-guide p code { border: 1px solid var(--line); border-radius: 4px; background: var(--code-bg); padding: 1px 5px; font-size: 12px; }
 .whitelist-guide pre { margin-bottom: 18px; }
 .whitelist-guide p { margin: 0; border-bottom: 1px solid var(--line); padding: 14px 0; font-size: 13px; }
 .whitelist-guide p:first-of-type { border-top: 1px solid var(--line); }

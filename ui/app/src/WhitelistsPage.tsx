@@ -305,11 +305,14 @@ function GroupEditor({ accessToken, copied, draft, initial, onBack, onChange, on
         </div>
 
         <aside className="whitelist-guide">
+          <h2>적용 결과 예시</h2>
+          <BeforeAfter words={words} />
           <h2>요청 예시</h2>
           {draft.id ? <pre>{requestExample([draft.id])}</pre> : <p className="whitelist-guide-note">저장하면 그룹 ID가 만들어지고, 그 ID를 넣은 요청 예시가 여기에 표시됩니다.</p>}
           <p>저장하면 1분 안에 반영됩니다.</p>
           <p>그룹 ID를 넣지 않은 요청은 기존과 같습니다.</p>
           <p>그룹을 삭제하면 이 ID를 쓰는 요청이 실패합니다.</p>
+          <p>허용 단어는 검출된 표현과 똑같아야 합니다. <code>바 보</code>처럼 띄어 쓴 표기는 따로 등록하세요.</p>
         </aside>
       </div>
 
@@ -325,5 +328,30 @@ function GroupEditor({ accessToken, copied, draft, initial, onBack, onChange, on
         </Modal>
       ) : null}
     </section>
+  );
+}
+
+/**
+ * 그룹의 첫 단어로 적용 전후를 보여 줍니다. 단어가 없으면 예시 단어를 씁니다.
+ * 실제 마스킹은 사전에 있는 단어에만 일어나므로, 여기서는 "등록한 단어가 검출됐다면"이라는 가정으로 그립니다.
+ */
+function BeforeAfter({ words }: { words: string[] }) {
+  const word = words[0] ?? "죽여";
+  const sentence = `오늘 보스 ${word} 이 바보야`;
+  const before = sentence.replace(word, "*".repeat(word.length)).replace("바보", "**");
+  const after = sentence.replace("바보", "**");
+  return (
+    <div className="whitelist-before-after">
+      <div>
+        <span>그룹 없이</span>
+        <p>{before}</p>
+        <small>검출: {word}, 바보</small>
+      </div>
+      <div>
+        <span>이 그룹 적용</span>
+        <p>{after}</p>
+        <small>검출: 바보 · <b>{word}</b>는 허용</small>
+      </div>
+    </div>
   );
 }
