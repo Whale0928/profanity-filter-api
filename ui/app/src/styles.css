@@ -704,7 +704,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .whitelist-editor .keys-heading h1 { font-size: clamp(28px, 3.2vw, 38px); }
 .whitelist-back { min-height: 44px; display: inline-flex; align-items: center; gap: 6px; border: 0; background: transparent; padding: 0; color: var(--accent-strong); font-size: 13px; font-weight: 700; cursor: pointer; }
 .whitelist-editor-actions { display: flex; align-items: center; gap: 10px; }
-.whitelist-editor-actions .danger-text { min-height: 48px; display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line-strong); border-radius: 7px; background: transparent; padding: 0 18px; font-weight: 700; cursor: pointer; }
+.whitelist-editor-actions .danger-text { min-height: 48px; display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line-strong); border-radius: 7px; background: transparent; padding: 0 18px; font-weight: 700; cursor: pointer; white-space: nowrap; }
 .whitelist-editor-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 44px; align-items: start; margin-top: 40px; }
 .whitelist-fields { display: grid; gap: 30px; }
 .whitelist-field { display: grid; gap: 9px; }
@@ -725,6 +725,11 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .whitelist-guide pre { margin-bottom: 18px; }
 .whitelist-guide p { margin: 0; border-bottom: 1px solid var(--line); padding: 14px 0; font-size: 13px; }
 .whitelist-guide p:first-of-type { border-top: 1px solid var(--line); }
+.whitelist-guide .whitelist-guide-note { margin-bottom: 18px; border: 1px dashed var(--line-strong); border-radius: 10px; padding: 18px 20px; color: var(--text-muted); font-size: 13px; line-height: 1.7; }
+.whitelist-guide .whitelist-guide-note + p { border-top: 1px solid var(--line); }
+.whitelist-word-error { margin: 0; color: var(--danger); font-size: 12.5px; }
+.whitelist-create { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.whitelist-create small { color: var(--text-muted); font-size: 12px; }
 @media (max-width: 860px) {
   .whitelist-row, .whitelist-usage, .whitelist-editor-grid { grid-template-columns: minmax(0, 1fr); gap: 20px; }
 }

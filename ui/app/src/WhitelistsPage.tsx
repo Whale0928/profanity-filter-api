@@ -1,5 +1,5 @@
 import { ArrowLeft, Check, Copy, ListChecks, Plus, Trash, X } from "@phosphor-icons/react";
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 
 import { Modal } from "./ApiKeysPage";
 import {
@@ -24,12 +24,49 @@ const PREVIEW_WORDS = 5;
 /** 편집 중인 그룹입니다. id가 없으면 새로 만드는 그룹입니다. */
 type Draft = { id: string | null; name: string; words: string[] };
 
+/** 편집 화면은 URL을 바꾸지 않는 대신 history 항목을 하나 쌓아, 브라우저 뒤로가기가 사이트 밖이 아니라 목록으로 돌아오게 한다. */
+type EditorState = { whitelistEditor: Draft };
+
 export default function WhitelistsPage({ accessToken }: { accessToken: string }) {
   const [groups, setGroups] = useState<WhitelistView[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [draft, setDraft] = useState<Draft | null>(null);
   const [copiedId, setCopiedId] = useState("");
+  /** 편집 중 내용. 뒤로가기 확인창을 취소해 편집으로 돌아올 때 쓰던 내용을 그대로 보여 주기 위해 부모가 들고 있는다. */
+  const working = useRef<{ id: string | null; name: string; words: string[]; entry: string } | null>(null);
+  const dirtyRef = useRef(false);
+
+  function openEditor(next: Draft) {
+    working.current = null;
+    window.history.pushState({ whitelistEditor: next } satisfies EditorState, "", window.location.href);
+    setDraft(next);
+  }
+
+  /** 편집 화면을 닫는다. history 항목을 쌓아 두었으므로 한 단계 되돌려 목록으로 온다. */
+  function closeEditor() {
+    dirtyRef.current = false;
+    if ((window.history.state as Partial<EditorState> | null)?.whitelistEditor) window.history.back();
+    else setDraft(null);
+  }
+
+  /**
+   * 브라우저 뒤로가기로 편집을 떠날 때 저장하지 않은 변경이 있으면 묻습니다. 취소하면 방금 떠난 편집 항목으로 다시 들어갑니다(history.forward).
+   * 편집기 컴포넌트가 아니라 여기서 처리하는 이유는, popstate 순간 편집기가 먼저 언마운트되어 자기 리스너를 잃기 때문입니다.
+   */
+  useEffect(() => {
+    const onPopState = () => {
+      const state = window.history.state as Partial<EditorState> | null;
+      const leavingEditor = !state?.whitelistEditor;
+      if (leavingEditor && dirtyRef.current && !window.confirm("저장하지 않은 변경이 있습니다. 나갈까요?")) {
+        window.history.forward();
+        return;
+      }
+      setDraft(state?.whitelistEditor ?? null);
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
 
   async function refresh() {
     setError("");
@@ -54,13 +91,16 @@ export default function WhitelistsPage({ accessToken }: { accessToken: string })
   const full = groups.length >= MAX_GROUPS;
 
   if (draft) {
+    const resume = working.current && working.current.id === draft.id ? working.current : null;
     return <GroupEditor
       accessToken={accessToken}
       copied={copiedId === draft.id}
       draft={draft}
-      onBack={() => setDraft(null)}
+      initial={resume}
+      onBack={closeEditor}
+      onChange={(state, dirty) => { working.current = { id: draft.id, ...state }; dirtyRef.current = dirty; }}
       onCopy={copy}
-      onDone={async () => { setDraft(null); await refresh(); }}
+      onDone={async () => { working.current = null; await refresh(); closeEditor(); }}
     />;
   }
 
@@ -72,9 +112,12 @@ export default function WhitelistsPage({ accessToken }: { accessToken: string })
           <h1>허용 단어 그룹</h1>
           <p>서비스에서 허용할 단어를 용도별로 묶어 둡니다. 필터 요청에 그룹 ID를 넣으면 적용됩니다.</p>
         </div>
-        <button className="primary-action" disabled={full} onClick={() => setDraft({ id: null, name: "", words: [] })} type="button">
-          <Plus size={18} /> 그룹 만들기
-        </button>
+        <div className="whitelist-create">
+          <button className="primary-action" disabled={full} onClick={() => openEditor({ id: null, name: "", words: [] })} type="button">
+            <Plus size={18} /> 그룹 만들기
+          </button>
+          {full ? <small>그룹은 계정당 {MAX_GROUPS}개까지 만들 수 있습니다.</small> : null}
+        </div>
       </header>
 
       <div aria-label="허용 단어 그룹 요약" className="keys-summary">
@@ -90,7 +133,7 @@ export default function WhitelistsPage({ accessToken }: { accessToken: string })
           <span><ListChecks size={28} /></span>
           <h2>아직 만든 허용 단어 그룹이 없습니다.</h2>
           <p>서비스 화면마다 허용할 단어가 다르면 그룹을 나눠 두세요.</p>
-          <button onClick={() => setDraft({ id: null, name: "", words: [] })} type="button">첫 그룹 만들기</button>
+          <button onClick={() => openEditor({ id: null, name: "", words: [] })} type="button">첫 그룹 만들기</button>
         </div>
       ) : null}
 
@@ -99,7 +142,7 @@ export default function WhitelistsPage({ accessToken }: { accessToken: string })
           {groups.map(group => (
             <article className="key-row whitelist-row" key={group.id}>
               <div className="key-primary">
-                <div><h2><button className="whitelist-name" onClick={() => setDraft({ id: group.id, name: group.name, words: group.words })} type="button">{group.name}</button></h2></div>
+                <div><h2><button className="whitelist-name" onClick={() => openEditor({ id: group.id, name: group.name, words: group.words })} type="button">{group.name}</button></h2></div>
                 <code>{group.id}</code>
                 <p>단어 {group.wordCount}개 · {formatDate(group.updatedAt)} 수정</p>
               </div>
@@ -110,7 +153,7 @@ export default function WhitelistsPage({ accessToken }: { accessToken: string })
               </div>
               <div className="key-actions">
                 <button onClick={() => void copy(group.id)} type="button">{copiedId === group.id ? <Check size={17} /> : <Copy size={17} />} {copiedId === group.id ? "복사됨" : "ID 복사"}</button>
-                <button onClick={() => setDraft({ id: group.id, name: group.name, words: group.words })} type="button">편집</button>
+                <button onClick={() => openEditor({ id: group.id, name: group.name, words: group.words })} type="button">편집</button>
               </div>
             </article>
           ))}
@@ -131,47 +174,63 @@ export default function WhitelistsPage({ accessToken }: { accessToken: string })
   );
 }
 
-function GroupEditor({ accessToken, copied, draft, onBack, onCopy, onDone }: {
+function GroupEditor({ accessToken, copied, draft, initial, onBack, onChange, onCopy, onDone }: {
   accessToken: string;
   copied: boolean;
   draft: Draft;
+  initial: { name: string; words: string[]; entry: string } | null;
   onBack: () => void;
+  onChange: (state: { name: string; words: string[]; entry: string }, dirty: boolean) => void;
   onCopy: (id: string) => Promise<void>;
   onDone: () => Promise<void>;
 }) {
-  const [name, setName] = useState(draft.name);
-  const [words, setWords] = useState<string[]>(draft.words);
-  const [entry, setEntry] = useState("");
+  const [name, setName] = useState(initial?.name ?? draft.name);
+  const [words, setWords] = useState<string[]>(initial?.words ?? draft.words);
+  const [entry, setEntry] = useState(initial?.entry ?? "");
   const [formError, setFormError] = useState("");
+  const [wordError, setWordError] = useState("");
   const [pending, setPending] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
-  /** 쉼표나 줄바꿈으로 여러 단어를 한 번에 넣을 수 있습니다. */
-  function addWords(event: FormEvent) {
-    event.preventDefault();
-    setFormError("");
+  const dirty = name !== draft.name || words.join("\n") !== draft.words.join("\n") || entry.trim() !== "";
+  useEffect(() => { onChange({ name, words, entry }, dirty && !pending); }, [name, words, entry, dirty, pending]);
+
+  /** 입력창의 내용을 목록에 합칩니다. 쉼표나 줄바꿈으로 여러 단어를 한 번에 넣을 수 있습니다. */
+  function merged(): { words: string[] } | { error: string } {
     const next = [...words];
     const keys = new Set(next.map(comparisonKey));
     for (const raw of entry.split(/[,\n]/)) {
       const word = raw.trim();
       if (!word) continue;
       const key = comparisonKey(word);
-      if (!key) { setFormError(`한글이나 영문이 없는 단어는 등록할 수 없습니다: ${word}`); return; }
-      if (word.length > MAX_WORD_LENGTH) { setFormError(`단어는 최대 ${MAX_WORD_LENGTH}자까지 가능합니다.`); return; }
+      if (!key) return { error: `한글이나 영문이 없는 단어는 등록할 수 없습니다: ${word}` };
+      if (word.length > MAX_WORD_LENGTH) return { error: `단어는 최대 ${MAX_WORD_LENGTH}자까지 가능합니다.` };
       if (keys.has(key)) continue;
       keys.add(key);
       next.push(word);
     }
-    if (next.length > MAX_WORDS) { setFormError(`허용 단어는 그룹당 최대 ${MAX_WORDS}개까지 가능합니다.`); return; }
-    setWords(next);
+    if (next.length > MAX_WORDS) return { error: `허용 단어는 그룹당 최대 ${MAX_WORDS}개까지 가능합니다.` };
+    return { words: next };
+  }
+
+  function addWords(event: FormEvent) {
+    event.preventDefault();
+    const result = merged();
+    if ("error" in result) { setWordError(result.error); return; }
+    setWordError("");
+    setWords(result.words);
     setEntry("");
   }
 
+  /** 입력창에 쓰다 만 단어가 있으면 버리지 않고 함께 저장합니다. */
   async function save() {
+    const result = merged();
+    if ("error" in result) { setWordError(result.error); return; }
+    setWordError("");
     setFormError("");
     setPending(true);
     try {
-      const input = { name: name.trim(), words };
+      const input = { name: name.trim(), words: result.words };
       if (draft.id) await updateWhitelist(accessToken, draft.id, input);
       else await createWhitelist(accessToken, input);
       await onDone();
@@ -196,7 +255,7 @@ function GroupEditor({ accessToken, copied, draft, onBack, onCopy, onDone }: {
     <section className="keys-page whitelist-editor page-width">
       <header className="keys-heading">
         <div>
-          <button className="whitelist-back" onClick={onBack} type="button"><ArrowLeft size={15} />허용 단어 그룹</button>
+          <button className="whitelist-back" onClick={() => { if (!dirty || window.confirm("저장하지 않은 변경이 있습니다. 나갈까요?")) onBack(); }} type="button"><ArrowLeft size={15} />허용 단어 그룹</button>
           <h1>{draft.id ? draft.name : "새 허용 단어 그룹"}</h1>
         </div>
         <div className="whitelist-editor-actions">
@@ -229,9 +288,10 @@ function GroupEditor({ accessToken, copied, draft, onBack, onCopy, onDone }: {
           <div className="whitelist-field">
             <div className="whitelist-field-head"><label htmlFor="whitelist-word">허용 단어</label><span>{words.length} / {MAX_WORDS}</span></div>
             <form className="whitelist-inline" onSubmit={addWords}>
-              <input id="whitelist-word" onChange={event => setEntry(event.target.value)} placeholder="단어 입력" value={entry} />
+              <input id="whitelist-word" onChange={event => { setEntry(event.target.value); setWordError(""); }} placeholder="단어 입력" value={entry} />
               <button className="whitelist-add" disabled={!entry.trim()} type="submit">추가</button>
             </form>
+            {wordError ? <p className="whitelist-word-error" role="alert">{wordError}</p> : null}
             <div className="whitelist-box">
               {words.map(word => (
                 <span className="whitelist-chip is-removable" key={word}>{word}
@@ -246,7 +306,7 @@ function GroupEditor({ accessToken, copied, draft, onBack, onCopy, onDone }: {
 
         <aside className="whitelist-guide">
           <h2>요청 예시</h2>
-          <pre>{requestExample([draft.id ?? EXAMPLE_ID])}</pre>
+          {draft.id ? <pre>{requestExample([draft.id])}</pre> : <p className="whitelist-guide-note">저장하면 그룹 ID가 만들어지고, 그 ID를 넣은 요청 예시가 여기에 표시됩니다.</p>}
           <p>저장하면 1분 안에 반영됩니다.</p>
           <p>그룹 ID를 넣지 않은 요청은 기존과 같습니다.</p>
           <p>그룹을 삭제하면 이 ID를 쓰는 요청이 실패합니다.</p>
