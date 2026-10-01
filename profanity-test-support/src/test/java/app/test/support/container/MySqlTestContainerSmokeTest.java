@@ -29,9 +29,9 @@ class MySqlTestContainerSmokeTest {
     assertThat(columnNullability(dataSource, "users", "primary_email")).isEqualTo("NO");
     assertThat(columnCollation(dataSource, "users", "primary_email")).isEqualTo("utf8mb4_bin");
     assertThat(uniqueIndexCount(dataSource, "users", "primary_email")).isEqualTo(1);
-    assertThat(count(dataSource, "api_keys")).isEqualTo(2);
+    assertThat(count(dataSource, "api_keys")).isEqualTo(3);
     assertThat(count(dataSource, "profanity_word")).isEqualTo(3);
-    assertThat(count(dataSource, "users")).isZero();
+    assertThat(count(dataSource, "users")).isEqualTo(1);
     assertThat(count(dataSource, "login_exchange_codes")).isZero();
     assertThat(count(dataSource, "login_refresh_sessions")).isZero();
     assertThat(count(dataSource, "login_refresh_tokens")).isZero();
@@ -41,7 +41,7 @@ class MySqlTestContainerSmokeTest {
         """
         insert into api_keys
           (id, user_id, name, email, key_hash, key_hint, issuer_info, permissions, issued_at)
-        values (UNHEX(REPLACE('00000000-0000-0000-0000-000000000003', '-', '')),
+        values (UNHEX(REPLACE('00000000-0000-0000-0000-000000000009', '-', '')),
                 null,
                 'Temporary Client',
                 'temporary@example.com',
@@ -127,8 +127,8 @@ class MySqlTestContainerSmokeTest {
 
     MySqlTestContainer.resetSeedData(MYSQL);
 
-    assertThat(count(dataSource, "api_keys")).isEqualTo(2);
-    assertThat(count(dataSource, "users")).isZero();
+    assertThat(count(dataSource, "api_keys")).isEqualTo(3);
+    assertThat(count(dataSource, "users")).isEqualTo(1);
     assertThat(count(dataSource, "login_exchange_codes")).isZero();
     assertThat(count(dataSource, "login_refresh_sessions")).isZero();
     assertThat(count(dataSource, "login_refresh_tokens")).isZero();

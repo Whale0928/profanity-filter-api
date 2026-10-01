@@ -12,11 +12,16 @@ import java.util.UUID;
 
 public class FakeApiKeyMetadataReader implements ApiKeyMetadataReader {
   public static final List<String> validKeys = new ArrayList<>();
+
+  /** 유효하지만 로그인 계정에 연결되지 않은 키. 실제 ApiKeyReader의 미연결 거절 규칙을 흉내낸다. */
+  public static final List<String> unlinkedKeys = new ArrayList<>();
+
   private final KeyGenerator apiKeyGenerator;
 
   public FakeApiKeyMetadataReader(KeyGenerator apiKeyGenerator) throws NoSuchAlgorithmException {
     this.apiKeyGenerator = apiKeyGenerator;
     validKeys.clear();
+    unlinkedKeys.clear();
     validKeys.add(apiKeyGenerator.generateApiKey());
     validKeys.add(apiKeyGenerator.generateApiKey());
   }
@@ -28,6 +33,9 @@ public class FakeApiKeyMetadataReader implements ApiKeyMetadataReader {
     }
     if (!validKeys.contains(apiKey)) {
       throw new NoSuchElementException(StatusCode.NOT_FOUND_CLIENT.stringCode());
+    }
+    if (unlinkedKeys.contains(apiKey)) {
+      throw new NoSuchElementException(StatusCode.API_KEY_NOT_LINKED.stringCode());
     }
     return new ApiKeyMetadata(
         UUID.nameUUIDFromBytes(apiKey.getBytes()),
