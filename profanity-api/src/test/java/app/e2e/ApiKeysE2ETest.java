@@ -9,6 +9,7 @@ import app.application.auth.LoginAuthService;
 import app.core.data.response.constant.StatusCode;
 import app.domain.user.OAuthLoginProfile;
 import app.domain.user.OAuthProvider;
+import app.test.support.fixture.SeedApiKeys;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -31,17 +32,32 @@ class ApiKeysE2ETest extends AbstractApiTester {
   @Test
   @DisplayName("기존 API Key는 최초 SSO 로그인 시 검증된 이메일로 한 번만 연결된다")
   void login_matchingLegacyEmail_claimsMigratedKeyOnce() throws Exception {
-    String token = login("e2e-read@example.com", "legacy-owner");
+    String email = SeedApiKeys.LEGACY_CLIENT.email();
+    String token = login(email, "legacy-owner");
 
-    awaitOwnership("e2e-read@example.com");
+    awaitOwnership(email);
     JsonNode first = body(list(token)).at("/data");
-    String secondToken = login("e2e-read@example.com", "legacy-owner");
-    awaitOwnership("e2e-read@example.com");
+    String secondToken = login(email, "legacy-owner");
+    awaitOwnership(email);
     JsonNode second = body(list(secondToken)).at("/data");
 
     assertThat(first).hasSize(1);
-    assertThat(first.get(0).at("/keyHint").asText()).isEqualTo("Hmikqf...-nDU");
+    assertThat(first.get(0).at("/keyHint").asText()).isEqualTo("GFx8zn...FZzI");
     assertThat(second).hasSize(1);
+  }
+
+  @Test
+  @DisplayName("로그인 계정에 연결되지 않은 기존 API Key는 인증을 거부하고 연결된 뒤에는 다시 허용한다")
+  void filter_unlinkedLegacyKey_isRejectedUntilClaimed() throws Exception {
+    String apiKey = SeedApiKeys.LEGACY_CLIENT.apiKey();
+
+    assertThat(filter(apiKey).at("/status/code").asInt())
+        .isEqualTo(StatusCode.API_KEY_NOT_LINKED.code());
+
+    login(SeedApiKeys.LEGACY_CLIENT.email(), "legacy-owner");
+    awaitOwnership(SeedApiKeys.LEGACY_CLIENT.email());
+
+    assertThat(filter(apiKey).at("/status/code").asInt()).isEqualTo(StatusCode.OK.code());
   }
 
   @Test

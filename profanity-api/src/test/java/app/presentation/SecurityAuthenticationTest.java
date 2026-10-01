@@ -188,6 +188,26 @@ class SecurityAuthenticationTest {
     FakeApiKeyMetadataReader.validKeys.add(key);
   }
 
+  @Test
+  @DisplayName("로그인 계정에 연결되지 않은 API 키 요청시 4034 API_KEY_NOT_LINKED 응답을 반환한다")
+  void test_4034() throws Exception {
+    ApiRequest request = quickRequest("test text");
+    String key = FakeApiKeyMetadataReader.validKeys.get(0);
+    FakeApiKeyMetadataReader.unlinkedKeys.add(key);
+
+    mockMvc
+        .perform(
+            post(REQUEST_URL)
+                .header("X-API-KEY", key)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status.code").value(StatusCode.API_KEY_NOT_LINKED.code()))
+        .andExpect(jsonPath("$.status.message").value(StatusCode.API_KEY_NOT_LINKED.status()));
+
+    FakeApiKeyMetadataReader.unlinkedKeys.remove(key);
+  }
+
   private static ApiRequest quickRequest(String text) {
     return new ApiRequest(text, Mode.QUICK, null);
   }

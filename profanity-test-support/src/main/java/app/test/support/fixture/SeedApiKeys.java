@@ -16,5 +16,13 @@ public final class SeedApiKeys {
           "e2e-write@example.com",
           "u6N_yQZAPfyrLheRXi7V0tZkvqe5Mno__vV0BlxpCjk");
 
+  /** 로그인 계정에 연결되지 않은 기존 키. 인증 거절과 최초 로그인 시 자동 연결 검증에 쓴다. */
+  public static final SeedApiKey LEGACY_CLIENT =
+      new SeedApiKey(
+          "00000000-0000-0000-0000-000000000003",
+          "E2E Legacy Client",
+          "e2e-legacy@example.com",
+          "GFx8znIDWePH3M_MOPd00aLwXp0C7LGPCKsQb13FZzI");
+
   private SeedApiKeys() {}
 }
