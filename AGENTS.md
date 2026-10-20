@@ -95,6 +95,7 @@ Gradle 모듈 밖에는 `ui/`(프런트엔드), `adr/`(아키텍처 결정 기�
 - `CustomAuthenticationFilter` → `RequestCredentialResolver` → 타입별 authenticator가 정확히 하나의 `Authentication`만 새 `SecurityContext`에 설정
 - 기존 외부 API는 `X-API-KEY`와 `AUTH_API_KEY`; `/api/v1/auth/me`, `/api/v1/dashboard/**`는 RS256 로그인 JWT와 `AUTH_LOGIN_JWT`/`ROLE_USER` 사용
 - `api_keys`가 API Key 인증의 유일한 원장이며 원문 대신 SHA-256 hash만 저장
+- `ApiKeyReader`는 만료되지 않았고 `user_id`가 연결된 키만 통과시킴. 미연결 레거시 키는 HTTP 200/code 4034(`API_KEY_NOT_LINKED`)로 거절하며 데이터는 건드리지 않음. 발급 이메일로 SSO 로그인하면 `claimUnownedByEmail`이 자동 연결해 같은 키가 다시 통과함(2026.09.30 공지 기한 경과 후 적용)
 - OAuth2 Client Credentials access token은 의도적으로 미구현. 외부 API Bearer는 `OAUTH2_ACCESS_TOKEN` 경계에서 HTTP 401/code 4017로 fail-closed
 - SSO 성공은 일회용 교환 코드 → `/api/v1/auth/exchange`; access token 15분, opaque refresh 14일/절대 세션 30일, MySQL hash 저장과 rotation 사용
 - refresh replay는 5초 grace 안에서 loser 요청만 실패하고 family를 유지하며, grace 이후 재사용은 session family 전체 폐기
@@ -110,7 +111,7 @@ Gradle 모듈 밖에는 `ui/`(프런트엔드), `adr/`(아키텍처 결정 기�
 - 계정(`users`)이 그룹을 최대 10개, 그룹당 단어 200개까지 소유. 필터 요청의 `whitelistIds`(최대 5개)로 지정한 그룹의 단어만 그 요청의 검출과 마스킹에서 빠짐. 지정하지 않으면 기존과 동일
 - 검출은 사전 단어로 일어나고 응답에는 원문 조각(`바-보`)이 나가므로, 허용 단어와 사전 단어를 `ProfanityText.comparisonKey`로 똑같이 정리해 비교. 이 규칙을 필터의 정리 규칙과 따로 두지 말 것
 - `QUICK`은 첫 검출만 돌려주므로 결과를 뒤에서 걸러 내면 안 됨. 허용 단어가 아닌 첫 검출을 찾도록 구현돼 있음
-- `WhitelistResolver`가 접수 시점에 검증. 없는 그룹과 남의 그룹은 같은 코드(`4090`)로 거절하고, 소유 계정이 없는 API Key는 `4092`. 조용히 무시하지 않음
+- `WhitelistResolver`가 접수 시점에 검증. 없는 그룹과 남의 그룹은 같은 코드(`4090`)로 거절하고, 소유 계정이 없는 API Key는 인증 단계에서 `4034`로 거절됨. Resolver의 `4092`는 소유 계정 누락에 대한 방어 검증으로 유지함. 조용히 무시하지 않음
 - 그룹 본문은 `whitelist_words` 캐시(1분)에 그룹 ID 단위로 둠. 수정한 인스턴스는 즉시 비우고 다른 인스턴스는 만료로 수렴
 
 ### 관리자 통계 (`profanity-domain/.../application/admin/AdminStatisticsService`)
@@ -199,6 +200,7 @@ cd ui/app && npm run typecheck && npm run build
 - JUnit 5(Platform), 한글 `@DisplayName` + `@Nested` BDD 스타일. API 스펙은 Springdoc 기반 `/openapi.json` 응답으로 검증
 - 도메인 계층은 Mock보다 **테스트 더블 우선** — `Inmemory*Repository`, `Fake*` 등 실제 구현 사용. Mockito는 외부 의존 격리가 필요한 일부에만 제한적 사용
 - E2E와 마이그레이션 테스트는 Testcontainers MySQL을 사용(`AbstractApiTester`, `MySqlTestContainer`)
+- E2E seed API Key(`SeedApiKeys`)는 `READ_CLIENT`·`WRITE_CLIENT`가 seed 사용자(`e2e-seed-owner@example.com`)에 연결돼 있고, `LEGACY_CLIENT`만 미연결 상태로 인증 거절과 최초 로그인 자동 연결 검증에 씀
 - 도메인 Repository 포트에 메서드를 추가하면 포트를 직접 구현한 테스트 더블을 전부 고쳐야 컴파일됨. `profanity-domain/src/test/java/app/domain/InMemory*Repository` 외에 인증 테스트 안의 중첩 더블(`LoginJwtServiceTest`, `SsoAccountServiceTest` 등)도 포함
 - 마이그레이션을 추가하면 `AdminPortalMigrationTest`의 적용 개수 검증을 함께 갱신
 - (세부 작성 규칙은 별도 스킬로 관리)

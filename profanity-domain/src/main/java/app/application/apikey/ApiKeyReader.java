@@ -31,6 +31,12 @@ public class ApiKeyReader implements ApiKeyMetadataReader {
             .filter(ApiKey::isActive)
             .orElseThrow(
                 () -> new NoSuchElementException(StatusCode.NOT_FOUND_CLIENT.stringCode()));
+    // 2026.09.30 공지 기한이 지난 미연결 키는 데이터를 만료시키지 않고 인증에서만 막는다.
+    // 발급 이메일로 로그인하면 소유권이 자동 연결되어 같은 키가 다시 통과한다.
+    if (apiKey.getUserId() == null) {
+      log.warn("[AUTH] 로그인 계정에 연결되지 않은 API Key 거절 keyHint={}", apiKey.getKeyHint());
+      throw new NoSuchElementException(StatusCode.API_KEY_NOT_LINKED.stringCode());
+    }
     // 조회 커넥션을 반환한 뒤 기록한다. 바깥 트랜잭션을 유지하면 요청마다 연결 두 개가 필요하다.
     if (apiKey.isUsageRecordStale(apiKeyUsageRecorder.now(), ApiKeyUsageRecorder.RECORD_INTERVAL)) {
       try {

@@ -22,6 +22,7 @@ public enum StatusCode {
   NOT_FOUND_CLIENT(4031, "클라이언트 정보를 찾을 수 없습니다. 인증 키가 유효하지 않거나 권한이 없는 경우 발생합니다."),
   INVALID_API_KEY(4032, "API 키가 유효하지 않습니다. 인증 키가 유효하지 않거나 권한이 없는 경우 발생합니다."),
   USER_INACTIVE(4033, "비활성 사용자 계정입니다."),
+  API_KEY_NOT_LINKED(4034, "로그인 계정에 연결되지 않은 API Key입니다. 발급 이메일로 로그인하면 자동으로 연결됩니다."),
   TOO_MANY_REQUESTS(4290, "요청 횟수가 제한이 초과 되었습니다. 일정 시간이 지나면 다시 시도해 주세요."),
   INVALID_TRACKING_ID(4002, "유효하지 않은 Tracking ID 입니다. Tracking ID를 확인해 주세요."),
   INVALID_CALLBACK_URL(4001, "콜백 URL 형식이 올바르지 않습니다. 콜백 URL을 확인해 주세요."),

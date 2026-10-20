@@ -32,6 +32,7 @@ OpenAPI의 `responses`는 HTTP 상태 코드를 기준으로 표시합니다.
 | `4030` | `Forbidden`             | 권한 부족 또는 차단된 클라이언트       |
 | `4031` | `Not_found_client`      | 클라이언트 정보 없음              |
 | `4032` | `Invalid_api_key`       | 유효하지 않은 API Key          |
+| `4034` | `Api_key_not_linked`    | 로그인 계정에 연결되지 않은 API Key. 발급 이메일로 로그인하면 자동 연결 |
 | `4290` | `Too_many_requests`     | 요청 제한 초과                 |
 | `5000` | `Internal_server_error` | 서버 내부 오류                 |
 | `5030` | `Service_unavailable`   | 서비스 점검 또는 일시 사용 불가       |

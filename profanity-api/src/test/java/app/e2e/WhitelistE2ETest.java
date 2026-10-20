@@ -32,7 +32,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 /**
  * 허용 단어 그룹(ADR 0009)을 여러 계정과 API Key로 검증합니다.
  *
- * <p>시드 사전에는 나쁜말샘플과 비속어샘플이 사용 중으로 들어 있고, 시드 API Key는 소유 계정이 연결되지 않은 과거 키입니다.
+ * <p>시드 사전에는 나쁜말샘플과 비속어샘플이 사용 중으로 들어 있고, 시드 API Key는 연결된 키와 소유 계정이 없는 과거 키를 구분합니다.
  */
 class WhitelistE2ETest extends AbstractApiTester {
 
@@ -41,7 +41,7 @@ class WhitelistE2ETest extends AbstractApiTester {
   private static final int BAD_REQUEST = 4000;
   private static final int NOT_FOUND = 4090;
   private static final int LIMIT_EXCEEDED = 4091;
-  private static final int OWNER_REQUIRED = 4092;
+  private static final int API_KEY_NOT_LINKED = 4034;
 
   @Autowired private MockMvc mockMvc;
   @Autowired private LoginAuthService loginAuthService;
@@ -418,15 +418,15 @@ class WhitelistE2ETest extends AbstractApiTester {
     }
 
     @Test
-    @DisplayName("소유 계정이 없는 API Key는 그룹을 쓸 수 없지만 그룹 없이는 그대로 동작한다")
+    @DisplayName("소유 계정이 없는 API Key는 그룹 지정 여부와 관계없이 인증에서 거절한다")
     void keyWithoutOwner() throws Exception {
       Account account = account("ownerless-helper");
       String group = group(account, "게임", "나쁜말샘플");
-      String legacyKey = SeedApiKeys.READ_CLIENT.apiKey();
+      String legacyKey = SeedApiKeys.LEGACY_CLIENT.apiKey();
 
-      assertThat(code(filter(legacyKey, BOTH, "NORMAL", List.of(group)))).isEqualTo(OWNER_REQUIRED);
-      assertThat(detected(filter(legacyKey, BOTH, "NORMAL", null)))
-          .containsExactlyInAnyOrder("나쁜말샘플", "비속어샘플");
+      assertThat(code(filter(legacyKey, BOTH, "NORMAL", List.of(group))))
+          .isEqualTo(API_KEY_NOT_LINKED);
+      assertThat(code(filter(legacyKey, BOTH, "NORMAL", null))).isEqualTo(API_KEY_NOT_LINKED);
     }
 
     @Test
@@ -534,15 +534,15 @@ class WhitelistE2ETest extends AbstractApiTester {
     @Test
     @DisplayName("과거 키도 발급 이메일로 로그인해 계정에 연결되면 그룹을 쓸 수 있다")
     void legacyKeyBecomesUsableAfterClaim() throws Exception {
-      String legacyKey = SeedApiKeys.READ_CLIENT.apiKey();
-      Login owner = loginWithEmail("legacy-owner", SeedApiKeys.READ_CLIENT.email());
+      String legacyKey = SeedApiKeys.LEGACY_CLIENT.apiKey();
+      Login owner = loginWithEmail("legacy-owner", SeedApiKeys.LEGACY_CLIENT.email());
       String group = data(createGroup(owner, "게임", List.of("나쁜말샘플"))).path("id").asText();
 
       // 키 연결은 로그인 뒤에 비동기로 일어나므로 연결될 때까지 기다린다.
       long deadline = System.currentTimeMillis() + 10_000;
       while (count(
                   "SELECT COUNT(*) FROM api_keys WHERE user_id IS NOT NULL AND email = '"
-                      + SeedApiKeys.READ_CLIENT.email()
+                      + SeedApiKeys.LEGACY_CLIENT.email()
                       + "'")
               == 0
           && System.currentTimeMillis() < deadline) {
