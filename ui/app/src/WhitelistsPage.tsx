@@ -27,7 +27,10 @@ type Draft = { id: string | null; name: string; words: string[] };
 /** 편집 화면은 URL을 바꾸지 않는 대신 history 항목을 하나 쌓아, 브라우저 뒤로가기가 사이트 밖이 아니라 목록으로 돌아오게 한다. */
 type EditorState = { whitelistEditor: Draft };
 
-export default function WhitelistsPage({ accessToken }: { accessToken: string }) {
+export default function WhitelistsPage({ accessToken, registerLeaveGuard }: {
+  accessToken: string;
+  registerLeaveGuard: (guard: (() => boolean) | null) => void;
+}) {
   const [groups, setGroups] = useState<WhitelistView[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -44,11 +47,30 @@ export default function WhitelistsPage({ accessToken }: { accessToken: string })
   }
 
   /** 편집 화면을 닫는다. history 항목을 쌓아 두었으므로 한 단계 되돌려 목록으로 온다. */
-  function closeEditor() {
+  function closeEditor(clearHistoryEntry = false) {
     dirtyRef.current = false;
-    if ((window.history.state as Partial<EditorState> | null)?.whitelistEditor) window.history.back();
-    else setDraft(null);
+    if ((window.history.state as Partial<EditorState> | null)?.whitelistEditor) {
+      // 완료한 편집 내용을 앞으로가기로 다시 열어 저장 전 값으로 덮어쓰지 않게 한다.
+      if (clearHistoryEntry) window.history.replaceState({}, "", window.location.href);
+      window.history.back();
+    } else setDraft(null);
   }
+
+  useEffect(() => {
+    registerLeaveGuard(() => {
+      if (dirtyRef.current && !window.confirm("저장하지 않은 변경이 있습니다. 나갈까요?")) return false;
+      dirtyRef.current = false;
+      return true;
+    });
+    const onBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (dirtyRef.current) event.preventDefault();
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => {
+      registerLeaveGuard(null);
+      window.removeEventListener("beforeunload", onBeforeUnload);
+    };
+  }, [registerLeaveGuard]);
 
   /**
    * 브라우저 뒤로가기로 편집을 떠날 때 저장하지 않은 변경이 있으면 묻습니다. 취소하면 방금 떠난 편집 항목으로 다시 들어갑니다(history.forward).
@@ -61,6 +83,10 @@ export default function WhitelistsPage({ accessToken }: { accessToken: string })
       if (leavingEditor && dirtyRef.current && !window.confirm("저장하지 않은 변경이 있습니다. 나갈까요?")) {
         window.history.forward();
         return;
+      }
+      if (leavingEditor) {
+        dirtyRef.current = false;
+        working.current = null;
       }
       setDraft(state?.whitelistEditor ?? null);
     };
@@ -97,10 +123,10 @@ export default function WhitelistsPage({ accessToken }: { accessToken: string })
       copied={copiedId === draft.id}
       draft={draft}
       initial={resume}
-      onBack={closeEditor}
+      onBack={() => closeEditor()}
       onChange={(state, dirty) => { working.current = { id: draft.id, ...state }; dirtyRef.current = dirty; }}
       onCopy={copy}
-      onDone={async () => { working.current = null; await refresh(); closeEditor(); }}
+      onDone={async () => { working.current = null; await refresh(); closeEditor(true); }}
     />;
   }
 

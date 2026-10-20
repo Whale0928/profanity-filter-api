@@ -12,7 +12,7 @@ import {
   UserCircle,
   X,
 } from "@phosphor-icons/react";
-import { lazy, Suspense, useEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from "react";
 
 import { exchangeLoginCode, logoutSession, restoreLoginSession, startSocialLogin, type LoginUser } from "./auth";
 import ApiKeysPage from "./ApiKeysPage";
@@ -92,6 +92,10 @@ export default function App() {
   const [signingOut, setSigningOut] = useState(false);
   const [logoutError, setLogoutError] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
+  const leaveGuard = useRef<(() => boolean) | null>(null);
+  const registerLeaveGuard = useCallback((guard: (() => boolean) | null) => {
+    leaveGuard.current = guard;
+  }, []);
   const authenticated = authStatus === "authenticated";
   const [previewRole, setPreviewRole] = useState<"visitor" | "user" | "admin">(() => readPreviewParam() ?? "visitor");
   const [previewActive, setPreviewActive] = useState(() => import.meta.env.DEV && readPreviewParam() !== null);
@@ -186,6 +190,7 @@ export default function App() {
   }, [authStatus, authenticated, path]);
 
   function navigate(next: RoutePath) {
+    if (next !== path && leaveGuard.current && !leaveGuard.current()) return;
     const nextUrl = previewActive && (next === "/news" || next === "/admin") ? `${next}?preview=${previewRole}` : next;
     if (window.location.pathname + window.location.search !== nextUrl) window.history.pushState({}, "", nextUrl);
     if (next === path) window.dispatchEvent(new PopStateEvent("popstate"));
@@ -196,6 +201,7 @@ export default function App() {
 
   async function signOut() {
     if (signingOut) return;
+    if (leaveGuard.current && !leaveGuard.current()) return;
     setSigningOut(true);
     setLogoutError("");
     try {
@@ -231,7 +237,7 @@ export default function App() {
       case "/app/keys":
         return accessToken && loginUser ? <ApiKeysPage accessToken={accessToken} /> : null;
       case "/app/whitelists":
-        return accessToken && loginUser ? <WhitelistsPage accessToken={accessToken} /> : null;
+        return accessToken && loginUser ? <WhitelistsPage accessToken={accessToken} registerLeaveGuard={registerLeaveGuard} /> : null;
       default:
         return (
           <OverviewPage
