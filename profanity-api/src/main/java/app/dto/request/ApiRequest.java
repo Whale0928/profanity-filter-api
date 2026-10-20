@@ -6,6 +6,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+import java.util.List;
+import java.util.UUID;
 import lombok.Builder;
 
 @Builder
@@ -28,7 +31,13 @@ public record ApiRequest(
         @Schema(
             description = "비동기 처리 결과를 받을 callback URL. 비어 있으면 동기 요청으로 처리합니다.",
             example = "https://example.com/callback")
-        String callbackUrl) {
+        String callbackUrl,
+    @Size(max = 5, message = "허용 단어 그룹은 요청 한 번에 최대 5개까지 지정할 수 있습니다.")
+        @Schema(
+            description =
+                "이 요청에 적용할 허용 단어 그룹 ID. 여러 개를 지정하면 허용 단어를 합쳐서 적용합니다. 비어 있으면 기존과 똑같이 동작합니다.",
+            example = "[\"0b6f7c1e-5a3d-4c1e-9a53-2f8f4d6f1b20\"]")
+        List<UUID> whitelistIds) {
 
   /**
    * 비동기 요청 여부를 반환합니다.

@@ -49,9 +49,9 @@ public class DefaultProfanityHandler implements ProfanityHandler {
 
     FilterApiResponse response =
         switch (mode) {
-          case QUICK -> quickFilter(text, trackingId);
-          case NORMAL -> normalFilter(text, trackingId);
-          case FILTER -> sanitizeProfanity(text, trackingId);
+          case QUICK -> quickFilter(text, trackingId, request.allowedWords());
+          case NORMAL -> normalFilter(text, trackingId, request.allowedWords());
+          case FILTER -> sanitizeProfanity(text, trackingId, request.allowedWords());
         };
 
     publisher.publishEvent(FilterEvent.create(request, response));
@@ -61,8 +61,12 @@ public class DefaultProfanityHandler implements ProfanityHandler {
 
   @Override
   public FilterApiResponse quickFilter(String word, UUID trackingId) {
+    return quickFilter(word, trackingId, Set.of());
+  }
+
+  private FilterApiResponse quickFilter(String word, UUID trackingId, Set<String> allowedWords) {
     ElapsedStartAt start = ElapsedStartAt.now();
-    FilterWord filterWord = normalProfanityFilter.firstMatched(word);
+    FilterWord filterWord = normalProfanityFilter.firstMatched(word, allowedWords);
     Elapsed elapsed = Elapsed.end(start);
     Set<Detected> detected = Set.of(Detected.of(filterWord.length(), filterWord.word()));
 
@@ -81,7 +85,11 @@ public class DefaultProfanityHandler implements ProfanityHandler {
 
   @Override
   public FilterApiResponse normalFilter(String word, UUID trackingId) {
-    final FilterResponse filterResponse = normalProfanityFilter.allMatched(word);
+    return normalFilter(word, trackingId, Set.of());
+  }
+
+  private FilterApiResponse normalFilter(String word, UUID trackingId, Set<String> allowedWords) {
+    final FilterResponse filterResponse = normalProfanityFilter.allMatched(word, allowedWords);
     final Set<Detected> detects = detects(filterResponse.filterWords());
 
     if (trackingId == null) {
@@ -99,7 +107,12 @@ public class DefaultProfanityHandler implements ProfanityHandler {
 
   @Override
   public FilterApiResponse sanitizeProfanity(String word, UUID trackingId) {
-    final FilterResponse filterResponse = normalProfanityFilter.allMatched(word);
+    return sanitizeProfanity(word, trackingId, Set.of());
+  }
+
+  private FilterApiResponse sanitizeProfanity(
+      String word, UUID trackingId, Set<String> allowedWords) {
+    final FilterResponse filterResponse = normalProfanityFilter.allMatched(word, allowedWords);
     final Set<Detected> detects = detects(filterResponse.filterWords());
     final String masked = masked(word, filterResponse.filterWords());
 

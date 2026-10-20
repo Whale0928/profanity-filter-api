@@ -39,7 +39,7 @@ class AdminPortalMigrationTest {
       }
 
       var migrated = flyway(container, null).migrate();
-      assertThat(migrated.migrationsExecuted).isEqualTo(2);
+      assertThat(migrated.migrationsExecuted).isEqualTo(3);
       assertThat(flyway(container, null).migrate().migrationsExecuted).isZero();
       assertThat(flyway(container, null).validateWithResult().validationSuccessful).isTrue();
 
@@ -115,11 +115,11 @@ class AdminPortalMigrationTest {
   }
 
   @Test
-  @DisplayName("빈 DB에도 V1부터 V6까지 순서대로 적용되고 재실행은 변경을 만들지 않는다")
+  @DisplayName("빈 DB에도 V1부터 V7까지 순서대로 적용되고 재실행은 변경을 만들지 않는다")
   void migrateFreshDatabase_appliesEveryMigrationOnce() throws Exception {
     try (MySQLContainer container = MySqlTestContainer.create()) {
       container.start();
-      assertThat(flyway(container, null).migrate().migrationsExecuted).isEqualTo(6);
+      assertThat(flyway(container, null).migrate().migrationsExecuted).isEqualTo(7);
       assertThat(flyway(container, null).migrate().migrationsExecuted).isZero();
       assertThat(flyway(container, null).validateWithResult().validationSuccessful).isTrue();
       try (Connection connection = connection(container)) {
@@ -140,6 +140,15 @@ class AdminPortalMigrationTest {
                     ORDER BY seq_in_index
                     """))
             .containsExactly(List.of("created_at"), List.of("id"));
+        // V7이 만든 허용 단어 그룹 테이블입니다. 없는 계정을 가리키는 그룹은 만들 수 없어야 합니다.
+        assertThat(rows(connection, "SELECT COUNT(*) FROM whitelists"))
+            .containsExactly(List.of("0"));
+        assertThatThrownBy(
+                () ->
+                    execute(
+                        connection,
+                        "INSERT INTO whitelists(id,user_id,name,words,created_at,updated_at) VALUES (UNHEX(LPAD('71',32,'0')),UNHEX(LPAD('99',32,'0')),'orphan','',CURRENT_TIMESTAMP(6),CURRENT_TIMESTAMP(6))"))
+            .isInstanceOf(Exception.class);
       }
     }
   }

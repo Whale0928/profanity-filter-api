@@ -4,6 +4,7 @@ import static app.application.HttpClient.getClientIP;
 import static app.application.HttpClient.getReferrer;
 
 import app.application.filter.ProfanityHandler;
+import app.application.whitelist.WhitelistResolver;
 import app.core.data.response.FilterApiResponse;
 import app.core.util.ApiKeys;
 import app.dto.request.ApiRequest;
@@ -35,9 +36,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class ProfanityController {
 
   private final ProfanityHandler profanityHandler;
+  private final WhitelistResolver whitelistResolver;
 
   @VerifiedClientOnly
-  @Cacheable(value = "request_filter", key = "#request.text + '_' + #request.mode")
+  @Cacheable(
+      value = "request_filter",
+      key = "#request.text + '_' + #request.mode",
+      condition = "#request.whitelistIds == null || #request.whitelistIds.isEmpty()")
   @ProfanityOpenApi.BasicProfanity
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<FilterApiResponse> basicProfanity(
@@ -45,6 +50,7 @@ public class ProfanityController {
     final String apiKey = SecurityContextUtil.getCurrentApiKey();
     final String clientIp = getClientIP(httpRequest);
     final String referrer = getReferrer(httpRequest);
+    final String apiKeyHash = SecurityContextUtil.getCurrentApiKeyHash();
 
     log.info(
         "[FILTER] 요청 수신 host={} clientIp={} apiKey={} mode={} textLen={} async={}",
@@ -59,9 +65,10 @@ public class ProfanityController {
         FilterRequest.create(
             request.text(),
             request.mode(),
-            SecurityContextUtil.getCurrentApiKeyHash(),
+            apiKeyHash,
             clientIp,
-            referrer);
+            referrer,
+            whitelistResolver.resolve(apiKeyHash, request.whitelistIds()));
 
     if (request.isAsync()) {
       FilterApiResponse response =
@@ -73,7 +80,10 @@ public class ProfanityController {
   }
 
   @VerifiedClientOnly
-  @Cacheable(value = "request_filter", key = "#request.text + '_' + #request.mode")
+  @Cacheable(
+      value = "request_filter",
+      key = "#request.text + '_' + #request.mode",
+      condition = "#request.whitelistIds == null || #request.whitelistIds.isEmpty()")
   @Hidden
   @PostMapping(consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
   public ResponseEntity<FilterApiResponse> basicProfanityByUrlencodedValue(
@@ -81,6 +91,7 @@ public class ProfanityController {
     final String apiKey = SecurityContextUtil.getCurrentApiKey();
     String clientIp = getClientIP(httpRequest);
     String referrer = getReferrer(httpRequest);
+    final String apiKeyHash = SecurityContextUtil.getCurrentApiKeyHash();
 
     log.info(
         "[FILTER] 요청 수신(form) host={} clientIp={} apiKey={} mode={} textLen={}",
@@ -94,9 +105,10 @@ public class ProfanityController {
         FilterRequest.create(
             request.text(),
             request.mode(),
-            SecurityContextUtil.getCurrentApiKeyHash(),
+            apiKeyHash,
             clientIp,
-            referrer);
+            referrer,
+            whitelistResolver.resolve(apiKeyHash, request.whitelistIds()));
     FilterApiResponse response = profanityHandler.requestFacadeFilter(filterRequest, null);
     return ResponseEntity.ok(response);
   }

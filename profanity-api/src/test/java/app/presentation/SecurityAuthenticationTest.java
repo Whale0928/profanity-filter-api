@@ -209,7 +209,7 @@ class SecurityAuthenticationTest {
   }
 
   private static ApiRequest quickRequest(String text) {
-    return new ApiRequest(text, Mode.QUICK, null);
+    return new ApiRequest(text, Mode.QUICK, null, null);
   }
 
   @TestConfiguration

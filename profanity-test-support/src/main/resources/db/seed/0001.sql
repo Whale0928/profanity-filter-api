@@ -1,5 +1,6 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
+DELETE FROM `whitelists`;
 DELETE FROM `inquiry_replies`;
 DELETE FROM `word_management`;
 DELETE FROM `inquiries`;
