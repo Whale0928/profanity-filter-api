@@ -81,21 +81,12 @@ public class NormalProfanityFilter implements ProfanityFilter, AhocorasickFilter
 
     ElapsedStartAt start = ElapsedStartAt.now();
 
-    String cleanedText = ProfanityText.clean(text);
-    int currentPos = 0;
+    ProfanityText.Cleaned cleaned = ProfanityText.cleanWithOffsets(text);
     Set<FilterWord> filterWords = new HashSet<>();
 
-    for (Emit emit : trie.parseText(cleanedText)) {
-      int startPos = text.indexOf(emit.getKeyword().charAt(0), currentPos);
-      if (startPos == -1) continue;
-      int endPos = startPos;
-      for (char c : emit.getKeyword().toCharArray()) {
-        endPos = text.indexOf(c, endPos) + 1;
-      }
-      // 허용 단어도 원문 위치는 그대로 지나가야 뒤따르는 검출의 위치가 어긋나지 않는다.
-      currentPos = endPos;
+    for (Emit emit : trie.parseText(cleaned.text())) {
       if (isAllowed(emit, allowedWords)) continue;
-      filterWords.add(FilterWord.create(text.substring(startPos, endPos), startPos, endPos));
+      filterWords.add(toFilterWord(text, cleaned, emit));
     }
     Elapsed elapsed = Elapsed.end(start);
     log.debug("[NormalProfanityFilter] 전체 비속어 필터링 완료 (지연 시간 : {})", elapsed);
@@ -111,22 +102,16 @@ public class NormalProfanityFilter implements ProfanityFilter, AhocorasickFilter
 
     ElapsedStartAt start = ElapsedStartAt.now();
 
-    String cleanedText = ProfanityText.clean(text);
-    Emit emit = trie.firstMatch(cleanedText);
+    ProfanityText.Cleaned cleaned = ProfanityText.cleanWithOffsets(text);
+    Emit emit = trie.firstMatch(cleaned.text());
 
     if (emit == null) {
       return FilterWord.empty();
     }
 
-    int startPos = text.indexOf(emit.getKeyword().charAt(0));
-    int endPos = startPos;
-    for (char c : emit.getKeyword().toCharArray()) {
-      endPos = text.indexOf(c, endPos) + 1;
-    }
-
     Elapsed elapsed = Elapsed.end(start);
     log.debug("[NormalProfanityFilter] 단일 비속어 필터링 완료 (지연 시간 : {})", elapsed);
-    return FilterWord.create(text.substring(startPos, endPos), startPos, endPos);
+    return toFilterWord(text, cleaned, emit);
   }
 
   /** 첫 검출이 허용 단어이면 그 뒤의 검출을 찾아야 하므로 전체를 훑습니다. 결과를 뒤에서 걸러 내면 허용 단어 뒤에 있는 실제 비속어를 놓칩니다. */
@@ -139,20 +124,19 @@ public class NormalProfanityFilter implements ProfanityFilter, AhocorasickFilter
       return FilterWord.empty();
     }
 
-    String cleanedText = ProfanityText.clean(text);
-    int currentPos = 0;
-    for (Emit emit : trie.parseText(cleanedText)) {
-      int startPos = text.indexOf(emit.getKeyword().charAt(0), currentPos);
-      if (startPos == -1) continue;
-      int endPos = startPos;
-      for (char c : emit.getKeyword().toCharArray()) {
-        endPos = text.indexOf(c, endPos) + 1;
-      }
-      currentPos = endPos;
+    ProfanityText.Cleaned cleaned = ProfanityText.cleanWithOffsets(text);
+    for (Emit emit : trie.parseText(cleaned.text())) {
       if (isAllowed(emit, allowedWords)) continue;
-      return FilterWord.create(text.substring(startPos, endPos), startPos, endPos);
+      return toFilterWord(text, cleaned, emit);
     }
     return FilterWord.empty();
+  }
+
+  /** 검출 구간을 원문 위치로 옮깁니다. 사이에 끼운 기호(`바-보`)는 원문 조각에 그대로 포함됩니다. */
+  private static FilterWord toFilterWord(String text, ProfanityText.Cleaned cleaned, Emit emit) {
+    int startPos = cleaned.originalStart(emit.getStart());
+    int endPos = cleaned.originalEnd(emit.getEnd());
+    return FilterWord.create(text.substring(startPos, endPos), startPos, endPos);
   }
 
   private static boolean isAllowed(Emit emit, Set<String> allowedWords) {

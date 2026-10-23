@@ -13,10 +13,12 @@ import app.dto.response.FilterResponse;
 import app.dto.response.FilterWord;
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -175,5 +177,73 @@ class NormalProfanityFilterTest {
     FilterResponse response = normalProfanityFilter.allMatched(text);
     assertFalse(response.filterWords().isEmpty());
     log.info("Found words: {}", response.filterWords());
+  }
+
+  @Nested
+  @DisplayName("검출 위치는 원문 기준으로 계산한다")
+  class OriginalOffsets {
+
+    @Test
+    @DisplayName("앞에 같은 글자로 시작하는 단어가 있어도 검출된 구간만 돌려준다")
+    void allMatched_sameLeadingCharBefore_returnsOnlyMatchedRange() {
+      // given
+      String text = "욕심 많은 욕설";
+
+      // when
+      FilterResponse result = normalProfanityFilter.allMatched(text);
+
+      // then
+      assertEquals(Set.of(FilterWord.create("욕설", 6, 8)), result.filterWords());
+    }
+
+    @Test
+    @DisplayName("첫 검출도 앞에 같은 글자로 시작하는 단어를 끌어오지 않는다")
+    void firstMatched_sameLeadingCharBefore_returnsOnlyMatchedRange() {
+      // when
+      FilterWord result = normalProfanityFilter.firstMatched("욕심 많은 욕설");
+
+      // then
+      assertEquals(FilterWord.create("욕설", 6, 8), result);
+    }
+
+    @Test
+    @DisplayName("사이에 끼운 기호는 원문 조각에 그대로 포함한다")
+    void allMatched_symbolsInside_keepsOriginalFragment() {
+      // when
+      FilterResponse result = normalProfanityFilter.allMatched("아 진짜 욕!@#설");
+
+      // then
+      assertEquals(Set.of(FilterWord.create("욕!@#설", 5, 10)), result.filterWords());
+    }
+
+    @Test
+    @DisplayName("같은 단어가 반복되면 각 위치를 따로 돌려준다")
+    void allMatched_repeatedWord_returnsEachRange() {
+      // when
+      FilterResponse result = normalProfanityFilter.allMatched("욕설 욕설");
+
+      // then
+      assertEquals(
+          Set.of(FilterWord.create("욕설", 0, 2), FilterWord.create("욕설", 3, 5)),
+          result.filterWords());
+    }
+
+    @ParameterizedTest
+    @DisplayName("영문은 대소문자가 달라도 원문 그대로 검출한다")
+    @ValueSource(strings = {"fool", "FOOL", "Fool", "fOoL"})
+    void matched_englishInAnyCase_returnsOriginalFragment(String word) {
+      // given
+      repository.save(ProfanityWord.create("fool"));
+      normalProfanityFilter.synchronizeProfanityTrie();
+      String text = "you " + word;
+
+      // when
+      FilterResponse all = normalProfanityFilter.allMatched(text);
+      FilterWord first = normalProfanityFilter.firstMatched(text);
+
+      // then
+      assertEquals(Set.of(FilterWord.create(word, 4, 8)), all.filterWords());
+      assertEquals(FilterWord.create(word, 4, 8), first);
+    }
   }
 }
