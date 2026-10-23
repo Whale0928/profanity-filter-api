@@ -91,6 +91,15 @@ class AllowedWordsFilterTest {
     }
 
     @Test
+    @DisplayName("허용하지 않으면 대소문자가 달라도 원문 그대로 검출한다")
+    void detectsEnglishCaseInsensitivelyWhenNotAllowed() {
+      // 위 허용 테스트가 검출 실패 때문에 통과하지 않도록, 허용하지 않은 경우의 검출을 함께 확인한다.
+      FilterResponse result = filter.allMatched("you FOOL", Set.of());
+
+      assertThat(result.filterWords()).containsExactly(FilterWord.create("FOOL", 4, 8));
+    }
+
+    @Test
     @DisplayName("사전에 없는 단어를 허용해도 결과가 바뀌지 않는다")
     void ignoresAllowedWordsNotInDictionary() {
       FilterResponse result = filter.allMatched("이 바보야", allowed("헤드샷"));
@@ -128,6 +137,14 @@ class AllowedWordsFilterTest {
       FilterWord result = filter.firstMatched("보스 죽여 이 바보야", allowed("죽여", "바보"));
 
       assertThat(result).isEqualTo(FilterWord.empty());
+    }
+
+    @Test
+    @DisplayName("허용 단어를 건너뛴 뒤의 영문 검출도 원문 대소문자와 위치를 지킨다")
+    void keepsCaseAndPositionAfterSkippingAllowedWord() {
+      FilterWord result = filter.firstMatched("죽여 you FOOL", allowed("죽여"));
+
+      assertThat(result).isEqualTo(FilterWord.create("FOOL", 7, 11));
     }
   }
 }

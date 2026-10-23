@@ -83,4 +83,17 @@ class DefaultProfanityHandlerTest {
     assertTrue(detected.filteredWord().equals("욕설") && detected.length() == 2);
     assertEquals("**이 들어간 문장입니다.", filtered);
   }
+
+  @Test
+  @DisplayName("filter 타입은 앞에 같은 글자로 시작하는 단어까지 마스킹하지 않는다")
+  void sanitizeProfanity_sameLeadingCharBefore_masksOnlyMatchedRange() {
+    // given
+    String word = "욕심 많은 욕설";
+
+    // when
+    FilterApiResponse response = profanityHandler.sanitizeProfanity(word, UUID.randomUUID());
+
+    // then
+    assertEquals("욕심 많은 **", response.filtered());
+  }
 }
