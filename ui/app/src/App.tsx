@@ -33,11 +33,11 @@ const ROUTES: RoutePath[] = ["/", "/admin", "/news", "/docs", "/login", "/app", 
 const PUBLIC_PAGE_METADATA = {
   "/": {
     title: "한국어 욕설·비속어 필터 API | 말조심하세욧",
-    description: "한국어 문장의 욕설과 비속어를 검출하고 QUICK, NORMAL, FILTER 모드로 확인하거나 마스킹하는 REST API입니다.",
+    description: "채팅, 댓글, 게시글의 한국어 욕설과 비속어를 검출하고 마스킹하는 욕설 필터링 REST API입니다. QUICK, NORMAL, FILTER 모드와 API Key 인증을 제공합니다.",
     canonical: "https://developers.kr-filter.com/",
   },
   "/docs": {
-    title: "한국어 텍스트 처리 API 문서 | 말조심하세욧",
+    title: "한국어 욕설·비속어 필터링 API 문서 | 말조심하세욧",
     description: "한국어 욕설·비속어 검출 API의 인증, 요청 형식, 처리 모드, 오류 모델과 OpenAPI 명세를 확인하세요.",
     canonical: "https://developers.kr-filter.com/docs",
   },
@@ -446,6 +446,7 @@ function OverviewPage({
         </div>
         <FilterExample />
       </section>
+      <UseCases />
       <section className="quickstart page-width" id="credentials">
         <div className="quickstart-copy">
           <p className="eyebrow">첫 API 요청</p>
@@ -460,6 +461,23 @@ function OverviewPage({
         <RequestExample />
       </section>
     </div>
+  );
+}
+
+// 정적 fallback(index.html)과 같은 문구를 유지한다. 검색엔진이 JS 실행 전후에 같은 본문을 보게 하기 위해서다.
+function UseCases() {
+  return (
+    <section aria-labelledby="use-cases-heading" className="use-cases page-width">
+      <p className="eyebrow">욕설 필터링이 필요한 곳</p>
+      <h2 id="use-cases-heading">채팅, 댓글, 닉네임의 비속어 필터링을 API 호출 한 번으로 처리합니다.</h2>
+      <ul className="use-case-list">
+        <li><h3>게임·커뮤니티 채팅 욕설 차단</h3><p>메시지를 보내기 전에 QUICK 모드로 욕설 포함 여부만 빠르게 확인합니다.</p></li>
+        <li><h3>댓글·게시글 비속어 마스킹</h3><p>FILTER 모드는 검출한 비속어를 *로 가린 문장을 돌려줘 그대로 저장하거나 노출할 수 있습니다.</p></li>
+        <li><h3>닉네임·프로필 금칙어 검사</h3><p>NORMAL 모드로 검출된 단어와 위치를 모두 받아 가입 단계에서 안내합니다.</p></li>
+        <li><h3>서비스에 맞춘 허용 단어</h3><p>계정별 허용 단어 그룹으로 사전에 있어도 걸러내지 않을 단어를 직접 정합니다.</p></li>
+      </ul>
+      <p className="use-case-note">Aho-Corasick 기반 다중 패턴 매칭으로 사전 단어 수와 무관하게 문장 길이에 비례한 시간에 응답합니다. 띄어쓰기와 특수문자로 변형한 표기도 정리해 비교합니다.</p>
+    </section>
   );
 }
 

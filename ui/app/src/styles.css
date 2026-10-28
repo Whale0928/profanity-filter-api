@@ -450,6 +450,12 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .example-output small { display: flex; align-items: center; gap: 7px; margin-top: 12px; color: var(--text-muted); font-size: 11px; }
 .example-output small svg { flex-shrink: 0; }
 .example-note { margin: 16px 0 0; color: var(--text-muted); font-size: 11px; line-height: 1.7; }
+.use-cases { border-top: 1px solid var(--line); padding-block: 64px 72px; }
+.use-cases h2 { max-width: 760px; margin: 0; font-size: clamp(25px, 2.4vw, 32px); line-height: 1.5; letter-spacing: -.035em; word-break: keep-all; }
+.use-case-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 28px 32px; margin: 36px 0 0; padding: 0; list-style: none; }
+.use-case-list h3 { margin: 0; font-size: 17px; letter-spacing: -.02em; word-break: keep-all; }
+.use-case-list p { margin: 8px 0 0; color: var(--text-muted); font-size: 14px; line-height: 1.7; word-break: keep-all; }
+.use-case-note { max-width: 760px; margin: 32px 0 0; color: var(--text-muted); font-size: 14px; line-height: 1.7; word-break: keep-all; }
 .quickstart { display: grid; grid-template-columns: .85fr 1.15fr; align-items: center; gap: clamp(32px, 5vw, 72px); border-top: 1px solid var(--line); padding-block: 64px 80px; }
 .quickstart-copy { min-width: 0; }
 .quickstart h2 { margin: 0; font-size: clamp(25px, 2.4vw, 32px); line-height: 1.5; letter-spacing: -.035em; word-break: keep-all; }

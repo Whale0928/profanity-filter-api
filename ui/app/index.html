@@ -20,9 +20,10 @@
       })();
     </script>
     <meta name="robots" content="index, follow" />
+    <meta name="google-site-verification" content="SRtxJejE1HxfyBX6llnyZdyLDas1hQqwkW-m3mD--qo" />
     <meta
       name="description"
-      content="한국어 문장의 욕설과 비속어를 검출하고 QUICK, NORMAL, FILTER 모드로 확인하거나 마스킹하는 REST API입니다."
+      content="채팅, 댓글, 게시글의 한국어 욕설과 비속어를 검출하고 마스킹하는 욕설 필터링 REST API입니다. QUICK, NORMAL, FILTER 모드와 API Key 인증을 제공합니다."
     />
     <link rel="canonical" href="https://developers.kr-filter.com/" />
     <link rel="icon" href="/favicon.ico" sizes="any" />
@@ -116,6 +117,29 @@
                 <a href="https://api.kr-filter.com/overview.md">API 개요</a>
                 <a href="https://api.kr-filter.com/openapi.json">OpenAPI 명세</a>
               </div>
+            </section>
+            <section class="use-cases page-width" aria-labelledby="use-cases-heading">
+              <p class="eyebrow">욕설 필터링이 필요한 곳</p>
+              <h2 id="use-cases-heading">채팅, 댓글, 닉네임의 비속어 필터링을 API 호출 한 번으로 처리합니다.</h2>
+              <ul class="use-case-list">
+                <li>
+                  <h3>게임·커뮤니티 채팅 욕설 차단</h3>
+                  <p>메시지를 보내기 전에 QUICK 모드로 욕설 포함 여부만 빠르게 확인합니다.</p>
+                </li>
+                <li>
+                  <h3>댓글·게시글 비속어 마스킹</h3>
+                  <p>FILTER 모드는 검출한 비속어를 *로 가린 문장을 돌려줘 그대로 저장하거나 노출할 수 있습니다.</p>
+                </li>
+                <li>
+                  <h3>닉네임·프로필 금칙어 검사</h3>
+                  <p>NORMAL 모드로 검출된 단어와 위치를 모두 받아 가입 단계에서 안내합니다.</p>
+                </li>
+                <li>
+                  <h3>서비스에 맞춘 허용 단어</h3>
+                  <p>계정별 허용 단어 그룹으로 사전에 있어도 걸러내지 않을 단어를 직접 정합니다.</p>
+                </li>
+              </ul>
+              <p class="use-case-note">Aho-Corasick 기반 다중 패턴 매칭으로 사전 단어 수와 무관하게 문장 길이에 비례한 시간에 응답합니다. 띄어쓰기와 특수문자로 변형한 표기도 정리해 비교합니다.</p>
             </section>
           </div>
         </main>

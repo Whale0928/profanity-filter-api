@@ -27,12 +27,14 @@ const [landing, docs, robots, sitemap, llms] = await Promise.all([
 ]);
 
 assert.equal(titleOf(landing), "한국어 욕설·비속어 필터 API | 말조심하세욧");
-assert.equal(titleOf(docs), "한국어 텍스트 처리 API 문서 | 말조심하세욧");
+assert.equal(titleOf(docs), "한국어 욕설·비속어 필터링 API 문서 | 말조심하세욧");
 assert.notEqual(titleOf(landing), titleOf(docs));
 assert.equal(canonicalOf(landing), "https://developers.kr-filter.com/");
 assert.equal(canonicalOf(docs), "https://developers.kr-filter.com/docs");
+assert.match(landing, /<meta name="google-site-verification" content="[A-Za-z0-9_-]+"/);
 assert.match(landing, /<h1>한국어 욕설·비속어<br\s*\/?\s*>필터 API<\/h1>/);
-assert.match(docs, /<h1>한국어 텍스트 처리 API 문서<\/h1>/);
+assert.match(landing, /욕설 필터링[\s\S]*비속어 필터링/);
+assert.match(docs, /<h1>한국어 욕설·비속어 필터링 API 문서<\/h1>/);
 assert.match(docs, /href="https:\/\/api\.kr-filter\.com\/overview\.md"/);
 assert.match(docs, /href="https:\/\/api\.kr-filter\.com\/openapi\.json"/);
 
@@ -54,7 +56,13 @@ assert.match(robots, /Sitemap: https:\/\/developers\.kr-filter\.com\/sitemap\.xm
 
 assert.match(sitemap, /^<\?xml version="1\.0" encoding="UTF-8"\?>/);
 const sitemapLocations = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]);
-assert.deepEqual(sitemapLocations, ["https://developers.kr-filter.com/", "https://developers.kr-filter.com/docs"]);
+assert.deepEqual(sitemapLocations, [
+  "https://developers.kr-filter.com/",
+  "https://developers.kr-filter.com/docs",
+  "https://developers.kr-filter.com/news",
+  "https://developers.kr-filter.com/terms",
+  "https://developers.kr-filter.com/privacy",
+]);
 
 assert.doesNotMatch(llms, /<html/i);
 assert.match(llms, /https:\/\/developers\.kr-filter\.com\/docs/);
