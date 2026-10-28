@@ -1,6 +1,7 @@
 # 말조심하세욧
 
 > 한국어 문장의 욕설과 비속어를 검출하고 필요한 방식으로 확인하거나 마스킹하는 REST API입니다.
+> Korean profanity filter API: detects Korean and English swear words in text and masks them with asterisks. Built for chat, comment and nickname moderation.
 
 ## Public pages
 

@@ -1,6 +1,7 @@
 # Overview
 
 한국어와 영어 비속어를 검출하고, 필요하면 검출 단어를 `*`로 마스킹하는 API입니다.
+Korean profanity filter API: detects Korean and English swear words in text and masks them with asterisks. Built for chat, comment and nickname moderation.
 
 ### 시작하기
 

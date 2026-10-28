@@ -1,5 +1,7 @@
 # Profanity Filter API
 
+Korean profanity filter API: detects Korean and English swear words in text and masks them with asterisks. Built for chat, comment and nickname moderation.
+
 AI agents and non-JavaScript clients can use these documents:
 
 - OpenAPI JSON: /openapi.json

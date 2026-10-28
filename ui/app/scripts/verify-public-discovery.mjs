@@ -49,6 +49,8 @@ const jsonLdTypes = jsonLdBlocks
   .map((item) => item["@type"]);
 assert.ok(jsonLdTypes.includes("WebSite"));
 assert.ok(jsonLdTypes.includes("SoftwareApplication"));
+assert.ok(jsonLdTypes.includes("FAQPage"));
+assert.match(landing, /<dl class="faq-list">/);
 
 assert.doesNotMatch(robots, /<html/i);
 assert.match(robots, /User-agent: OAI-SearchBot[\s\S]*?Allow: \//);

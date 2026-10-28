@@ -12,7 +12,7 @@ import {
   UserCircle,
   X,
 } from "@phosphor-icons/react";
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from "react";
+import { Fragment, lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from "react";
 
 import { exchangeLoginCode, logoutSession, restoreLoginSession, startSocialLogin, type LoginUser } from "./auth";
 import ApiKeysPage from "./ApiKeysPage";
@@ -447,6 +447,7 @@ function OverviewPage({
         <FilterExample />
       </section>
       <UseCases />
+      <Faq />
       <section className="quickstart page-width" id="credentials">
         <div className="quickstart-copy">
           <p className="eyebrow">첫 API 요청</p>
@@ -476,7 +477,34 @@ function UseCases() {
         <li><h3>닉네임·프로필 금칙어 검사</h3><p>NORMAL 모드로 검출된 단어와 위치를 모두 받아 가입 단계에서 안내합니다.</p></li>
         <li><h3>서비스에 맞춘 허용 단어</h3><p>계정별 허용 단어 그룹으로 사전에 있어도 걸러내지 않을 단어를 직접 정합니다.</p></li>
       </ul>
-      <p className="use-case-note">Aho-Corasick 기반 다중 패턴 매칭으로 사전 단어 수와 무관하게 문장 길이에 비례한 시간에 응답합니다. 띄어쓰기와 특수문자로 변형한 표기도 정리해 비교합니다.</p>
+      <p className="use-case-note">Aho-Corasick 기반 다중 패턴 매칭으로 사전 단어 수와 무관하게 문장 길이에 비례한 시간에 응답합니다. 기호를 끼워 넣은 변형 표기(바-보)는 정리해서 비교합니다.</p>
+    </section>
+  );
+}
+
+// 정적 fallback(index.html)의 FAQ와 JSON-LD FAQPage에 같은 문답을 두고 있다. 고칠 때 세 곳을 함께 고친다.
+const FAQ_ITEMS = [
+  ["초성 욕설이나 기호를 끼운 변형 표기도 감지하나요?", "입력에서 한글, 영문, 공백 외의 기호를 지우고 비교하므로 바-보, 바.보처럼 기호를 끼운 표기는 바보로 검출합니다. ㅅㅂ 같은 초성 표기와 바 보 같은 띄어쓰기 변형은 사전에 그 표기가 등록돼 있을 때 검출합니다. 놓치는 표현은 문의로 알려 주시면 사전에 반영합니다."],
+  ["댓글에 적용하면 욕설만 가려지나요?", "FILTER 모드는 검출한 비속어만 *로 바꾼 문장을 돌려주고 나머지 글자는 그대로 둡니다. 가리지 않고 포함 여부만 알고 싶으면 QUICK, 검출된 단어 목록이 필요하면 NORMAL 모드를 씁니다."],
+  ["영어 욕설도 검출하나요?", "한국어와 영어 비속어를 함께 검출하며 영문은 대소문자를 구분하지 않습니다."],
+  ["우리 서비스에서는 허용해야 하는 단어가 있는데 어떻게 하나요?", "개발자 포털에서 허용 단어 그룹을 만들고 요청에 그룹 ID를 넣으면 그 단어는 검출과 마스킹에서 빠집니다. 사전에 없는 욕설이나 잘못 잡히는 단어는 문의로 요청하면 검토해 반영합니다."],
+  ["요금이 있나요?", "지금은 요금을 받지 않습니다. 요금이나 요청 한도를 도입하게 되면 시행 전에 공지합니다."],
+  ["장애가 나면 어떻게 되나요?", "개인이 운영하는 서비스라 드물게 응답이 늦어지거나 잠시 끊길 수 있습니다. 문제가 보이면 포털 문의나 GitHub Issue로 알려 주시면 확인하고 대응합니다."],
+] as const;
+
+function Faq() {
+  return (
+    <section aria-labelledby="faq-heading" className="faq page-width">
+      <p className="eyebrow">FAQ</p>
+      <h2 id="faq-heading">욕설 감지, 비속어 마스킹, 금칙어 관리에 관해 자주 묻는 질문입니다.</h2>
+      <dl className="faq-list">
+        {FAQ_ITEMS.map(([question, answer]) => (
+          <Fragment key={question}>
+            <dt>{question}</dt>
+            <dd>{answer}</dd>
+          </Fragment>
+        ))}
+      </dl>
     </section>
   );
 }
