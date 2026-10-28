@@ -32,6 +32,7 @@ assert.notEqual(titleOf(landing), titleOf(docs));
 assert.equal(canonicalOf(landing), "https://developers.kr-filter.com/");
 assert.equal(canonicalOf(docs), "https://developers.kr-filter.com/docs");
 assert.match(landing, /<meta name="google-site-verification" content="[A-Za-z0-9_-]+"/);
+assert.match(landing, /<meta name="naver-site-verification" content="[a-f0-9]+"/);
 assert.match(landing, /<h1>한국어 욕설·비속어<br\s*\/?\s*>필터 API<\/h1>/);
 assert.match(landing, /욕설 필터링[\s\S]*비속어 필터링/);
 assert.match(docs, /<h1>한국어 욕설·비속어 필터링 API 문서<\/h1>/);
